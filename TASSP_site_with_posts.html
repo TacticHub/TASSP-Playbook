@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Strategy Library — The TASSP Playbook</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink:#0c0f14; --ink2:#141820; --ink3:#1c2330;
+      --charcoal:#252e3d; --steel:#3a4a62; --muted:#7a8eaa;
+      --fog:#b0bdd0; --paper:#f2efe8; --white:#fdfcfa;
+      --gold:#c9a96e; --gold2:#e4c98a; --red:#c0544a;
+      --border:rgba(201,169,110,0.15);
+      --glow:rgba(201,169,110,0.06);
+      --cat-careersite:#4e8ecf; --cat-crm:#7b6fd4;
+      --cat-engagement:#3faa7c; --cat-interview:#d4834a;
+      --cat-offer:#c9a96e; --cat-postoffer:#c25e58;
+      --cat-onboarding:#4aadc0; --cat-cx:#a07bc8; --cat-metrics:#6aaa48;
+    }
+    html { scroll-behavior: smooth; }
+    body { background:var(--ink); color:var(--paper); font-family:'Outfit',sans-serif; font-weight:300; line-height:1.65; overflow-x:hidden; }
+
+    /* NAV */
+    nav { position:fixed; top:0; left:0; right:0; z-index:300; display:flex; align-items:center; justify-content:space-between; padding:0 3rem; height:64px; background:rgba(12,15,20,0.92); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
+    .nav-brand { display:flex; align-items:center; gap:0.75rem; text-decoration:none; }
+    .nav-brand-mark { width:28px; height:28px; border:1.5px solid var(--gold); border-radius:4px; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:0.58rem; color:var(--gold); }
+    .nav-brand-text { font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-weight:600; color:var(--paper); }
+    .nav-center { display:flex; gap:2rem; position:absolute; left:50%; transform:translateX(-50%); }
+    .nav-center a { font-size:0.78rem; font-weight:400; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color 0.2s; }
+    .nav-center a:hover, .nav-center a.active { color:var(--paper); }
+    .nav-right { display:flex; align-items:center; gap:1rem; }
+    .nav-search-btn { background:none; border:none; cursor:pointer; color:var(--muted); padding:0.4rem; transition:color 0.2s; display:flex; align-items:center; }
+    .nav-search-btn:hover { color:var(--gold); }
+    .nav-cta { padding:0.45rem 1.1rem; background:var(--gold); color:var(--ink); font-size:0.75rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; text-decoration:none; border-radius:3px; transition:background 0.2s; }
+    .nav-cta:hover { background:var(--gold2); }
+
+    /* PAGE HEADER */
+    .page-header { padding:9rem 5rem 3rem; background:var(--ink2); border-bottom:1px solid var(--border); position:relative; overflow:hidden; }
+    .page-header::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 80% at 80% 50%, rgba(201,169,110,0.05) 0%, transparent 70%); }
+    .page-header-label { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); margin-bottom:0.75rem; }
+    .page-header h1 { font-family:'Cormorant Garamond',serif; font-size:clamp(2.2rem,5vw,3.8rem); font-weight:700; line-height:1.05; position:relative; z-index:1; }
+    .page-header p { margin-top:1rem; font-size:1rem; color:var(--muted); max-width:560px; line-height:1.75; position:relative; z-index:1; }
+
+    /* SEARCH BAR */
+    .search-bar-section { background:var(--ink2); padding:1.5rem 5rem 0; border-bottom:1px solid var(--border); position:sticky; top:64px; z-index:100; }
+    .search-row { display:flex; gap:1rem; align-items:center; margin-bottom:1.5rem; }
+    .lib-search-wrap { position:relative; flex:1; max-width:460px; }
+    .lib-search-input { width:100%; padding:0.7rem 1rem 0.7rem 2.75rem; background:var(--ink); border:1px solid var(--border); border-radius:3px; color:var(--paper); font-family:'Outfit',sans-serif; font-size:0.9rem; outline:none; transition:border-color 0.2s; }
+    .lib-search-input:focus { border-color:var(--gold); }
+    .lib-search-input::placeholder { color:var(--steel); }
+    .lib-search-icon { position:absolute; left:0.9rem; top:50%; transform:translateY(-50%); color:var(--muted); }
+    .search-count { font-family:'DM Mono',monospace; font-size:0.7rem; letter-spacing:0.12em; color:var(--muted); white-space:nowrap; }
+
+    /* FILTER TABS */
+    .filter-tabs { display:flex; gap:0.35rem; flex-wrap:wrap; }
+    .filter-tab { padding:0.5rem 1rem; border-radius:3px 3px 0 0; border:1px solid transparent; border-bottom:none; font-family:'Outfit',sans-serif; font-size:0.77rem; font-weight:400; color:var(--muted); background:transparent; cursor:pointer; transition:all 0.2s; white-space:nowrap; display:flex; align-items:center; gap:0.4rem; }
+    .filter-tab:hover { color:var(--paper); background:rgba(255,255,255,0.03); }
+    .filter-tab.active { color:var(--paper); background:var(--ink3); border-color:var(--border); }
+    .tab-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .tab-count { font-family:'DM Mono',monospace; font-size:0.62rem; color:var(--steel); }
+    .filter-tab.active .tab-count { color:var(--muted); }
+
+    /* TRIAD BANNER */
+    .triad-banner { display:flex; align-items:center; justify-content:center; gap:0; padding:1rem 5rem; background:var(--ink3); border-bottom:1px solid var(--border); flex-wrap:wrap; }
+    .triad-item { display:flex; align-items:center; gap:0.5rem; padding:0.4rem 1.5rem; font-family:'DM Mono',monospace; font-size:0.67rem; letter-spacing:0.18em; text-transform:uppercase; }
+    .triad-dot { width:6px; height:6px; border-radius:50%; background:var(--gold); flex-shrink:0; }
+    .triad-sep { color:var(--gold); font-size:0.9rem; padding:0 0.25rem; }
+
+    /* LIBRARY */
+    .library-main { padding:3rem 5rem 5rem; background:var(--ink2); min-height:60vh; }
+    .no-results { text-align:center; padding:5rem 2rem; color:var(--muted); }
+    .no-results h3 { font-family:'Cormorant Garamond',serif; font-size:1.5rem; margin-bottom:0.75rem; color:var(--fog); }
+    .category-section { display:none; margin-bottom:4rem; }
+    .category-section.visible { display:block; }
+    .category-header { display:flex; align-items:center; gap:1.25rem; margin-bottom:2rem; padding-bottom:1rem; border-bottom:1px solid var(--border); }
+    .category-header-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .category-header h2 { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:700; }
+    .category-header-stage { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-left:auto; }
+    .strategy-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:1.25rem; }
+
+    /* STRATEGY CARD */
+    .strategy-card { background:var(--ink); border:1px solid var(--border); border-radius:4px; padding:2rem; cursor:pointer; transition:border-color 0.25s, transform 0.2s, background 0.25s; position:relative; overflow:hidden; }
+    .strategy-card:hover { border-color:rgba(201,169,110,0.35); background:rgba(201,169,110,0.02); transform:translateY(-2px); }
+    .card-topbar { position:absolute; top:0; left:0; right:0; height:3px; opacity:0; transition:opacity 0.25s; }
+    .strategy-card:hover .card-topbar { opacity:1; }
+    .card-tag { display:inline-flex; align-items:center; gap:0.4rem; font-family:'DM Mono',monospace; font-size:0.62rem; letter-spacing:0.18em; text-transform:uppercase; padding:0.2rem 0.55rem; border-radius:2px; margin-bottom:0.85rem; border:1px solid transparent; }
+    .card-tag-dot { width:5px; height:5px; border-radius:50%; }
+    .card-title { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:600; line-height:1.3; margin-bottom:0.75rem; }
+    .card-summary { font-size:0.85rem; color:rgba(242,239,232,0.55); line-height:1.7; }
+    .card-footer { margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+    .card-access { display:flex; align-items:center; gap:0.4rem; font-family:'DM Mono',monospace; font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; }
+    .access-free { color:#3faa7c; }
+    .access-locked { color:var(--muted); }
+    .card-cta { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); }
+
+    /* EMAIL GATE MODAL */
+    .modal-overlay { display:none; position:fixed; inset:0; z-index:500; background:rgba(8,10,14,0.88); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:2rem; }
+    .modal-overlay.open { display:flex; }
+
+    /* STRATEGY MODAL */
+    .strategy-modal { background:var(--ink2); border:1px solid var(--border); border-radius:6px; max-width:720px; width:100%; max-height:88vh; overflow-y:auto; position:relative; animation:modalIn 0.25s ease; }
+    @keyframes modalIn { from{opacity:0;transform:translateY(14px) scale(0.98)} to{opacity:1;transform:translateY(0) scale(1)} }
+    .modal-topbar { height:4px; border-radius:6px 6px 0 0; }
+    .modal-header { padding:2.5rem 3rem 1.5rem; border-bottom:1px solid var(--border); }
+    .modal-tag { display:inline-flex; align-items:center; gap:0.4rem; font-family:'DM Mono',monospace; font-size:0.62rem; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:0.85rem; }
+    .modal-tag-dot { width:6px; height:6px; border-radius:50%; }
+    .modal-title { font-family:'Cormorant Garamond',serif; font-size:1.75rem; font-weight:700; line-height:1.2; }
+    .modal-close { position:absolute; top:1.25rem; right:1.5rem; background:none; border:none; color:var(--muted); font-size:1.2rem; cursor:pointer; line-height:1; transition:color 0.2s; padding:0.25rem 0.5rem; }
+    .modal-close:hover { color:var(--paper); }
+    .modal-body { padding:2.5rem 3rem; }
+    .modal-triad { display:grid; grid-template-columns:1fr auto 1fr auto 1fr; border:1px solid var(--border); border-radius:4px; overflow:hidden; margin-bottom:2.5rem; }
+    .triad-cell { padding:1.25rem 1.5rem; background:rgba(255,255,255,0.02); text-align:center; }
+    .triad-cell-label { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:0.4rem; }
+    .triad-cell-val { font-size:0.85rem; color:var(--paper); font-weight:400; line-height:1.45; }
+    .triad-sep { display:flex; align-items:center; justify-content:center; padding:0 0.75rem; color:var(--gold); border-left:1px solid var(--border); border-right:1px solid var(--border); background:rgba(201,169,110,0.03); }
+    .modal-section { margin-bottom:2.25rem; }
+    .modal-section-label { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.25em; text-transform:uppercase; color:var(--gold); margin-bottom:0.85rem; }
+    .modal-section p { font-size:0.95rem; color:rgba(242,239,232,0.8); line-height:1.8; }
+    .modal-section ul { padding-left:1.25rem; display:flex; flex-direction:column; gap:0.5rem; }
+    .modal-section ul li { font-size:0.92rem; color:rgba(242,239,232,0.72); line-height:1.7; }
+    .modal-linkedin { display:inline-flex; align-items:center; gap:0.5rem; font-family:'DM Mono',monospace; font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); text-decoration:none; padding:0.55rem 1rem; border:1px solid var(--border); border-radius:3px; transition:all 0.2s; }
+    .modal-linkedin:hover { color:var(--gold); border-color:var(--gold); }
+
+    /* EMAIL GATE */
+    .gate-modal { background:var(--ink2); border:1px solid var(--border); border-radius:6px; max-width:480px; width:100%; position:relative; animation:modalIn 0.25s ease; overflow:hidden; }
+    .gate-topbar { height:4px; background:linear-gradient(90deg, var(--gold), var(--gold2)); }
+    .gate-body { padding:3rem; }
+    .gate-icon { font-size:2rem; margin-bottom:1.25rem; }
+    .gate-title { font-family:'Cormorant Garamond',serif; font-size:1.75rem; font-weight:700; line-height:1.15; margin-bottom:0.75rem; }
+    .gate-desc { font-size:0.92rem; color:var(--muted); line-height:1.75; margin-bottom:2rem; }
+    .gate-form { display:flex; flex-direction:column; gap:0.75rem; }
+    .gate-input { padding:0.8rem 1.1rem; background:var(--ink); border:1px solid var(--border); border-radius:3px; color:var(--paper); font-family:'Outfit',sans-serif; font-size:0.9rem; outline:none; transition:border-color 0.2s; }
+    .gate-input:focus { border-color:var(--gold); }
+    .gate-input::placeholder { color:var(--steel); }
+    .gate-btn { padding:0.85rem; background:var(--gold); border:none; border-radius:3px; color:var(--ink); font-family:'Outfit',sans-serif; font-size:0.85rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; transition:background 0.2s; }
+    .gate-btn:hover { background:var(--gold2); }
+    .gate-note { font-family:'DM Mono',monospace; font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--steel); text-align:center; margin-top:0.5rem; }
+    .gate-close { position:absolute; top:1.25rem; right:1.25rem; background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.1rem; transition:color 0.2s; }
+    .gate-close:hover { color:var(--paper); }
+    .gate-perks { display:flex; flex-direction:column; gap:0.6rem; margin-bottom:2rem; }
+    .gate-perk { display:flex; align-items:center; gap:0.6rem; font-size:0.85rem; color:var(--fog); }
+    .gate-perk::before { content:'✓'; color:var(--gold); font-family:'DM Mono',monospace; font-size:0.75rem; flex-shrink:0; }
+
+    /* PLAYBOOK BUNDLES */
+    .bundles-section { background:var(--ink); border-top:1px solid var(--border); padding:5rem; }
+    .section-eyebrow { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.28em; text-transform:uppercase; color:var(--gold); margin-bottom:0.6rem; }
+    .section-title { font-family:'Cormorant Garamond',serif; font-size:clamp(1.8rem,3vw,2.6rem); font-weight:700; line-height:1.1; }
+    .section-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:3rem; }
+    .section-sub { font-size:0.95rem; color:var(--muted); max-width:560px; line-height:1.75; margin-top:0.75rem; }
+    .bundles-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; }
+    .bundle-card { border:1px solid var(--border); border-radius:6px; overflow:hidden; background:var(--ink2); transition:border-color 0.25s, transform 0.2s; }
+    .bundle-card:hover { border-color:rgba(201,169,110,0.35); transform:translateY(-3px); }
+    .bundle-card-header { padding:1.75rem 1.75rem 1.25rem; border-bottom:1px solid var(--border); }
+    .bundle-stage { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.25em; text-transform:uppercase; margin-bottom:0.6rem; }
+    .bundle-name { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:700; line-height:1.2; }
+    .bundle-card-body { padding:1.25rem 1.75rem; }
+    .bundle-count { font-size:0.82rem; color:var(--muted); margin-bottom:1rem; }
+    .bundle-count strong { color:var(--paper); font-weight:500; }
+    .bundle-topics { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:1.5rem; }
+    .bundle-topic { font-size:0.72rem; padding:0.2rem 0.55rem; border:1px solid var(--border); border-radius:2px; color:var(--muted); }
+    .bundle-card-footer { padding:1rem 1.75rem; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .bundle-price { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:700; color:var(--gold); }
+    .bundle-price sup { font-size:0.75rem; vertical-align:super; }
+    .bundle-per { font-size:0.7rem; font-family:'DM Mono',monospace; color:var(--muted); font-weight:400; }
+    .bundle-btn { padding:0.5rem 1.1rem; background:transparent; border:1px solid var(--border); border-radius:3px; font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--fog); cursor:pointer; transition:all 0.2s; }
+    .bundle-btn:hover { background:var(--gold); border-color:var(--gold); color:var(--ink); }
+
+    /* FOOTER */
+    footer { background:var(--ink2); border-top:1px solid var(--border); padding:2.5rem 5rem; }
+    .footer-bottom { display:flex; justify-content:space-between; align-items:center; }
+    .footer-bottom p { font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--steel); }
+    .footer-links { display:flex; gap:2rem; }
+    .footer-links a { font-size:0.82rem; color:var(--muted); text-decoration:none; transition:color 0.2s; }
+    .footer-links a:hover { color:var(--gold); }
+
+    @media(max-width:900px){
+      nav{padding:0 1.5rem}.nav-center{display:none}
+      .page-header,.library-main,.search-bar-section,.bundles-section{padding-left:1.5rem;padding-right:1.5rem}
+      .search-bar-section{top:58px}
+      .modal-header,.modal-body{padding-left:1.5rem;padding-right:1.5rem}
+      .modal-triad{grid-template-columns:1fr}.triad-sep{display:none}
+      .bundles-grid{grid-template-columns:1fr 1fr}
+      footer{padding:2rem 1.5rem}
+      .footer-bottom{flex-direction:column;gap:1rem;text-align:center}
+    }
+    @media(max-width:600px){
+      .bundles-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="index.html">
+    <div class="nav-brand-mark">TP</div>
+    <span class="nav-brand-text">The TASSP Playbook</span>
+  </a>
+  <div class="nav-center">
+    <a href="index.html">Home</a>
+    <a href="library.html" class="active">Strategy Library</a>
+    <a href="#playbooks">Playbooks</a>
+  </div>
+  <div class="nav-right">
+    <a class="nav-cta" href="index.html#signup">Get Updates</a>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-label">The TASSP Playbook</div>
+  <h1>Strategy Library</h1>
+  <p>Strategies spanning the full talent acquisition funnel. Free previews available. Sign up to unlock the full collection. Buy a playbook bundle for deep-dive action frameworks.</p>
+</div>
+
+<!-- SEARCH + FILTERS -->
+<div class="search-bar-section">
+  <div class="search-row">
+    <div class="lib-search-wrap">
+      <span class="lib-search-icon">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M11 11l3 3"/></svg>
+      </span>
+      <input class="lib-search-input" id="libSearch" type="text" placeholder="Search strategies…" autocomplete="off"/>
+    </div>
+    <span class="search-count" id="searchCount">27 strategies</span>
+  </div>
+  <div class="filter-tabs">
+    <button class="filter-tab active" data-cat="all"><span class="tab-dot" style="background:var(--gold)"></span>All <span class="tab-count">58</span></button>
+    <button class="filter-tab" data-cat="careersite"><span class="tab-dot" style="background:var(--cat-careersite)"></span>Career Site <span class="tab-count">7</span></button>
+    <button class="filter-tab" data-cat="crm"><span class="tab-dot" style="background:var(--cat-crm)"></span>Recruitment Marketing <span class="tab-count">12</span></button>
+    <button class="filter-tab" data-cat="engagement"><span class="tab-dot" style="background:var(--cat-engagement)"></span>Engagement <span class="tab-count">9</span></button>
+    <button class="filter-tab" data-cat="interview"><span class="tab-dot" style="background:var(--cat-interview)"></span>Interview <span class="tab-count">7</span></button>
+    <button class="filter-tab" data-cat="offer"><span class="tab-dot" style="background:var(--cat-offer)"></span>Offer <span class="tab-count">2</span></button>
+    <button class="filter-tab" data-cat="postoffer"><span class="tab-dot" style="background:var(--cat-postoffer)"></span>Post-Offer <span class="tab-count">3</span></button>
+    <button class="filter-tab" data-cat="onboarding"><span class="tab-dot" style="background:var(--cat-onboarding)"></span>Onboarding <span class="tab-count">7</span></button>
+    <button class="filter-tab" data-cat="cx"><span class="tab-dot" style="background:var(--cat-cx)"></span>Candidate Experience <span class="tab-count">2</span></button>
+    <button class="filter-tab" data-cat="metrics"><span class="tab-dot" style="background:var(--cat-metrics)"></span>Metrics & KPIs <span class="tab-count">9</span></button>
+  </div>
+</div>
+
+<!-- TRIAD BANNER -->
+<div class="triad-banner">
+  <div class="triad-item"><div class="triad-dot"></div>Efficient Process</div>
+  <span class="triad-sep">→</span>
+  <div class="triad-item"><div class="triad-dot"></div>Increased Productivity</div>
+  <span class="triad-sep">→</span>
+  <div class="triad-item"><div class="triad-dot"></div>Cost Savings</div>
+  <span class="triad-sep">+</span>
+  <div class="triad-item"><div class="triad-dot"></div>Quality Hiring</div>
+</div>
+
+<!-- LIBRARY MAIN -->
+<div class="library-main" id="libraryMain">
+  <div id="noResults" class="no-results" style="display:none">
+    <h3>No strategies found</h3>
+    <p>Try a different search term or browse all categories.</p>
+  </div>
+</div>
+
+<!-- PLAYBOOK BUNDLES -->
+<section class="bundles-section" id="playbooks">
+  <div class="section-header">
+    <div>
+      <div class="section-eyebrow">Playbook Bundles</div>
+      <div class="section-title">Go Deeper. Buy the Full Playbook.</div>
+      <p class="section-sub">Each bundle contains the complete, unabridged version of every strategy in that funnel stage — full action frameworks, system configuration guides, and triad outcome breakdowns.</p>
+    </div>
+  </div>
+  <div class="bundles-grid">
+    <div class="bundle-card">
+      <div class="bundle-card-header">
+        <div class="bundle-stage" style="color:var(--cat-careersite)">Attraction · Top of Funnel</div>
+        <div class="bundle-name">Career Site & Recruitment Marketing Playbook</div>
+      </div>
+      <div class="bundle-card-body">
+        <div class="bundle-count"><strong>6 full strategies</strong> with complete action frameworks</div>
+        <div class="bundle-topics"><span class="bundle-topic">Conversion Architecture</span><span class="bundle-topic">JD Optimization</span><span class="bundle-topic">CRM Campaigns</span><span class="bundle-topic">Talent Communities</span><span class="bundle-topic">Nurture Sequences</span></div>
+      </div>
+      <div class="bundle-card-footer">
+        <div class="bundle-price"><sup>$</sup>29 <span class="bundle-per">/ bundle</span></div>
+        <button class="bundle-btn">Coming Soon</button>
+      </div>
+    </div>
+    <div class="bundle-card">
+      <div class="bundle-card-header">
+        <div class="bundle-stage" style="color:var(--cat-engagement)">Engagement & Interview · Mid Funnel</div>
+        <div class="bundle-name">Screening, Assessment & Interview Playbook</div>
+      </div>
+      <div class="bundle-card-body">
+        <div class="bundle-count"><strong>6 full strategies</strong> with complete action frameworks</div>
+        <div class="bundle-topics"><span class="bundle-topic">Application Flow</span><span class="bundle-topic">Screen Frameworks</span><span class="bundle-topic">Assessments</span><span class="bundle-topic">Interview Architecture</span><span class="bundle-topic">Scorecard Design</span></div>
+      </div>
+      <div class="bundle-card-footer">
+        <div class="bundle-price"><sup>$</sup>29 <span class="bundle-per">/ bundle</span></div>
+        <button class="bundle-btn">Coming Soon</button>
+      </div>
+    </div>
+    <div class="bundle-card">
+      <div class="bundle-card-header">
+        <div class="bundle-stage" style="color:var(--cat-offer)">Offer Through Onboarding · Bottom of Funnel</div>
+        <div class="bundle-name">Offer, Post-Offer & Onboarding Playbook</div>
+      </div>
+      <div class="bundle-card-body">
+        <div class="bundle-count"><strong>9 full strategies</strong> with complete action frameworks</div>
+        <div class="bundle-topics"><span class="bundle-topic">Offer Workflow</span><span class="bundle-topic">Pre-Board Engagement</span><span class="bundle-topic">BGC Automation</span><span class="bundle-topic">HRIS Handoff</span><span class="bundle-topic">Quality-of-Hire Loop</span></div>
+      </div>
+      <div class="bundle-card-footer">
+        <div class="bundle-price"><sup>$</sup>29 <span class="bundle-per">/ bundle</span></div>
+        <button class="bundle-btn">Coming Soon</button>
+      </div>
+    </div>
+    <div class="bundle-card">
+      <div class="bundle-card-header">
+        <div class="bundle-stage" style="color:var(--cat-cx)">Cross-Funnel</div>
+        <div class="bundle-name">Candidate Experience Playbook</div>
+      </div>
+      <div class="bundle-card-body">
+        <div class="bundle-count"><strong>3 full strategies</strong> with complete action frameworks</div>
+        <div class="bundle-topics"><span class="bundle-topic">Communication Cadence</span><span class="bundle-topic">Rejection Architecture</span><span class="bundle-topic">CX Surveys</span></div>
+      </div>
+      <div class="bundle-card-footer">
+        <div class="bundle-price"><sup>$</sup>19 <span class="bundle-per">/ bundle</span></div>
+        <button class="bundle-btn">Coming Soon</button>
+      </div>
+    </div>
+    <div class="bundle-card">
+      <div class="bundle-card-header">
+        <div class="bundle-stage" style="color:var(--cat-metrics)">Intelligence Layer</div>
+        <div class="bundle-name">TA Metrics & KPIs Playbook</div>
+      </div>
+      <div class="bundle-card-body">
+        <div class="bundle-count"><strong>3 full strategies</strong> with complete action frameworks</div>
+        <div class="bundle-topics"><span class="bundle-topic">Metrics Framework</span><span class="bundle-topic">Conversion Analysis</span><span class="bundle-topic">Cost-Per-Hire Model</span></div>
+      </div>
+      <div class="bundle-card-footer">
+        <div class="bundle-price"><sup>$</sup>19 <span class="bundle-per">/ bundle</span></div>
+        <button class="bundle-btn">Coming Soon</button>
+      </div>
+    </div>
+    <div class="bundle-card" style="border-color:rgba(201,169,110,0.3);background:rgba(201,169,110,0.04)">
+      <div class="bundle-card-header" style="border-color:rgba(201,169,110,0.15)">
+        <div class="bundle-stage" style="color:var(--gold)">Complete Collection</div>
+        <div class="bundle-name">The Full TASSP Playbook Bundle</div>
+      </div>
+      <div class="bundle-card-body">
+        <div class="bundle-count"><strong>All 27+ strategies</strong> across every funnel stage</div>
+        <div class="bundle-topics"><span class="bundle-topic">All 9 Categories</span><span class="bundle-topic">Full Action Frameworks</span><span class="bundle-topic">System Guides</span><span class="bundle-topic">Future Updates</span></div>
+      </div>
+      <div class="bundle-card-footer">
+        <div class="bundle-price" style="color:var(--gold2)"><sup>$</sup>99 <span class="bundle-per">/ full access</span></div>
+        <button class="bundle-btn" style="border-color:var(--gold);color:var(--gold)">Coming Soon</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-bottom">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="library.html">Strategy Library</a>
+      <a href="index.html#signup">Newsletter</a>
+      <a href="#">LinkedIn</a>
+    </div>
+    <p>© 2025 The TASSP Playbook · All rights reserved</p>
+  </div>
+</footer>
+
+<!-- STRATEGY MODAL -->
+<div class="modal-overlay" id="strategyOverlay">
+  <div class="strategy-modal" id="strategyModal">
+    <div class="modal-topbar" id="modalTopBar"></div>
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-header">
+      <div class="modal-tag"><span class="modal-tag-dot" id="modalTagDot"></span><span id="modalTagText"></span></div>
+      <div class="modal-title" id="modalTitle"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-triad">
+        <div class="triad-cell"><div class="triad-cell-label">Efficient Process</div><div class="triad-cell-val" id="triadProcess"></div></div>
+        <div class="triad-sep">→</div>
+        <div class="triad-cell"><div class="triad-cell-label">Increased Productivity</div><div class="triad-cell-val" id="triadProductivity"></div></div>
+        <div class="triad-sep">→</div>
+        <div class="triad-cell"><div class="triad-cell-label">Cost Savings + Quality</div><div class="triad-cell-val" id="triadOutcome"></div></div>
+      </div>
+      <div class="modal-section"><div class="modal-section-label">The Strategy</div><p id="modalStrategy"></p></div>
+      <div class="modal-section"><div class="modal-section-label">Key Actions</div><ul id="modalActions"></ul></div>
+      <div class="modal-section"><div class="modal-section-label">System Considerations</div><p id="modalSystem"></p></div>
+      <a href="#" class="modal-linkedin" id="modalLinkedin" target="_blank">↗ View Original on LinkedIn</a>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL GATE MODAL -->
+<div class="modal-overlay" id="gateOverlay">
+  <div class="gate-modal">
+    <div class="gate-topbar"></div>
+    <button class="gate-close" id="gateClose">✕</button>
+    <div class="gate-body">
+      <div class="gate-icon">🔓</div>
+      <div class="gate-title">Unlock the Full Strategy Library</div>
+      <div class="gate-desc">Enter your email to get free access to all 27 strategies — plus a new strategy every week, delivered to your inbox.</div>
+      <div class="gate-perks">
+        <div class="gate-perk">Instant access to all 27 published strategies</div>
+        <div class="gate-perk">New strategy every week, free in your inbox</div>
+        <div class="gate-perk">Early access to new playbook bundles</div>
+      </div>
+      <div class="gate-form">
+        <input class="gate-input" id="gateEmail" type="email" placeholder="Your email address"/>
+        <button class="gate-btn" id="gateSubmit">Unlock Free Access</button>
+        <div class="gate-note">No spam. Unsubscribe any time.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STRATEGY DATA ───
+const strategies = {
+  li1:{cat:'postoffer',color:'#c25e58',label:'Post-Offer',access:'free',date:'1/22/2026 20:58',title:'After surviving the 40 weeks of January, and for some, a historical storm, let’s put Febru',summary:'After surviving the 40 weeks of January, and for some, a historical storm, let’s put February to work 😄  This week, I want to focus on the most fragile stretch of the hiring funnel: post offer through onboarding. Strategy: Turn post-offer steps into momentum builders.',triadProcess:'Automated post-offer communications and compliance tracking',triadProductivity:'Reduced manual follow-up on BGC and compliance tasks',triadOutcome:'Lower no-show rate, faster time-to-start',strategy:'This week, I want to focus on the most fragile stretch of the hiring funnel: post offer through onboarding.',actions:['After surviving the 40 weeks of January, and for some, a historical storm, let’s put February to work','This week, I want to focus on the most fragile stretch of the hiring funnel: post offer through onboarding.','Strategy: Turn post-offer steps into momentum builders.','Before changing anything, benchmark first.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7420208230917668864'},
+  li2:{cat:'careersite',color:'#4e8ecf',label:'Career Site',access:'free',date:'1/22/2026 21:11',title:'Let’s talk about attraction, and no, not the Valentine’s Day kind',summary:'Let’s talk about attraction, and no, not the Valentine’s Day kind ❤️  Before you “add more applicants” to the funnel this week, pause and benchmark. What does your apply-to-qualified ratio look like today?',triadProcess:'Optimized career site pages with clear apply paths',triadProductivity:'Higher qualified applicant volume per sourcing dollar',triadOutcome:'Lower cost-per-apply, stronger employer brand',strategy:'Before you “add more applicants” to the funnel this week, pause and benchmark. What does your apply-to-qualified ratio look like today? How much recruiter time is spent screening misaligned candidates? Without that baseline, improvement is just a guess.',actions:['Let’s talk about attraction, and no, not the Valentine’s Day kind','Before you “add more applicants” to the funnel this week, pause and benchmark.','What does your apply-to-qualified ratio look like today?','How much recruiter time is spent screening misaligned candidates?'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7420211449811243008'},
+  li3:{cat:'crm',color:'#7b6fd4',label:'Recruitment Marketing',access:'free',date:'1/22/2026 21:31',title:'President’s Day is about leadership and legacy',summary:'President’s Day is about leadership and legacy. So this week, let’s talk about how your CRM proves careers grow inside your company.',triadProcess:'Segmented pipeline campaigns with consistent cadence',triadProductivity:'Faster fills from warm talent vs. cold sourcing',triadOutcome:'Reduced sourcing cost, higher pipeline conversion',strategy:'Before you send another nurture campaign, pause and benchmark. How many people in your CRM actually believe growth is possible at your company? How many applies come from long-term CRM engagement versus paid job traffic? Does internal mobility matter to some of your candidates? Without that baseline, improvement is just a guess.',actions:['President’s Day is about leadership and legacy.','So this week, let’s talk about how your CRM proves careers grow inside your company.','Before you send another nurture campaign, pause and benchmark.','How many people in your CRM actually believe growth is possible at your company?'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7420216502378803201'},
+  li4:{cat:'engagement',color:'#3faa7c',label:'Engagement',access:'free',date:'1/22/2026 21:40',title:'February is flying by, isn’t it',summary:'February is flying by, isn’t it? ⏱️ If your funnel feels “busy” but not productive, this week’s strategy is for you.',triadProcess:'Standardized screening with clear evaluation criteria',triadProductivity:'Faster screening decisions, reduced per-candidate time',triadOutcome:'Higher submit-to-hire ratios, improved data quality',strategy:'🎯 Screening and Engagement Strategy Screen for decision readiness, not just resume alignment. The most dangerous candidate in your funnel isn’t unqualified. It’s undecided. Undecided candidates slow hiring, waste interviewer time, and quietly inflate time to fill.',actions:['February is flying by, isn’t it?','If your funnel feels “busy” but not productive, this week’s strategy is for you.','Screening and Engagement Strategy','Screen for decision readiness, not just resume alignment.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7420218730250481664'},
+  li5:{cat:'engagement',color:'#3faa7c',label:'Engagement',access:'free',date:'10/1/2025 19:15',title:'Happy Monday, friends',summary:'Happy Monday, friends 👋 Want to plug one of the biggest silent leaks in your hiring funnel? Look no further than your recruiter screening calls.',triadProcess:'Standardized screening with clear evaluation criteria',triadProductivity:'Faster screening decisions, reduced per-candidate time',triadOutcome:'Higher submit-to-hire ratios, improved data quality',strategy:'Let’s fix that. Start with a benchmark: What’s your average time from application to first recruiter contact? If you don’t know, you’re already flying blind.',actions:['Want to plug one of the biggest silent leaks in your hiring funnel?','Look no further than your recruiter screening calls. ☎','Misaligned or delayed recruiter screens stall momentum.','Inconsistent questions = inconsistent insights.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7379232570770731008'},
+  li6:{cat:'crm',color:'#7b6fd4',label:'Recruitment Marketing',access:'free',date:'10/10/2025 21:57',title:'This week, I spent two incredible days at iCIMS HQ in Holmdel, NJ for in-person customer t',summary:'This week, I spent two incredible days at iCIMS HQ in Holmdel, NJ for in-person customer training designed specifically for new system administrators. Our trainer covered the essentials, building searches, dashboards, and reports, but what stood out most was the people in the roo',triadProcess:'Segmented pipeline campaigns with consistent cadence',triadProductivity:'Faster fills from warm talent vs. cold sourcing',triadOutcome:'Reduced sourcing cost, higher pipeline conversion',strategy:'They are the bridge between strategy and execution. 🔹 Translating vision into workflows. 🔹 Supporting recruiters and leaders with tools that actually work. 🔹 Turning good intentions into operational excellence.',actions:['This week, I spent two incredible days at iCIMS HQ in Holmdel, NJ for in-person customer training designed specifically for new system administrators.','Our trainer covered the essentials, building searches, dashboards, and reports, but what stood out most was the people in the room.','For many attendees, this was their first formal HR tech training. But by the end, something clicked.','These aren’t just system admins.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3AugcPost%3A7382534641213153280'},
+  li7:{cat:'interview',color:'#d4834a',label:'Interview',access:'free',date:'10/11/2025 20:01',title:'Good morning and happy Monday! Let’s start the week with a TA strategy you can use right n',summary:'Let’s start the week with a TA strategy you can use right now at the Interview stage of your hiring process. 📅 Still juggling interviews across random days and scattered time slots?',triadProcess:'Structured interview stages with defined evaluation owners',triadProductivity:'Fewer rounds, faster hiring manager decisions',triadOutcome:'Reduced time-to-hire, improved hiring manager satisfaction',strategy:'But before you jump in, benchmark your current state. 👉 What’s your average time from first interview to final decision? 👉 How many back-and-forths does it take to schedule an interview?',actions:['Good morning and happy Monday! Let’s start the week with a TA strategy you can use right now at the Interview stage of your hiring process.','Still juggling interviews across random days and scattered time slots? Let’s fix that.','This week’s power play: "Interview Day Batching."','Instead of spreading interviews all over the calendar, assign specific days or time blocks by role or department. This small shift can unlock BIG results.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7382867987793600512'},
+  li8:{cat:'metrics',color:'#6aaa48',label:'Metrics & KPIs',access:'free',date:'10/2/2025 12:46',title:'Friends, let’s be real: a flood of applicants isn’t always a blessing',summary:'Friends, let’s be real: a flood of applicants isn’t always a blessing. Right now, many TA teams are overwhelmed by inbound volume.',triadProcess:'Layered metrics framework from funnel to outcome',triadProductivity:'Data infrastructure that supports proactive decisions',triadOutcome:'TA elevated from reporting to strategic intelligence',strategy:'A Talent Acquisition Systems & Strategy Professional (TASSP) can show you exactly where the funnel is breaking:',actions:['Friends, let’s be real: a flood of applicants isn’t always a blessing.','The real problem isn’t the surge in candidates.','A Talent Acquisition Systems & Strategy Professional (TASSP) can show you exactly where the funnel is breaking:','⚠ Where high-quality candidates drop out'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7379497124905766912'},
+  li9:{cat:'crm',color:'#7b6fd4',label:'Recruitment Marketing',access:'free',date:'10/24/2024 18:36',title:'BIG ANNOUNCEMENT: Our Fall Release is here, packed with game-changing features designed to',summary:'🎉 BIG ANNOUNCEMENT: Our Fall Release is here, packed with game-changing features designed to take your talent acquisition strategy to the next level. Here\'s a few of my favorite features in this release!',triadProcess:'Segmented pipeline campaigns with consistent cadence',triadProductivity:'Faster fills from warm talent vs. cold sourcing',triadOutcome:'Reduced sourcing cost, higher pipeline conversion',strategy:'1️⃣ Meet iCIMS Copilot Email Writing Assistant for CXM & CRM: Say goodbye to writer’s block and hello to effortlessly crafted, high-impact emails. Whether you\'re nurturing talent or launching recruitment campaigns, Copilot ensures your messages are optimized for response and ready to build pipelines in record time. 2️⃣ New Campaign Template Library in iCIMS CXM: No need to start from scratch! With',actions:['Stay tuned for more exciting updates! These features are going to transform how you hire. Let’s build something great together!  #HiringTech #TalentAcquisition #FallRelease2024'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3AugcPost%3A7255286020848455680'},
+  li10:{cat:'onboarding',color:'#4aadc0',label:'Onboarding',access:'free',date:'10/26/2025 15:35',title:'It\'s a spooky week carving pumpkins, streamlining your process, and another TA strategy yo',summary:'It\'s a spooky week carving pumpkins, streamlining your process, and another TA strategy you can use right now. Todays focus is on the onboarding stage.',triadProcess:'Workflow-based onboarding triggered by hire type and role',triadProductivity:'Consistent execution without manual coordinator overhead',triadOutcome:'Improved new hire readiness, reduced early attrition',strategy:'Here’s a simple question that can unlock big efficiency gains: Are you tracking task completion rates inside your onboarding packets?',actions:['It\'s a spooky week carving pumpkins, streamlining your process, and another TA strategy you can use right now. Todays focus is on the onboarding stage.','Here’s a simple question that can unlock big efficiency gains:','Are you tracking task completion rates inside your onboarding packets?','Most orgs build different onboarding packets by job type or location. Smart.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3AugcPost%3A7388236746586759168'},
+  li11:{cat:'metrics',color:'#6aaa48',label:'Metrics & KPIs',access:'free',date:'10/27/2025 15:18',title:'Temperatures are starting to fall, so it\'s time to heat up your TA strategy',summary:'Temperatures are starting to fall, so it\'s time to heat up your TA strategy. 🎯 Why Time‑to‑Fill and Time‑to‑Hire do matter (especially in healthcare): Before you execute any changes, set your baseline by benchmarking current metrics: What’s your average time to fill that nursing ',triadProcess:'Layered metrics framework from funnel to outcome',triadProductivity:'Data infrastructure that supports proactive decisions',triadOutcome:'TA elevated from reporting to strategic intelligence',strategy:'🎯 Why Time‑to‑Fill and Time‑to‑Hire do matter (especially in healthcare): Before you execute any changes, set your baseline by benchmarking current metrics: What’s your average time to fill that nursing vacancy? What’s your time to hire once you’ve screened candidates? Knowing this gives you a benchmark to measure against.',actions:['Temperatures are starting to fall, so it\'s time to heat up your TA strategy.','Why Time‑to‑Fill and Time‑to‑Hire do matter (especially in healthcare):','⚫The longer a role is open, the more marketing dollars you’re burning with job ads and agency spend.','⚫A vacant shift in healthcare means risk: patient care can suffer, staff burnout rises, the cost of overtime and agency fill can skyrocket.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7388594939611324416'},
+  li12:{cat:'metrics',color:'#6aaa48',label:'Metrics & KPIs',access:'free',date:'10/27/2025 15:29',title:'Good morning and happy Monday! Let’s start the week with a TA strategy you can use right n',summary:'Let’s start the week with a TA strategy you can use right now. If you want to know how healthy your recruiting engine really is, look at your hires per recruiter.',triadProcess:'Layered metrics framework from funnel to outcome',triadProductivity:'Data infrastructure that supports proactive decisions',triadOutcome:'TA elevated from reporting to strategic intelligence',strategy:'But here’s the catch: 🚨 You can’t make sense of this number unless you benchmark it first. Whether you’re looking at a month-over-month or quarter-over-quarter view, you need a consistent baseline to see what’s normal… and what’s a red flag.',actions:['Good morning and happy Monday! Let’s start the week with a TA strategy you can use right now.','Are your recruiters averaging 20 hires per quarter?','👏 That might be fantastic for a high-touch, complex hiring environment.','🚀 That could be a sign of high efficiency, or maybe even unsustainable workload, depending on your support model.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7388597605989105664'},
+  li13:{cat:'cx',color:'#a07bc8',label:'Candidate Experience',access:'free',date:'10/27/2025 15:47',title:'Happy Monday! It\'s "No Shave November" for those preparing the perfect beard or mustache f',summary:'It\'s "No Shave November" for those preparing the perfect beard or mustache for family gatherings next week. But for me, it\'s another TA strategy you can use today.',triadProcess:'Stage-triggered communication templates across the funnel',triadProductivity:'Eliminated ad-hoc status update requests to recruiters',triadOutcome:'Higher candidate satisfaction, improved offer acceptance',strategy:'We all know that longer applications lead to higher application drop-off. But what about the other side of the coin? What happens when your application is too short? Yes, there\'s such a thing.',actions:['Happy Monday! It\'s "No Shave November" for those preparing the perfect beard or mustache for family gatherings next week. But for me, it\'s another TA strategy you can use today.','We all know that longer applications lead to higher application drop-off. But what about the other side of the coin? What happens when your application is too short?','Today’s strategy: Find your application time sweet spot. 🍰','Benchmark your current average application completion time and drop-off rate.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7388602226358812673'},
+  li14:{cat:'metrics',color:'#6aaa48',label:'Metrics & KPIs',access:'free',date:'10/27/2025 16:02',title:'Good morning and hope everyone had a great weekend! Let’s start the short holiday week wit',summary:'Good morning and hope everyone had a great weekend! Let’s start the short holiday week with a TA strategy you can use right now.',triadProcess:'Layered metrics framework from funnel to outcome',triadProductivity:'Data infrastructure that supports proactive decisions',triadOutcome:'TA elevated from reporting to strategic intelligence',strategy:'How long are candidates sitting in each stage of your hiring funnel? If you aren’t measuring days in stage, you’re missing a huge opportunity to identify where your process is slowing down, creating friction, and costing you time and money. Do you have SLA\'s? Are they being followed?',actions:['Good morning and hope everyone had a great weekend! Let’s start the short holiday week with a TA strategy you can use right now.','All month we’ve been talking metrics that matter, and this week, we’re carving into a big one: stage-level bottlenecks in your hiring funnel. 🦃','Last week, we explored how application time connects to both candidate drop-off and recruiter overload. This week, we\'re following that thread downstream by asking:','How long are candidates sitting in each stage of your hiring funnel?'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7388605985428312065'},
+  li15:{cat:'metrics',color:'#6aaa48',label:'Metrics & KPIs',access:'free',date:'10/4/2025 13:30',title:'Optimizing your recruitment funnel isn’t just about filling roles. It’s about engineering ',summary:'Optimizing your recruitment funnel isn’t just about filling roles. It’s about engineering a seamless, data-informed experience from the first click to the first day.',triadProcess:'Layered metrics framework from funnel to outcome',triadProductivity:'Data infrastructure that supports proactive decisions',triadOutcome:'TA elevated from reporting to strategic intelligence',strategy:'High-performing TA leaders know that efficiency and experience go hand in hand. A true Talent Acquisition System & Strategy Professional (TASSP) helps you benchmark, test, and refine every stage of the funnel to: ✅ Reduce time-to-hire without sacrificing quality ✅ Strengthen your employer brand through consistent candidate experience ✅ Uncover process bottlenecks that waste recruiter time ✅ Turn h',actions:['Optimizing your recruitment funnel isn’t just about filling roles. It’s about engineering a seamless, data-informed experience from the first click to the first day.','Reduce time-to-hire without sacrificing quality','Strengthen your employer brand through consistent candidate experience','Uncover process bottlenecks that waste recruiter time'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7380232846650527745'},
+  li16:{cat:'metrics',color:'#6aaa48',label:'Metrics & KPIs',access:'free',date:'11/24/2025 21:06',title:'Happy Monday and happy December, friends  Ready to unwrap a simple career site strategy th',summary:'Happy Monday and happy December, friends 🎄 Ready to unwrap a simple career site strategy that delivers big impact? Here’s a festive upgrade for your hiring toolkit:  🎯 Strategy: Add a rotating spotlight section featuring your top three high priority roles.',triadProcess:'Layered metrics framework from funnel to outcome',triadProductivity:'Data infrastructure that supports proactive decisions',triadOutcome:'TA elevated from reporting to strategic intelligence',strategy:'🎯 Strategy: Add a rotating spotlight section featuring your top three high priority roles.',actions:['Happy Monday and happy December, friends  Ready to unwrap a simple career site strategy that delivers big impact?','Here’s a festive upgrade for your hiring toolkit:','Strategy: Add a rotating spotlight section featuring your top three high priority roles.','✨ Before you launch: benchmark.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7398829388160606208'},
+  li17:{cat:'crm',color:'#7b6fd4',label:'Recruitment Marketing',access:'free',date:'11/24/2025 21:18',title:'Good morning and happy Monday, friends. The December chill is settling in, the lights are ',summary:'Good morning and happy Monday, friends. The December chill is settling in, the lights are twinkling, and it is the perfect time to add a little seasonal sparkle to your TA strategy.',triadProcess:'Segmented pipeline campaigns with consistent cadence',triadProductivity:'Faster fills from warm talent vs. cold sourcing',triadOutcome:'Reduced sourcing cost, higher pipeline conversion',strategy:'Today’s strategy: Add a CRM campaign layer that injects short employee success moments into your existing multi-email campaigns.',actions:['Today’s strategy: Add a CRM campaign layer that injects short employee success moments into your existing multi-email campaigns.','🪚Test two versions of each story: one visual and one text-based.','🔨Segment audiences by pipeline or job family to ensure stories match the interests of recipients.','🔦Track which stories spark continued interaction inside your CRM.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7398832386303631360'},
+  li18:{cat:'engagement',color:'#3faa7c',label:'Engagement',access:'free',date:'11/24/2025 21:32',title:'Happy Monday and warm December wishes, friends ✨',summary:'Happy Monday and warm December wishes, friends 🎁✨ Let’s start this week with a strategy you can implement before the cocoa cools. Today’s strategy: Send candidates a structured preparation kit before the recruiter screen, delivered automatically through your ATS.',triadProcess:'Standardized screening with clear evaluation criteria',triadProductivity:'Faster screening decisions, reduced per-candidate time',triadOutcome:'Higher submit-to-hire ratios, improved data quality',strategy:'Today’s strategy: Send candidates a structured preparation kit before the recruiter screen, delivered automatically through your ATS.',actions:['Happy Monday and warm December wishes, friends ✨','Let’s start this week with a strategy you can implement before the cocoa cools.','Today’s strategy: Send candidates a structured preparation kit before the recruiter screen, delivered automatically through your ATS.','🧝Create one standard preparation kit that includes role clarity, call expectations, and FAQs.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7398835905245097984'},
+  li19:{cat:'interview',color:'#d4834a',label:'Interview',access:'free',date:'11/24/2025 21:43',title:'As we step into Christmas week, with calendars looking a little more like snowflake patter',summary:'As we step into Christmas week, with calendars looking a little more like snowflake patterns than meeting grids, here is a quick-win TA strategy to keep your hiring pipeline warm during a short holiday week. 🎄✨  Today’s Strategy: Create a hiring manager decision matrix to simplif',triadProcess:'Structured interview stages with defined evaluation owners',triadProductivity:'Fewer rounds, faster hiring manager decisions',triadOutcome:'Reduced time-to-hire, improved hiring manager satisfaction',strategy:'Today’s Strategy: Create a hiring manager decision matrix to simplify final selection by mapping skills, behaviors, and core business needs.',actions:['Today’s Strategy: Create a hiring manager decision matrix to simplify final selection by mapping skills, behaviors, and core business needs.','Why this matters: Decision matrices cut down hesitation, reduce bias, and help hiring leaders move from interview to offer with North Pole level precision.⭐','Test lightweight matrices versus more detailed scoring sheets to see what your hiring teams actually use.','Track decision timelines before and after implementing your matrix so you can measure the real impact.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7398838653357023232'},
+  li20:{cat:'postoffer',color:'#c25e58',label:'Post-Offer',access:'free',date:'11/24/2025 21:51',title:'Good morning and happy final Monday of December, friends  I hope your holiday weekend was ',summary:'Good morning and happy final Monday of December, friends 👋 I hope your holiday weekend was full of rest, good food, and maybe even a little recruitment-free magic. As we sit in that cozy space between Christmas and the New Year, let’s unwrap a quick but mighty strategy you can de',triadProcess:'Automated post-offer communications and compliance tracking',triadProductivity:'Reduced manual follow-up on BGC and compliance tasks',triadOutcome:'Lower no-show rate, faster time-to-start',strategy:'Post Offer Strategy: Introduce a welcome call within 48 hours of offer acceptance. This is your warm, friendly touchpoint to walk candidates through next steps and compliance milestones. Think of it like offering them a cup of hot cocoa for the journey ahead, something comforting that signals they are in good hands.',actions:['Today’s focus: Post offer through onboarding.','Test scripted calls versus a more informal, friendly tone.','Track the questions candidates ask so you can refine onboarding documents and automation.','Play with timing to see when your candidates are most responsive.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7398840601275949057'},
+  li21:{cat:'careersite',color:'#4e8ecf',label:'Career Site',access:'free',date:'12/16/2025 19:28',title:'New year, new hiring goals, same question every TA team should ask first',summary:'New year, new hiring goals, same question every TA team should ask first: 👉 Do candidates actually understand the job they’re applying for? 👀If candidates can’t picture the job, they shouldn’t be applying  Before you launch new sourcing campaigns or tweak your tech stack, benchma',triadProcess:'Optimized career site pages with clear apply paths',triadProductivity:'Higher qualified applicant volume per sourcing dollar',triadOutcome:'Lower cost-per-apply, stronger employer brand',strategy:'Before you launch new sourcing campaigns or tweak your tech stack, benchmark your baseline.',actions:['New year, new hiring goals, same question every TA team should ask first:','👉 Do candidates actually understand the job they’re applying for?','If candidates can’t picture the job, they shouldn’t be applying','Before you launch new sourcing campaigns or tweak your tech stack, benchmark your baseline.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7406777239805210624'},
+  li22:{cat:'engagement',color:'#3faa7c',label:'Engagement',access:'free',date:'12/16/2025 19:51',title:'With today being Martin Luther King Jr. Day in the US, it’s a good reminder that progress ',summary:'With today being Martin Luther King Jr. Day in the US, it’s a good reminder that progress starts with listening.',triadProcess:'Standardized screening with clear evaluation criteria',triadProductivity:'Faster screening decisions, reduced per-candidate time',triadOutcome:'Higher submit-to-hire ratios, improved data quality',strategy:'Before changing your screening approach, benchmark your baseline. 🏴What’s your current screen-to-interview conversion rate? 🏴How many candidates withdraw late stage? 🏴How confident do recruiters feel that they’re prioritizing the right people? Without that snapshot, improvement is just a guess.',actions:['With today being Martin Luther King Jr. Day in the US, it’s a good reminder that progress starts with listening.','And that lesson applies directly to how we screen candidates.','If you don’t understand motivation early, you pay for it later.','Before changing your screening approach, benchmark your baseline.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7406782938559918080'},
+  li23:{cat:'interview',color:'#d4834a',label:'Interview',access:'free',date:'12/16/2025 19:59',title:'As January wraps up, most TA teams are feeling one of two things: momentum… or frustration',summary:'As January wraps up, most TA teams are feeling one of two things: momentum… or frustration. Here’s the question that decides which one you’re in: 👉 Are your interviews aligned to real offer readiness, or just process motion?',triadProcess:'Structured interview stages with defined evaluation owners',triadProductivity:'Fewer rounds, faster hiring manager decisions',triadOutcome:'Reduced time-to-hire, improved hiring manager satisfaction',strategy:'Here’s the question that decides which one you’re in: 👉 Are your interviews aligned to real offer readiness, or just process motion? If alignment starts after interviews, it’s already too late.',actions:['As January wraps up, most TA teams are feeling one of two things: momentum… or frustration.','Here’s the question that decides which one you’re in:','👉 Are your interviews aligned to real offer readiness, or just process motion?','If alignment starts after interviews, it’s already too late.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7406785107610591232'},
+  li24:{cat:'crm',color:'#7b6fd4',label:'Recruitment Marketing',access:'free',date:'2/3/2024 15:15',title:'Transform Your Recruitment Strategy with AI-Powered Campaigns',summary:'Transform Your Recruitment Strategy with AI-Powered Campaigns! Do you already have a ChatGPT+ subscription?',triadProcess:'Segmented pipeline campaigns with consistent cadence',triadProductivity:'Faster fills from warm talent vs. cold sourcing',triadOutcome:'Reduced sourcing cost, higher pipeline conversion',strategy:'Are you ready to revolutionize your talent acquisition process? Introducing Recruitment Marketing GPT – the tool that’s changing the game for recruiters and sourcing teams everywhere. 🚀',actions:['Transform Your Recruitment Strategy with AI-Powered Campaigns!','Do you already have a ChatGPT+ subscription? If you do, this tool is free to use.','Elevate your recruitment strategy and convert more prospects into applicants effortlessly.','Discover how Recruitment Marketing GPT can streamline your sourcing process. https://lnkd.in/ePR4FAUR'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7159564953308291073'},
+  li25:{cat:'crm',color:'#7b6fd4',label:'Recruitment Marketing',access:'free',date:'3/25/2025 14:57',title:'Transforming talent acquisition starts with a simple commitment: Make your process 1% bett',summary:'Transforming talent acquisition starts with a simple commitment: Make your process 1% better every day, and watch small steps lead to extraordinary results. Here\'s one area to consider today  CRM Campaigns to Nurture Passive Talent 🎯 Passive Talent Isn’t Cold—They’re Just Waiting',triadProcess:'Segmented pipeline campaigns with consistent cadence',triadProductivity:'Faster fills from warm talent vs. cold sourcing',triadOutcome:'Reduced sourcing cost, higher pipeline conversion',strategy:'✅ Efficiency Tip: Segment your talent pipelines by role or skill. Automate value-driven content—career path stories, culture highlights, or growth opportunities.',actions:['Transforming talent acquisition starts with a simple commitment: Make your process 1% better every day, and watch small steps lead to extraordinary results.','Here\'s one area to consider today','CRM Campaigns to Nurture Passive Talent','Passive Talent Isn’t Cold—They’re Just Waiting for the Right Message.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7310313917858078720'},
+  li26:{cat:'engagement',color:'#3faa7c',label:'Engagement',access:'free',date:'3/25/2025 15:55',title:'Leadership in talent acquisition isn’t about giant leaps—it’s about the courage to improve',summary:'Leadership in talent acquisition isn’t about giant leaps—it’s about the courage to improve just 1% each day and inspire others to follow. Here\'s one area to consider today  Screening & Recruiter Engagement  📍 Top talent isn’t impressed by speed alone—they want relevance and conne',triadProcess:'Standardized screening with clear evaluation criteria',triadProductivity:'Faster screening decisions, reduced per-candidate time',triadOutcome:'Higher submit-to-hire ratios, improved data quality',strategy:'✅ Efficiency Tip: Standardize initial screening templates with flexible questions tied to role impact, not just resume keywords.',actions:['Leadership in talent acquisition isn’t about giant leaps—it’s about the courage to improve just 1% each day and inspire others to follow.','Here\'s one area to consider today','Screening & Recruiter Engagement','Top talent isn’t impressed by speed alone—they want relevance and connection.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7310328540997058560'},
+  li27:{cat:'interview',color:'#d4834a',label:'Interview',access:'free',date:'3/25/2025 15:57',title:'Innovative hiring starts with consistency—refining one step at a time until excellence bec',summary:'Innovative hiring starts with consistency—refining one step at a time until excellence becomes your standard. Here\'s one area to consider today  Interview Scheduling Strategies  📍 Great candidates won’t wait around for clunky scheduling.',triadProcess:'Structured interview stages with defined evaluation owners',triadProductivity:'Fewer rounds, faster hiring manager decisions',triadOutcome:'Reduced time-to-hire, improved hiring manager satisfaction',strategy:'✅ Efficiency Tip: Implement self-scheduling tools or centralized calendar integrations. Cut scheduling friction by 60%—and cut drop-off rates, too.',actions:['Innovative hiring starts with consistency—refining one step at a time until excellence becomes your standard.','Here\'s one area to consider today','Interview Scheduling Strategies','Great candidates won’t wait around for clunky scheduling.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7310329045374717952'},
+  li28:{cat:'onboarding',color:'#4aadc0',label:'Onboarding',access:'free',date:'3/29/2025 20:37',title:'When you lead with purpose and improve with intention, every 1% adds up to a strategy that',summary:'When you lead with purpose and improve with intention, every 1% adds up to a strategy that attracts greatness. Here\'s one area to consider today  Pre-Boarding & Onboarding Strategy  📍 The experience doesn’t begin on Day 1, it begins the moment the offer is accepted.',triadProcess:'Workflow-based onboarding triggered by hire type and role',triadProductivity:'Consistent execution without manual coordinator overhead',triadOutcome:'Improved new hire readiness, reduced early attrition',strategy:'✅ Efficiency Tip: Build a structured pre-boarding plan. Automate welcome communications, provide access to tools early, and offer a sneak peek into culture and community.',actions:['When you lead with purpose and improve with intention, every 1% adds up to a strategy that attracts greatness.','Here\'s one area to consider today','Pre-Boarding & Onboarding Strategy','The experience doesn’t begin on Day 1, it begins the moment the offer is accepted.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7311848946056716289'},
+  li29:{cat:'onboarding',color:'#4aadc0',label:'Onboarding',access:'free',date:'3/30/2025 12:51',title:'Talent acquisition excellence isn’t an end goal, it’s a daily pursuit of progress, driven ',summary:'Talent acquisition excellence isn’t an end goal, it’s a daily pursuit of progress, driven by innovation and intention. Consider improving this process today.',triadProcess:'Workflow-based onboarding triggered by hire type and role',triadProductivity:'Consistent execution without manual coordinator overhead',triadOutcome:'Improved new hire readiness, reduced early attrition',strategy:'✅ Efficiency Tip: Launch pre-boarding touchpoints immediately post-offer. Automate welcome emails, day-one logistics, and personalized role prep.',actions:['Talent acquisition excellence isn’t an end goal, it’s a daily pursuit of progress, driven by innovation and intention.','Consider improving this process today.','The offer’s signed, but the experience has just begun.','Efficiency Tip: Launch pre-boarding touchpoints immediately post-offer. Automate welcome emails, day-one logistics, and personalized role prep.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7312094132015927296'},
+  li30:{cat:'careersite',color:'#4e8ecf',label:'Career Site',access:'free',date:'4/13/2025 14:26',title:'A long-term hiring vision doesn’t require a total overhaul—just the discipline to keep mov',summary:'A long-term hiring vision doesn’t require a total overhaul—just the discipline to keep moving forward, one better step at a time. Here\'s one area to consider today  Top of Funnel – Career Site Optimization  📍 Your hiring strategy begins where candidates first click—your career si',triadProcess:'Optimized career site pages with clear apply paths',triadProductivity:'Higher qualified applicant volume per sourcing dollar',triadOutcome:'Lower cost-per-apply, stronger employer brand',strategy:'📍 Your hiring strategy begins where candidates first click—your career site.',actions:['A long-term hiring vision doesn’t require a total overhaul—just the discipline to keep moving forward, one better step at a time.','Here\'s one area to consider today','Top of Funnel – Career Site Optimization','Your hiring strategy begins where candidates first click—your career site.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7317191535496683520'},
+  li31:{cat:'crm',color:'#7b6fd4',label:'Recruitment Marketing',access:'free',date:'4/20/2025 13:24',title:'Every extraordinary hiring outcome starts with one small decision: make today’s process be',summary:'Every extraordinary hiring outcome starts with one small decision: make today’s process better than yesterday’s. Here\'s one area to consider today  CRM Campaigns to Engage Passive Talent  📍 Passive candidates aren’t cold—they’re just waiting for relevance.',triadProcess:'Segmented pipeline campaigns with consistent cadence',triadProductivity:'Faster fills from warm talent vs. cold sourcing',triadOutcome:'Reduced sourcing cost, higher pipeline conversion',strategy:'✅ Efficiency Tip: Use segmented CRM pipeline campaigns to send content that speaks to candidate aspirations—growth stories, role spotlights, and culture insights.',actions:['Every extraordinary hiring outcome starts with one small decision: make today’s process better than yesterday’s.','Here\'s one area to consider today','CRM Campaigns to Engage Passive Talent','Passive candidates aren’t cold—they’re just waiting for relevance.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7319712469763952641'},
+  li32:{cat:'engagement',color:'#3faa7c',label:'Engagement',access:'free',date:'4/27/2025 13:34',title:'True visionaries in talent acquisition see potential not just in people, but in processes,',summary:'True visionaries in talent acquisition see potential not just in people, but in processes, improving them 1% at a time. Here\'s one area to consider today  Post-Offer & Background Screening  📍 The offer isn’t the finish line, it\'s the bridge to Day 1.',triadProcess:'Standardized screening with clear evaluation criteria',triadProductivity:'Faster screening decisions, reduced per-candidate time',triadOutcome:'Higher submit-to-hire ratios, improved data quality',strategy:'✅ Efficiency Tip: Automate background checks and integrate systems to track drug screening progress. Delays here risk candidate drop-off.',actions:['True visionaries in talent acquisition see potential not just in people, but in processes, improving them 1% at a time.','Here\'s one area to consider today','Post-Offer & Background Screening','The offer isn’t the finish line, it\'s the bridge to Day 1.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7322251694321422336'},
+  li33:{cat:'offer',color:'#c9a96e',label:'Offer',access:'free',date:'4/6/2025 14:53',title:'The best talent strategies aren’t built in a day—they’re crafted through daily dedication ',summary:'The best talent strategies aren’t built in a day—they’re crafted through daily dedication to doing things just a little better. Here\'s one area to consider today  Offer Strategy Excellence  🎯 You’ve found the right candidate—now don’t lose them at the offer stage.',triadProcess:'Mapped offer workflow with SLAs and approval routing',triadProductivity:'Faster offer delivery with fewer manual steps',triadOutcome:'Reduced offer-to-acceptance time, fewer lost candidates',strategy:'✅ Efficiency Tip: Build offer templates by role level and pre-align compensation approvals. Speed is your competitive edge.',actions:['The best talent strategies aren’t built in a day—they’re crafted through daily dedication to doing things just a little better.','Here\'s one area to consider today','You’ve found the right candidate—now don’t lose them at the offer stage.','Efficiency Tip: Build offer templates by role level and pre-align compensation approvals. Speed is your competitive edge.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7314661547966889984'},
+  li34:{cat:'careersite',color:'#4e8ecf',label:'Career Site',access:'free',date:'5/11/2025 13:19',title:'Great leaders know that small, consistent improvements compound into unstoppable momentum ',summary:'Great leaders know that small, consistent improvements compound into unstoppable momentum in hiring success. Here\'s one area to consider today.',triadProcess:'Optimized career site pages with clear apply paths',triadProductivity:'Higher qualified applicant volume per sourcing dollar',triadOutcome:'Lower cost-per-apply, stronger employer brand',strategy:'✅ Efficiency Tip: Optimize your career site for mobile and speed. Most candidates bounce in under 10 seconds if it’s clunky.',actions:['Great leaders know that small, consistent improvements compound into unstoppable momentum in hiring success.','Here\'s one area to consider today.','Attracting Talent with Career Sites','First impressions start before the resume.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7327321396563374080'},
+  li35:{cat:'interview',color:'#d4834a',label:'Interview',access:'free',date:'5/29/2025 15:30',title:'Make Your Hiring 1% Better Today',summary:'🧠 Make Your Hiring 1% Better Today 🗓️ Today’s Focus: Interview Scheduling Optimization  If you’re still juggling calendars manually, you’re inviting friction into your hiring funnel. What happens when your best candidates ghost you?',triadProcess:'Structured interview stages with defined evaluation owners',triadProductivity:'Fewer rounds, faster hiring manager decisions',triadOutcome:'Reduced time-to-hire, improved hiring manager satisfaction',strategy:'If you’re still juggling calendars manually, you’re inviting friction into your hiring funnel. And friction kills momentum.',actions:['Make Your Hiring 1% Better Today','🗓 Today’s Focus: Interview Scheduling Optimization','If you’re still juggling calendars manually, you’re inviting friction into your hiring funnel. And friction kills momentum.','What happens when your best candidates ghost you?'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7333877288213626880'},
+  li36:{cat:'onboarding',color:'#4aadc0',label:'Onboarding',access:'free',date:'6/10/2025 16:00',title:'🚀 Big news from iCIMS, we just announced iCIMS Agents, and they’re redefining what’s possi',summary:'🚀 Big news from iCIMS, we just announced iCIMS Agents, and they’re redefining what’s possible in talent acquisition. Built responsibly on billions of real-world hiring data points, our agents go beyond the basics of recruiting, hiring, and onboarding to unlock next-level hiring e',triadProcess:'Workflow-based onboarding triggered by hire type and role',triadProductivity:'Consistent execution without manual coordinator overhead',triadOutcome:'Improved new hire readiness, reduced early attrition',strategy:'🎥 Join us June 17 for iCIMS NEXT, our virtual user conference, where we’ll show you how iCIMS Agents transform TA strategy for today and tomorrow.',actions:['But don’t just take my word for it…','🎥 Join us June 17 for iCIMS NEXT, our virtual user conference, where we’ll show you how iCIMS Agents transform TA strategy for today and tomorrow.','🔗 I’ll be there, and I’d love for you to join me! Register using my link: https://lnkd.in/euchkjDv','Let’s explore what’s next in hiring, together.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3AugcPost%3A7338233669012058114'},
+  li37:{cat:'postoffer',color:'#c25e58',label:'Post-Offer',access:'free',date:'6/13/2025 13:47',title:'Happy Monday friends! Let\'s talk strategy. Today\'s strategy is focused on post-offer compl',summary:'Today\'s strategy is focused on post-offer compliance. 🚨 Post-Offer Drag Is Real, And It’s Killing Your Time-to-Start  You’ve made the offer.',triadProcess:'Automated post-offer communications and compliance tracking',triadProductivity:'Reduced manual follow-up on BGC and compliance tasks',triadOutcome:'Lower no-show rate, faster time-to-start',strategy:'📊 Start by benchmarking: Avg. time from offer to background check completion % of candidates dropping off post-offer Candidate feedback on communication clarity',actions:['Happy Monday friends! Let\'s talk strategy. Today\'s strategy is focused on post-offer compliance.','Post-Offer Drag Is Real, And It’s Killing Your Time-to-Start','Avg. time from offer to background check completion','% of candidates dropping off post-offer'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7339287353317842945'},
+  li38:{cat:'crm',color:'#7b6fd4',label:'Recruitment Marketing',access:'free',date:'6/15/2025 11:25',title:'Let’s talk about recruitment marketing for a moment. Attracting and converting talent can ',summary:'Let’s talk about recruitment marketing for a moment. Attracting and converting talent can be a real art if you take the time to build the right pipeline to target.',triadProcess:'Segmented pipeline campaigns with consistent cadence',triadProductivity:'Faster fills from warm talent vs. cold sourcing',triadOutcome:'Reduced sourcing cost, higher pipeline conversion',strategy:'Here’s today’s actionable insight: Why Your CRM Campaigns Are Ghosting You 👻 (And How to Fix It)',actions:['Let’s talk about recruitment marketing for a moment. Attracting and converting talent can be a real art if you take the time to build the right pipeline to target.','Here’s today’s actionable insight: Why Your CRM Campaigns Are Ghosting You 👻 (And How to Fix It)','Are you blasting thousands of passive candidates… and hearing crickets? 🦗','You might be “spraying and praying” and that’s not a strategy, it’s wishful thinking.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7339976366345379840'},
+  li39:{cat:'careersite',color:'#4e8ecf',label:'Career Site',access:'free',date:'6/18/2025 21:43',title:'Here\'s your Monday dose 🧪 of TA Strategy! Let\'s improve together, one area of the funnel a',summary:'Here\'s your Monday dose 🧪 of TA Strategy! Let\'s improve together, one area of the funnel at a time.',triadProcess:'Optimized career site pages with clear apply paths',triadProductivity:'Higher qualified applicant volume per sourcing dollar',triadOutcome:'Lower cost-per-apply, stronger employer brand',strategy:'Most teams focus on the job postings... but forget the experience of the site itself. And that’s where you\'re either winning talent or losing it silently.',actions:['Here\'s your Monday dose 🧪 of TA Strategy! Let\'s improve together, one area of the funnel at a time.','Is Your Career Site a Magnet or a Maze?','Is your career site converting visitors into candidates, or are they bouncing before they even explore?','Most teams focus on the job postings... but forget the experience of the site itself. And that’s where you\'re either winning talent or losing it silently.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7341219034027147264'},
+  li40:{cat:'engagement',color:'#3faa7c',label:'Engagement',access:'free',date:'6/24/2025 1:25',title:'Happy Monday, friends! Here’s your daily dose of TA strategy. Keep improving your process ',summary:'Here’s your daily dose of TA strategy. Keep improving your process 1% every day.',triadProcess:'Standardized screening with clear evaluation criteria',triadProductivity:'Faster screening decisions, reduced per-candidate time',triadOutcome:'Higher submit-to-hire ratios, improved data quality',strategy:'If your hiring manager hates your candidates… here’s what’s really going on.',actions:['Happy Monday, friends! Here’s your daily dose of TA strategy. Keep improving your process 1% every day.','If your hiring manager hates your candidates… here’s what’s really going on.','Recruiters: If your hiring manager keeps saying “not quite what I’m looking for” after every submittal, here’s the truth:','You don’t have a sourcing problem.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7343086957595443200'},
+  li41:{cat:'crm',color:'#7b6fd4',label:'Recruitment Marketing',access:'free',date:'6/30/2025 23:12',title:'Hi friends, it\'s Monday and you know what that means, another dose of TA Strategy. Today\'s',summary:'Hi friends, it\'s Monday and you know what that means, another dose of TA Strategy. Today\'s topic is back to filling the CRM funnel.',triadProcess:'Segmented pipeline campaigns with consistent cadence',triadProductivity:'Faster fills from warm talent vs. cold sourcing',triadOutcome:'Reduced sourcing cost, higher pipeline conversion',strategy:'📊 Always benchmark first what are your current campaign engagement and conversion rates? Document it, so you know exactly where you stand to prove where you’re going.',actions:['Always benchmark first what are your current campaign engagement and conversion rates? Document it, so you know exactly where you stand to prove where you’re going.','Efficiency Tip: Segment talent pipelines by role or skill. Automate targeted content like career journeys, behind-the-scenes culture snapshots, and enticing growth opportunities.','🚀 Productivity Win: Less cold sourcing means recruiters can focus on engaging warm leads.','💰 Financial Impact: Converting nurtured leads costs significantly less than acquiring new candidates. Reduce your sourcing spend while boosting pipeline quality.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7345590169174982657'},
+  li42:{cat:'offer',color:'#c9a96e',label:'Offer',access:'free',date:'7/19/2025 12:01',title:'Happy Monday, friends! Today we\'re tackling a hidden mess in many TA strategies, offer let',summary:'Today we\'re tackling a hidden mess in many TA strategies, offer letters. Let\'s talk about why it\'s time to clean up the chaos.',triadProcess:'Mapped offer workflow with SLAs and approval routing',triadProductivity:'Faster offer delivery with fewer manual steps',triadOutcome:'Reduced offer-to-acceptance time, fewer lost candidates',strategy:'🔍 How many different offer letters does your organization use? If your answer is anywhere near 30 or 40… It’s time for an intervention. 😬',actions:['Happy Monday, friends! Today we\'re tackling a hidden mess in many TA strategies, offer letters. Let\'s talk about why it\'s time to clean up the chaos.','🔍 How many different offer letters does your organization use?','If your answer is anywhere near 30 or 40… It’s time for an intervention. 😬','Here’s the truth: Every time a new “special case” gets its own offer letter, you’re not just customizing you’re complicating. And complexity is the enemy of compliance.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7352306619780603904'},
+  li43:{cat:'onboarding',color:'#4aadc0',label:'Onboarding',access:'free',date:'7/19/2025 12:31',title:'Happy Monday, friends',summary:'Happy Monday, friends 👋 Let’s talk about another high impact lever in your hiring strategy: pre-boarding. That gap between offer acceptance and Day 1?',triadProcess:'Workflow-based onboarding triggered by hire type and role',triadProductivity:'Consistent execution without manual coordinator overhead',triadOutcome:'Improved new hire readiness, reduced early attrition',strategy:'🧠 Benchmark before you build. Start by capturing your current pre-boarding and onboarding KPIs: • Time-to-onboard • Completion rates of docs/training • Engagement on pre-Day 1 comms • New hire clarity/confidence levels Without that baseline, you’re flying blind.',actions:['Let’s talk about another high impact lever in your hiring strategy: pre-boarding.','That gap between offer acceptance and Day 1? It’s either a trust-building runway or a silent momentum killer.','Start by capturing your current pre-boarding and onboarding KPIs:','Completion rates of docs/training'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7352314193628258305'},
+  li44:{cat:'metrics',color:'#6aaa48',label:'Metrics & KPIs',access:'free',date:'7/19/2025 13:00',title:'Last week, I joined a System Admin Insights session with the Integral Recruiting Design te',summary:'Last week, I joined a System Admin Insights session with the Integral Recruiting Design team a powerhouse group of TA tech admins from top-tier companies. Our conversation landed on a common challenge: Who\'s really owning the strategy behind our talent systems?',triadProcess:'Layered metrics framework from funnel to outcome',triadProductivity:'Data infrastructure that supports proactive decisions',triadOutcome:'TA elevated from reporting to strategic intelligence',strategy:'Our conversation landed on a common challenge: Who\'s really owning the strategy behind our talent systems?',actions:['Last week, I joined a System Admin Insights session with the Integral Recruiting Design team a powerhouse group of TA tech admins from top-tier companies.','Our conversation landed on a common challenge: Who\'s really owning the strategy behind our talent systems?','Yes, we\'ve got admins keeping systems alive. We\'ve got ops teams making processes work. But who\'s bridging the gap between the tech, the team, and the talent strategy?','That question led me to introduce something I\'ve been thinking about for a while: the Talent Acquisition Systems & Strategy Professional (TASSP).'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3AugcPost%3A7352321428001562624'},
+  li45:{cat:'cx',color:'#a07bc8',label:'Candidate Experience',access:'free',date:'7/21/2025 1:18',title:'Welcome back from the weekend, ready to sharpen your strategy',summary:'Welcome back from the weekend, ready to sharpen your strategy? Let’s talk about one of the most overlooked (yet powerful) automation moves in recruiting: contextual auto-texting at every hiring stage 📱✅  Here’s the reality: most recruiters are so heads-down, they forget to messag',triadProcess:'Stage-triggered communication templates across the funnel',triadProductivity:'Eliminated ad-hoc status update requests to recruiters',triadOutcome:'Higher candidate satisfaction, improved offer acceptance',strategy:'Here’s the reality: most recruiters are so heads-down, they forget to message candidates at critical moments like confirming interviews or celebrating an offer. But what if you didn’t have to remember?',actions:['Welcome back from the weekend, ready to sharpen your strategy?','Let’s talk about one of the most overlooked (yet powerful) automation moves in recruiting: contextual auto-texting at every hiring stage 📱','✨ Enter: Stage-based auto-texting, configured directly in your ATS.','A candidate schedules their phone screen → They get a warm “Congrats! Here’s how to prep 📞” message.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7352869564818288641'},
+  li46:{cat:'onboarding',color:'#4aadc0',label:'Onboarding',access:'free',date:'7/28/2025 14:47',title:'How is your TA org leveling up in 2025',summary:'How is your TA org leveling up in 2025? When this article came out last December, it struck a chord.',triadProcess:'Workflow-based onboarding triggered by hire type and role',triadProductivity:'Consistent execution without manual coordinator overhead',triadOutcome:'Improved new hire readiness, reduced early attrition',strategy:'That’s exactly why I introduced the Talent Acquisition Systems and Strategy Professional (TASSP) framework last week. It’s not just about technical know-how it’s about bridging the gap between recruiting strategy, system configuration, and measurable business outcomes.',actions:['How is your TA org leveling up in 2025?','Fast forward to today, and that “level up” mindset is more critical than ever. Especially in how we approach talent acquisition systems.','🔗 Curious how your team is approaching and executing systems and strategy in 2025 now that we are halfway through the year? Let’s compare notes.','#TASSP #AIRecruiting #ATS #TalentAcquisition #RecruiterFuture #HRTech'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3AugcPost%3A7355609775323172885'},
+  li47:{cat:'metrics',color:'#6aaa48',label:'Metrics & KPIs',access:'free',date:'7/30/2025 14:35',title:'“We need to reduce turnover.”',summary:'“We need to reduce turnover.”  Your CHRO drops the directive. All eyes go to Talent Acquisition.',triadProcess:'Layered metrics framework from funnel to outcome',triadProductivity:'Data infrastructure that supports proactive decisions',triadOutcome:'TA elevated from reporting to strategic intelligence',strategy:'A Talent Acquisition Systems & Strategy Professional isn’t just a button-clicker or a report-runner. They’re the connective tissue between strategy and system, and their education must cover two mission-critical domains:',actions:['Your CHRO drops the directive. All eyes go to Talent Acquisition.','The VP or Director of TA builds a plan.','They ask their system admins for data.','Because the tools and training never connected.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7356331547114762241'},
+  li48:{cat:'crm',color:'#7b6fd4',label:'Recruitment Marketing',access:'free',date:'7/7/2025 19:59',title:'Hi friends, welcome back from the weekend. I want to continue on last week’s theme around ',summary:'Hi friends, welcome back from the weekend. I want to continue on last week’s theme around CRM strategy.',triadProcess:'Segmented pipeline campaigns with consistent cadence',triadProductivity:'Faster fills from warm talent vs. cold sourcing',triadOutcome:'Reduced sourcing cost, higher pipeline conversion',strategy:'🔬 Want to see results? It starts by benchmarking your current university recruiting outcomes: 👉 Which programs are consistently producing hires? 👉 Where are your top early talent performers coming from?',actions:['Hi friends, welcome back from the weekend. I want to continue on last week’s theme around CRM strategy. Today\'s topic is leveraging the CRM for Precision University Recruiting.','Generic outreach won’t cut it anymore. If you’re still running “one-size-fits-all” campaigns across universities, you’re not recruiting you’re broadcasting.','🔬 Want to see results? It starts by benchmarking your current university recruiting outcomes:','👉 Which programs are consistently producing hires?'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7348078247730987008'},
+  li49:{cat:'interview',color:'#d4834a',label:'Interview',access:'free',date:'8/1/2025 13:09',title:'Happy Monday, friends',summary:'Happy Monday, friends 👋 Here’s a hard truth I’ve seen too many organizations learn the hard way during talent acquisition software rollouts:  If your UAT only tests the “happy path,” you’re not truly ready. Yes, designing for the most common use case is essential, but if you stop',triadProcess:'Structured interview stages with defined evaluation owners',triadProductivity:'Fewer rounds, faster hiring manager decisions',triadOutcome:'Reduced time-to-hire, improved hiring manager satisfaction',strategy:'Yes, designing for the most common use case is essential, but if you stop there, you’re leaving yourself vulnerable to failure in your highest-stakes moments. I’m talking about:',actions:['Here’s a hard truth I’ve seen too many organizations learn the hard way during talent acquisition software rollouts:','If your UAT only tests the “happy path,” you’re not truly ready.','Yes, designing for the most common use case is essential, but if you stop there, you’re leaving yourself vulnerable to failure in your highest-stakes moments. I’m talking about:','High-volume reqs opened with minimal prep'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7357034863167692802'},
+  li50:{cat:'careersite',color:'#4e8ecf',label:'Career Site',access:'free',date:'8/1/2025 13:21',title:'Happy Monday, friends',summary:'Happy Monday, friends 👋 Let’s start the week with a TA strategy that pays off fast, and keeps compounding. 📍 Today’s Focus: Career Sites That Convert Your career site isn’t just a digital job board, it’s your talent storefront.',triadProcess:'Optimized career site pages with clear apply paths',triadProductivity:'Higher qualified applicant volume per sourcing dollar',triadOutcome:'Lower cost-per-apply, stronger employer brand',strategy:'📍 Today’s Focus: Career Sites That Convert Your career site isn’t just a digital job board, it’s your talent storefront. The first impression. The silent recruiter working 24/7. But before we talk upgrades…',actions:['Let’s start the week with a TA strategy that pays off fast, and keeps compounding.','Today’s Focus: Career Sites That Convert','Your career site isn’t just a digital job board, it’s your talent storefront. The first impression. The silent recruiter working 24/7.','What’s your bounce rate? Time on site? Conversion-to-apply rate?'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7357037793191075840'},
+  li51:{cat:'engagement',color:'#3faa7c',label:'Engagement',access:'free',date:'8/12/2025 15:00',title:'Today, we’re focusing on a critical pivot point in your recruiting funnel: candidate scree',summary:'☀️ Today, we’re focusing on a critical pivot point in your recruiting funnel: candidate screening and recruiter engagement, the stage that sits right between interest and interviews. Before you make any changes, benchmark your: 📊 Screen-to-interview ratio ⏱ Time spent per candida',triadProcess:'Standardized screening with clear evaluation criteria',triadProductivity:'Faster screening decisions, reduced per-candidate time',triadOutcome:'Higher submit-to-hire ratios, improved data quality',strategy:'Before you make any changes, benchmark your: 📊 Screen-to-interview ratio ⏱ Time spent per candidate 💬 Candidate feedback scores about their recruiter experience Without that snapshot, you can’t know if your screening process is driving efficiency or quietly bleeding top talent.',actions:['Today, we’re focusing on a critical pivot point in your recruiting funnel: candidate screening and recruiter engagement, the stage that sits right between interest and interviews.','Before you make any changes, benchmark your:','Candidate feedback scores about their recruiter experience','Without that snapshot, you can’t know if your screening process is driving efficiency or quietly bleeding top talent.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7361048830668115969'},
+  li52:{cat:'metrics',color:'#6aaa48',label:'Metrics & KPIs',access:'free',date:'8/19/2025 20:27',title:'Just read a powerful piece by John Vlastelica on what it really takes to transform TA',summary:'Just read a powerful piece by John Vlastelica on what it really takes to transform TA:  ✅ Define “what good looks like” ✅ Build inspection mechanisms to ensure accountability  This is exactly where the TASSP role becomes a game-changer. A Talent Acquisition Systems & Strategy Pro',triadProcess:'Layered metrics framework from funnel to outcome',triadProductivity:'Data infrastructure that supports proactive decisions',triadOutcome:'TA elevated from reporting to strategic intelligence',strategy:'A Talent Acquisition Systems & Strategy Professional (TASSP) isn’t just managing tools; they’re enabling inspection and behavior change at scale. By aligning systems, data, and process insights, a TASSP helps orgs see what’s working, identify what’s not, and coach toward better outcomes.',actions:['Just read a powerful piece by John Vlastelica on what it really takes to transform TA:','Build inspection mechanisms to ensure accountability','This is exactly where the TASSP role becomes a game-changer.','Real-time visibility into strategic recruiting behaviors'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7363667881370230787'},
+  li53:{cat:'onboarding',color:'#4aadc0',label:'Onboarding',access:'free',date:'8/20/2025 21:23',title:'“Congratulations! You’re now our TA system admin.” Sound familiar',summary:'You’re now our TA system admin.” Sound familiar? In too many organizations, that moment marks the start and end of onboarding for someone suddenly responsible for the most complex ecosystem in HR: the TA tech stack.',triadProcess:'Workflow-based onboarding triggered by hire type and role',triadProductivity:'Consistent execution without manual coordinator overhead',triadOutcome:'Improved new hire readiness, reduced early attrition',strategy:'No context. No roadmap. No strategy. Just a hope they’ll “figure it out.” This is exactly where the TASSP approach flips the script.',actions:['“Congratulations! You’re now our TA system admin.” Sound familiar?','In too many organizations, that moment marks the start and end of onboarding for someone suddenly responsible for the most complex ecosystem in HR: the TA tech stack.','No context. No roadmap. No strategy. Just a hope they’ll “figure it out.”','This is exactly where the TASSP approach flips the script.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7364044549461012481'},
+  li54:{cat:'careersite',color:'#4e8ecf',label:'Career Site',access:'free',date:'8/21/2025 14:59',title:'Happy Monday, friends',summary:'Happy Monday, friends 👋 Is your career site a magnet for top talent, or a digital ghost town? 🎯 Strategy Spotlight: Audit your career site’s conversion performance.',triadProcess:'Optimized career site pages with clear apply paths',triadProductivity:'Higher qualified applicant volume per sourcing dollar',triadOutcome:'Lower cost-per-apply, stronger employer brand',strategy:'🎯 Strategy Spotlight: Audit your career site’s conversion performance. Here’s the deal: your career site is your front door. If it’s slow to load, hard to navigate, or doesn’t inspire action, you’re not just losing clicks, you’re losing qualified candidates.',actions:['Is your career site a magnet for top talent, or a digital ghost town?','Strategy Spotlight: Audit your career site’s conversion performance.','Use heatmaps to track clicks and drop-off zones.','Run A/B tests on job titles, images, and EVP copy.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7364310100397752321'},
+  li55:{cat:'crm',color:'#7b6fd4',label:'Recruitment Marketing',access:'free',date:'9/12/2025 14:48',title:'Good morning and happy Monday! Let’s start the week with a TA sourcing strategy you can us',summary:'Let’s start the week with a TA sourcing strategy you can use right now. 📩 Timing is everything, especially when you’re nurturing passive talent through CRM campaigns.',triadProcess:'Segmented pipeline campaigns with consistent cadence',triadProductivity:'Faster fills from warm talent vs. cold sourcing',triadOutcome:'Reduced sourcing cost, higher pipeline conversion',strategy:'Here’s the cold truth: even the most beautifully crafted emails won’t convert if they land at the wrong time. ⏰ If you’re not benchmarking send times and testing cadence, you\'re flying blind.',actions:['Good morning and happy Monday! Let’s start the week with a TA sourcing strategy you can use right now.','📩 Timing is everything, especially when you’re nurturing passive talent through CRM campaigns.','Here’s how to fine-tune your CRM campaigns for better engagement:','Benchmark first. Look at open and click-through rates by day and time to understand what’s working now.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7372279977909858304'},
+  li56:{cat:'engagement',color:'#3faa7c',label:'Engagement',access:'free',date:'9/12/2025 15:05',title:'Happy Monday, friends  Let’s kick off the week with a talent acquisition strategy that liv',summary:'Happy Monday, friends 👋 Let’s kick off the week with a talent acquisition strategy that lives in the early stage of the funnel but has ripple effects all the way through: screening & engagement. 💡 Today’s focus: Candidate communication speed.',triadProcess:'Standardized screening with clear evaluation criteria',triadProductivity:'Faster screening decisions, reduced per-candidate time',triadOutcome:'Higher submit-to-hire ratios, improved data quality',strategy:'💡 Today’s focus: Candidate communication speed. The recruiter screen is often the candidate’s very first live impression of your company, and how quickly you respond sets the tone.',actions:['Today’s focus: Candidate communication speed. The recruiter screen is often the candidate’s very first live impression of your company, and how quickly you respond sets the tone.','Test text-based scheduling vs. email scheduling. Speed and ease matter, and candidates often respond faster to mobile-first touchpoints.','Add SLAs for initial outreach. For example, commit to first contact within 48 hours of an application hitting your ATS.','✨ Why it matters: Fast engagement shows respect for the candidate’s time, reduces frustration, and creates a positive first impression that can set you apart.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7372284310210646029'},
+  li57:{cat:'interview',color:'#d4834a',label:'Interview',access:'free',date:'9/12/2025 15:55',title:'Happy Monday, friends  Let’s kick off the week with a strategy that directly impacts your ',summary:'Happy Monday, friends 👋 Let’s kick off the week with a strategy that directly impacts your hiring success: the interview-to-offer timeline. Here’s the truth: if your process drags after the final interview, you’re losing great candidates.',triadProcess:'Structured interview stages with defined evaluation owners',triadProductivity:'Fewer rounds, faster hiring manager decisions',triadOutcome:'Reduced time-to-hire, improved hiring manager satisfaction',strategy:'Here’s the truth: if your process drags after the final interview, you’re losing great candidates.',actions:['Happy Monday, friends  Let’s kick off the week with a strategy that directly impacts your hiring success: the interview-to-offer timeline.','Here’s the truth: if your process drags after the final interview, you’re losing great candidates.','Strategy: Audit and optimize your interview-to-offer stage.','Before you do anything, benchmark your current average days from final interview to offer. Without this baseline, you won’t know if your improvements are actually working.'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7372296719193128961'},
+  li58:{cat:'crm',color:'#7b6fd4',label:'Recruitment Marketing',access:'free',date:'9/25/2025 21:23',title:'Happy Monday, friends',summary:'Happy Monday, friends 👋 Let’s kick off the week with a CRM strategy that too many teams are overlooking: CRM workflow statuses. Here’s the reality: most CRMs give you the ability to customize statuses, but very few organizations actually set them up in a way that supports recruit',triadProcess:'Segmented pipeline campaigns with consistent cadence',triadProductivity:'Faster fills from warm talent vs. cold sourcing',triadOutcome:'Reduced sourcing cost, higher pipeline conversion',strategy:'Here’s the reality: most CRMs give you the ability to customize statuses, but very few organizations actually set them up in a way that supports recruiters and/or sourcers.',actions:['Let’s kick off the week with a CRM strategy that too many teams are overlooking: CRM workflow statuses.','Here’s the reality: most CRMs give you the ability to customize statuses, but very few organizations actually set them up in a way that supports recruiters and/or sourcers.','👉 Nobody knows where a candidate truly is in the pipeline','👉 Engagement history lives in people’s heads or in messy notes'],system:'See the original LinkedIn post for full implementation context and additional details.',linkedin:'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3A7377090302588919808'}
+};
+
+// ─── CATEGORY CONFIG ───
+const categories = [
+  {id:'careersite',label:'Attraction — Career Site',stage:'Top of Funnel',color:'#4e8ecf'},
+  {id:'crm',label:'Attraction — Recruitment Marketing & CRM',stage:'Top of Funnel',color:'#7b6fd4'},
+  {id:'engagement',label:'Engagement',stage:'Mid Funnel',color:'#3faa7c'},
+  {id:'interview',label:'Interview',stage:'Mid Funnel',color:'#d4834a'},
+  {id:'offer',label:'Offer',stage:'Bottom of Funnel',color:'#c9a96e'},
+  {id:'postoffer',label:'Post-Offer',stage:'Bottom of Funnel',color:'#c25e58'},
+  {id:'onboarding',label:'Onboarding',stage:'Post-Hire',color:'#4aadc0'},
+  {id:'cx',label:'Candidate Experience',stage:'Cross-Funnel',color:'#a07bc8'},
+  {id:'metrics',label:'Metrics & KPIs',stage:'Intelligence Layer',color:'#6aaa48'}
+];
+
+// Track whether user has "signed up"
+let isUnlocked = false;
+let pendingCardId = null;
+
+// ─── BUILD LIBRARY ───
+function buildLibrary(filterCat='all', searchTerm='') {
+  const main = document.getElementById('libraryMain');
+  main.innerHTML = '';
+  let totalVisible = 0;
+
+  categories.forEach(cat => {
+    if(filterCat !== 'all' && filterCat !== cat.id) return;
+
+    const cards = Object.entries(strategies).filter(([id,s]) => {
+      if(s.cat !== cat.id) return false;
+      if(searchTerm) {
+        const q = searchTerm.toLowerCase();
+        return s.title.toLowerCase().includes(q) || s.summary.toLowerCase().includes(q) || s.label.toLowerCase().includes(q);
+      }
+      return true;
+    });
+
+    if(cards.length === 0) return;
+    totalVisible += cards.length;
+
+    const section = document.createElement('div');
+    section.className = 'category-section visible';
+    section.dataset.section = cat.id;
+    section.innerHTML = `
+      <div class="category-header">
+        <div class="category-header-dot" style="background:${cat.color}"></div>
+        <h2>${cat.label}</h2>
+        <span class="category-header-stage">${cat.stage}</span>
+      </div>
+      <div class="strategy-grid" id="grid-${cat.id}"></div>
+    `;
+    main.appendChild(section);
+
+    const grid = section.querySelector(`#grid-${cat.id}`);
+    cards.forEach(([id,s]) => {
+      const isLocked = s.access === 'locked' && !isUnlocked;
+      const card = document.createElement('div');
+      card.className = 'strategy-card';
+      card.dataset.card = id;
+      card.innerHTML = `
+        <div class="card-topbar" style="background:${s.color}"></div>
+        <div class="card-tag" style="color:${s.color};border-color:${s.color}22;background:${s.color}12">
+          <span class="card-tag-dot" style="background:${s.color}"></span>${s.label}
+        </div>
+        <div class="card-title">${s.title}</div>
+        <div class="card-summary">${s.summary}</div>
+        <div class="card-footer">
+          <div class="card-access ${isLocked?'access-locked':'access-free'}">${isLocked?'🔒 Sign in to unlock':'🔓 Free preview'}</div>
+          <span class="card-cta">Read →</span>
+        </div>
+      `;
+      card.addEventListener('click', () => handleCardClick(id, isLocked));
+      grid.appendChild(card);
+    });
+  });
+
+  document.getElementById('searchCount').textContent = `${totalVisible} strateg${totalVisible===1?'y':'ies'}`;
+  document.getElementById('noResults').style.display = totalVisible === 0 ? 'block' : 'none';
+}
+
+function handleCardClick(cardId, isLocked) {
+  if(isLocked) {
+    pendingCardId = cardId;
+    openGate();
+  } else {
+    openStrategy(cardId);
+  }
+}
+
+// ─── STRATEGY MODAL ───
+function openStrategy(cardId) {
+  const s = strategies[cardId];
+  if(!s) return;
+  document.getElementById('modalTopBar').style.background = s.color;
+  document.getElementById('modalTagDot').style.background = s.color;
+  document.getElementById('modalTagText').style.color = s.color;
+  document.getElementById('modalTagText').textContent = s.label;
+  document.getElementById('modalTitle').textContent = s.title;
+  document.getElementById('triadProcess').textContent = s.triadProcess;
+  document.getElementById('triadProductivity').textContent = s.triadProductivity;
+  document.getElementById('triadOutcome').textContent = s.triadOutcome;
+  document.getElementById('modalStrategy').textContent = s.strategy;
+  const ul = document.getElementById('modalActions');
+  ul.innerHTML = '';
+  s.actions.forEach(a => { const li = document.createElement('li'); li.textContent = a; ul.appendChild(li); });
+  document.getElementById('modalSystem').textContent = s.system;
+  document.getElementById('modalLinkedin').href = s.linkedin;
+  document.getElementById('strategyOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeStrategy() {
+  document.getElementById('strategyOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ─── EMAIL GATE ───
+function openGate() {
+  document.getElementById('gateOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeGate() {
+  document.getElementById('gateOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ─── FILTER STATE ───
+let currentCat = 'all';
+let currentSearch = '';
+
+// ─── DOM READY ───
+document.addEventListener('DOMContentLoaded', () => {
+
+  // Modal close buttons
+  document.getElementById('modalClose').addEventListener('click', closeStrategy);
+  document.getElementById('strategyOverlay').addEventListener('click', e => {
+    if(e.target === document.getElementById('strategyOverlay')) closeStrategy();
+  });
+
+  // Gate close
+  document.getElementById('gateClose').addEventListener('click', closeGate);
+  document.getElementById('gateOverlay').addEventListener('click', e => {
+    if(e.target === document.getElementById('gateOverlay')) closeGate();
+  });
+
+  // Gate submit
+  document.getElementById('gateSubmit').addEventListener('click', () => {
+    const email = document.getElementById('gateEmail').value.trim();
+    if(!email || !email.includes('@')) {
+      document.getElementById('gateEmail').style.borderColor = '#c0544a';
+      return;
+    }
+    isUnlocked = true;
+    closeGate();
+    buildLibrary(currentCat, currentSearch);
+    if(pendingCardId) {
+      setTimeout(() => openStrategy(pendingCardId), 300);
+      pendingCardId = null;
+    }
+  });
+
+  // Filter tabs
+  document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentCat = tab.dataset.cat;
+      buildLibrary(currentCat, currentSearch);
+    });
+  });
+
+  // Search
+  const libSearch = document.getElementById('libSearch');
+  let searchTimeout;
+  libSearch.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      currentSearch = libSearch.value.trim();
+      buildLibrary(currentCat, currentSearch);
+    }, 220);
+  });
+
+  // URL param search
+  const urlParams = new URLSearchParams(window.location.search);
+  const qParam = urlParams.get('q');
+  if(qParam) {
+    libSearch.value = qParam;
+    currentSearch = qParam;
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape') { closeStrategy(); closeGate(); }
+  });
+
+  // Init render
+  buildLibrary(currentCat, currentSearch);
+});
+</script>
+</body>
+</html>
