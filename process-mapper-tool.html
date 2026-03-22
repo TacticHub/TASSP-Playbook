@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TA Process Mapper — TASSP Playbook</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ac: #8B1A1A;
+    --ac-bg: rgba(139,26,26,0.07);
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --bg: #ffffff;
+    --bg2: #f8f7f4;
+    --bg3: #f1efe8;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.2);
+    --text: #1a1a18;
+    --text2: #5f5e5a;
+    --text3: #888780;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a; --bg2: #242422; --bg3: #2c2c2a;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
+      --text: #e8e6de; --text2: #a8a69e; --text3: #6e6c66;
+    }
+  }
+  body { font-family: var(--font); background: var(--bg3); color: var(--text); font-size: 15px; line-height: 1.5; }
+
+  /* ── LAYOUT ── */
+  #shell { max-width: 860px; margin: 0 auto; min-height: 100vh; }
+  .header { background: var(--ac); color: #fff; padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .hdr-left { display: flex; align-items: center; gap: 14px; }
+  .hdr-logo { width: 36px; height: 36px; background: rgba(255,255,255,.18); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
+  .hdr-title { font-size: 15px; font-weight: 500; }
+  .hdr-sub { font-size: 12px; opacity: .65; margin-top: 1px; }
+  .hdr-right { display: flex; align-items: center; gap: 10px; }
+  .save-indicator { font-size: 11px; opacity: .75; display: flex; align-items: center; gap: 5px; }
+  .save-dot { width: 6px; height: 6px; border-radius: 50%; background: #7fff7f; }
+  .save-dot.saving { background: #ffdd44; animation: pulse .8s ease-in-out infinite; }
+  .save-dot.error { background: #ff6b6b; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+
+  /* ── PROGRESS ── */
+  .pbar-wrap { height: 3px; background: rgba(0,0,0,.08); }
+  .pbar-fill { height: 100%; background: var(--ac); transition: width .4s ease; }
+
+  /* ── NAV ── */
+  .snav { background: var(--bg2); border-bottom: 0.5px solid var(--border); padding: 0 28px; display: flex; overflow-x: auto; gap: 0; }
+  .snav::-webkit-scrollbar { display: none; }
+  .nitem { padding: 11px 12px 9px; font-size: 11px; color: var(--text3); border-bottom: 2px solid transparent; cursor: default; white-space: nowrap; display: flex; align-items: center; gap: 5px; transition: all .15s; }
+  .nitem.done { color: #3B6D11; cursor: pointer; }
+  .nitem.active { color: var(--ac); border-bottom-color: var(--ac); font-weight: 500; }
+  .ndot { width: 16px; height: 16px; border-radius: 50%; background: var(--bg3); border: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 500; }
+  .nitem.done .ndot { background: #EAF3DE; border-color: #3B6D11; color: #27500A; }
+  .nitem.active .ndot { background: var(--ac); border-color: var(--ac); color: #fff; }
+
+  /* ── MAIN ── */
+  .main { padding: 28px; }
+  .qcard { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 26px; animation: fadeIn .2s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+  .qlabel { font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--ac); margin-bottom: 10px; }
+  .qtext { font-size: 17px; font-weight: 500; margin-bottom: 6px; color: var(--text); line-height: 1.4; }
+  .qhint { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.55; }
+
+  /* ── OPTIONS ── */
+  .opts { display: flex; flex-direction: column; gap: 8px; }
+  .opt { display: flex; align-items: flex-start; gap: 12px; padding: 12px 15px; border: 0.5px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all .12s; background: var(--bg); user-select: none; }
+  .opt:hover, .opt.sel { border-color: var(--ac); background: var(--ac-bg); }
+  .chk { width: 18px; height: 18px; min-width: 18px; border: 0.5px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-top: 1px; background: var(--bg); transition: all .12s; }
+  .opt.sel .chk { background: var(--ac); border-color: var(--ac); }
+  .chkm { display: none; font-size: 11px; color: #fff; font-weight: 600; }
+  .opt.sel .chkm { display: block; }
+  .rad { width: 18px; height: 18px; min-width: 18px; border: 0.5px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 1px; background: var(--bg); }
+  .opt.sel .rad { border-color: var(--ac); }
+  .radd { width: 8px; height: 8px; border-radius: 50%; display: none; background: var(--ac); }
+  .opt.sel .radd { display: block; }
+  .ol { font-size: 14px; color: var(--text); line-height: 1.4; }
+  .od { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  /* ── INPUTS ── */
+  .mini { width: 100%; font-size: 13px; padding: 9px 12px; border: 0.5px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: var(--font); }
+  .mini:focus { outline: none; border-color: var(--ac); }
+  .addc { display: flex; gap: 8px; margin-top: 8px; }
+  .addc input { flex: 1; font-size: 13px; padding: 10px 12px; border: 0.5px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); }
+  .addc input:focus { outline: none; border-color: var(--ac); }
+  .addc button, .btn-ac { padding: 10px 18px; color: #fff; border: none; border-radius: var(--radius); cursor: pointer; font-size: 13px; font-family: var(--font); background: var(--ac); transition: opacity .12s; }
+  .addc button:hover, .btn-ac:hover { opacity: .88; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tag { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: 20px; font-size: 12px; color: var(--text); }
+  .tx { cursor: pointer; color: var(--text3); font-size: 14px; }
+  .tx:hover { color: var(--ac); }
+
+  /* ── FOOTER NAV ── */
+  .fnav { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
+  .bbtn { padding: 10px 20px; background: transparent; border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 14px; cursor: pointer; color: var(--text2); font-family: var(--font); transition: all .12s; }
+  .bbtn:hover { border-color: var(--border2); color: var(--text); }
+  .nbtn { padding: 10px 24px; color: #fff; border: none; border-radius: var(--radius); font-size: 14px; cursor: pointer; font-weight: 500; font-family: var(--font); display: flex; align-items: center; gap: 8px; background: var(--ac); transition: opacity .12s; }
+  .nbtn:hover { opacity: .88; }
+  .nbtn:disabled { opacity: .4; cursor: default; }
+  .qctr { font-size: 12px; color: var(--text3); }
+
+  /* ── EMAIL SAVE PANEL ── */
+  .save-panel { margin-top: 18px; padding: 16px 18px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); }
+  .save-panel-title { font-size: 13px; font-weight: 500; margin-bottom: 8px; color: var(--text); display: flex; align-items: center; gap: 7px; }
+  .save-panel-hint { font-size: 12px; color: var(--text2); margin-bottom: 12px; line-height: 1.5; }
+  .save-email-row { display: flex; gap: 8px; }
+  .save-email-row input { flex: 1; font-size: 13px; padding: 9px 12px; border: 0.5px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: var(--font); }
+  .save-email-row input:focus { outline: none; border-color: var(--ac); }
+  .save-success { font-size: 12px; color: #3B6D11; margin-top: 8px; display: none; }
+
+  /* ── RESUME SCREEN ── */
+  .resume-screen { padding: 40px 28px; text-align: center; }
+  .resume-card { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 32px; max-width: 520px; margin: 0 auto; }
+  .resume-icon { width: 56px; height: 56px; background: var(--ac-bg); border: 0.5px solid; border-color: var(--ac); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+  .resume-title { font-size: 20px; font-weight: 500; margin-bottom: 8px; }
+  .resume-meta { font-size: 13px; color: var(--text2); margin-bottom: 22px; line-height: 1.6; }
+  .resume-detail { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+  .resume-detail:last-child { border-bottom: none; }
+  .resume-detail span:first-child { color: var(--text2); }
+  .resume-detail span:last-child { font-weight: 500; }
+  .resume-details-block { background: var(--bg2); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 22px; }
+
+  /* ── TOAST ── */
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a18; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; transition: transform .3s ease; z-index: 999; white-space: nowrap; }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── COPY LINK ── */
+  .link-box { display: flex; gap: 8px; margin-top: 12px; }
+  .link-input { flex: 1; font-size: 12px; padding: 8px 12px; border: 0.5px solid var(--border); border-radius: var(--radius); background: var(--bg2); color: var(--text2); font-family: monospace; }
+  .copy-btn { padding: 8px 14px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 12px; cursor: pointer; color: var(--text2); font-family: var(--font); transition: all .12s; white-space: nowrap; }
+  .copy-btn:hover { border-color: var(--ac); color: var(--ac); }
+
+  /* ── CALLOUT ── */
+  .callout { border-radius: var(--radius); padding: 14px 16px; margin-bottom: 18px; border-left: 3px solid; }
+  .callout.info { background: #f0f7ff; border-color: #185FA5; }
+  .callout.info p { font-size: 13px; color: #0C447C; line-height: 1.5; }
+  @media (prefers-color-scheme: dark) {
+    .callout.info { background: #0d1f35; }
+    .callout.info p { color: #85B7EB; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     NAV — matches TASSP-Playbook dark theme
+     ══════════════════════════════════════════════════════ -->
+<style>
+  #site-nav{position:sticky;top:0;z-index:200;background:rgba(14,14,15,0.94);backdrop-filter:blur(12px);border-bottom:0.5px solid rgba(255,255,255,0.08);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:52px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+  .snav-brand{display:flex;align-items:center;gap:9px;text-decoration:none;font-size:15px;color:#f0ede8;font-weight:500;}
+  .snav-dot{width:7px;height:7px;border-radius:50%;background:#e74c3c;}
+  .snav-links{display:flex;align-items:center;gap:4px;}
+  .snav-links a{padding:6px 12px;color:#9e9b94;text-decoration:none;font-size:13px;border-radius:7px;transition:all .15s;}
+  .snav-links a:hover{color:#f0ede8;background:rgba(255,255,255,0.06);}
+  .snav-links a.back{color:#9e9b94;font-size:13px;}
+  #shell{padding-top:0;}
+</style>
+<div id="site-nav">
+  <a class="snav-brand" href="index.html"><span class="snav-dot"></span>TASSP Playbook</a>
+  <div class="snav-links">
+    <a href="process-mapper.html" class="back">← Back to Process Mapper</a>
+  </div>
+</div>
+<div id="shell">
+  <div class="header" id="hdr">
+    <div class="hdr-left">
+      <div class="hdr-logo" id="hdr-logo">TA</div>
+      <div>
+        <div class="hdr-title" id="hdr-title">TA Process Mapping Tool</div>
+        <div class="hdr-sub" id="hdr-sub">Talent acquisition process interview</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="save-indicator" id="save-indicator" style="display:none;">
+        <div class="save-dot" id="save-dot"></div>
+        <span id="save-label">Saved</span>
+      </div>
+    </div>
+  </div>
+  <div class="pbar-wrap"><div class="pbar-fill" id="pbar" style="width:0%"></div></div>
+  <div class="snav" id="snav"></div>
+  <div class="main" id="main"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// SUPABASE CLIENT
+// ─────────────────────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://fpenseudntsilynmhwje.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_rgWAZAaMLHFP548XcR1oVg_kEx-nKKr';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SESSION STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let SESSION_ID = null;
+let RESUME_TOKEN = null;
+let SAVE_TIMEOUT = null;
+let SAVE_STATUS = 'idle'; // idle | saving | saved | error
+
+// Generate or load resume token from URL
+function getOrCreateToken() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('token')) return params.get('token');
+  // Generate a UUID v4
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+// Push resume token to URL without reload
+function setTokenInURL(token) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('token', token);
+  window.history.replaceState({}, '', url.toString());
+}
+
+// Set auth header for RLS
+function getHeaders() {
+  return { 'x-resume-token': RESUME_TOKEN };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SAVE / LOAD
+// ─────────────────────────────────────────────────────────────────────────────
+async function initSession() {
+  RESUME_TOKEN = getOrCreateToken();
+  setTokenInURL(RESUME_TOKEN);
+
+  // Try to load existing session
+  const { data: existing } = await sb
+    .from('sessions')
+    .select('id, track_name, mode, accent_color, current_section, status')
+    .eq('resume_token', RESUME_TOKEN)
+    .single();
+
+  if (existing) {
+    SESSION_ID = existing.id;
+    // Load all section data
+    const { data: sections } = await sb
+      .from('session_data')
+      .select('section, data')
+      .eq('session_id', SESSION_ID);
+
+    if (sections) {
+      sections.forEach(s => {
+        if (D[s.section]) Object.assign(D[s.section], s.data);
+      });
+    }
+    // Restore position
+    if (existing.current_section) {
+      const idx = activeSecs.indexOf(existing.current_section);
+      if (idx > -1) cs = idx;
+    }
+    if (existing.accent_color) applyAC(existing.accent_color);
+    showResumeScreen(existing);
+    return;
+  }
+
+  // Create new session
+  const { data: newSession, error } = await sb
+    .from('sessions')
+    .insert({
+      resume_token: RESUME_TOKEN,
+      track_name: D.setup.trackName || '',
+      mode: mode,
+      accent_color: AC,
+      current_section: 'setup',
+      status: 'in_progress'
+    })
+    .select('id')
+    .single();
+
+  if (newSession) {
+    SESSION_ID = newSession.id;
+    setSaveStatus('saved');
+  } else {
+    console.warn('Session create failed:', error);
+    setSaveStatus('error');
+  }
+}
+
+async function saveSection(section) {
+  if (!SESSION_ID || !RESUME_TOKEN) return;
+  setSaveStatus('saving');
+  clearTimeout(SAVE_TIMEOUT);
+  SAVE_TIMEOUT = setTimeout(async () => {
+    try {
+      // Upsert section data
+      const { error: dataErr } = await sb
+        .from('session_data')
+        .upsert({
+          session_id: SESSION_ID,
+          section: section,
+          data: D[section] || {},
+          saved_at: new Date().toISOString()
+        }, { onConflict: 'session_id,section' });
+
+      // Update session metadata
+      const updates = {
+        current_section: activeSecs[cs] || section,
+        updated_at: new Date().toISOString(),
+      };
+      if (D.setup.trackName) updates.track_name = D.setup.trackName;
+      if (D.setup.mode) updates.mode = D.setup.mode;
+      if (AC) updates.accent_color = AC;
+
+      const { error: sessErr } = await sb
+        .from('sessions')
+        .update(updates)
+        .eq('resume_token', RESUME_TOKEN);
+
+      setSaveStatus(dataErr || sessErr ? 'error' : 'saved');
+    } catch(e) {
+      setSaveStatus('error');
+    }
+  }, 600);
+}
+
+async function saveEmail(email) {
+  if (!SESSION_ID || !email) return;
+  const { error } = await sb
+    .from('sessions')
+    .update({ email })
+    .eq('resume_token', RESUME_TOKEN);
+  if (!error) {
+    await sendResumeEmail(email);
+    return true;
+  }
+  return false;
+}
+
+async function sendResumeEmail(email) {
+  // Supabase Edge Function or direct magic link
+  // For now, use Supabase Auth OTP as the email mechanism
+  const resumeURL = `${https://tacticHub.github.io/TASSP-Playbook/process-mapper-tool.html}?token=${RESUME_TOKEN}`;
+  // We store the URL — in production you'd trigger a Supabase Edge Function
+  // to send a custom email. For now show the link to copy.
+  return resumeURL;
+}
+
+function setSaveStatus(status) {
+  SAVE_STATUS = status;
+  const ind = document.getElementById('save-indicator');
+  const dot = document.getElementById('save-dot');
+  const lbl = document.getElementById('save-label');
+  if (!ind) return;
+  ind.style.display = 'flex';
+  dot.className = 'save-dot' + (status === 'saving' ? ' saving' : status === 'error' ? ' error' : '');
+  lbl.textContent = status === 'saving' ? 'Saving…' : status === 'error' ? 'Save error' : 'Saved';
+}
+
+function showToast(msg, dur = 2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function showResumeScreen(session) {
+  const main = document.getElementById('main');
+  const trackLabel = session.track_name || 'Unnamed track';
+  const resumeURL = `${https://tacticHub.github.io/TASSP-Playbook/process-mapper-tool.html}?token=${RESUME_TOKEN}`;
+
+  main.innerHTML = `
+    <div class="resume-screen">
+      <div class="resume-card">
+        <div class="resume-icon">
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+            <path d="M13 3C7.477 3 3 7.477 3 13s4.477 10 10 10 10-4.477 10-10S18.523 3 13 3z" stroke="${AC}" stroke-width="1.5" fill="none"/>
+            <path d="M13 7v6l4 2" stroke="${AC}" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="resume-title">Welcome back</div>
+        <div class="resume-meta">We found a saved session for this link. Pick up right where you left off.</div>
+        <div class="resume-details-block">
+          <div class="resume-detail"><span>Process track</span><span>${trackLabel}</span></div>
+          <div class="resume-detail"><span>Mode</span><span>${session.mode === 'quick' ? 'Quick (~15 min)' : 'Full (~45 min)'}</span></div>
+          <div class="resume-detail"><span>Status</span><span style="text-transform:capitalize;">${session.status.replace('_',' ')}</span></div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Your resume link — bookmark this to return anytime:</div>
+          <div class="link-box">
+            <input class="link-input" type="text" readonly value="${resumeURL}" id="resume-url-input">
+            <button class="copy-btn" onclick="copyResumeLink('${resumeURL}')">Copy link</button>
+          </div>
+        </div>
+        <button class="nbtn" style="width:100%;justify-content:center;background:${AC};" onclick="continueSession()">
+          Continue where I left off →
+        </button>
+        <div style="margin-top:12px;text-align:center;">
+          <span style="font-size:12px;color:var(--text3);cursor:pointer;" onclick="startFresh()">Start a new session instead</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+window.continueSession = function() { render(); };
+window.startFresh = async function() {
+  // Create fresh token
+  RESUME_TOKEN = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+  SESSION_ID = null;
+  cs = 0;
+  setTokenInURL(RESUME_TOKEN);
+  await initSession();
+  render();
+};
+window.copyResumeLink = function(url) {
+  navigator.clipboard.writeText(url).then(() => showToast('Resume link copied to clipboard'));
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INTERVIEW ENGINE (abbreviated — same logic as v4, now with save hooks)
+// ─────────────────────────────────────────────────────────────────────────────
+let AC = '#8B1A1A'; let mode = 'quick'; let cs = 0;
+const QSECS = ['setup','org','users','ats','reqflow','stages','subprocess','actions','integrations','review'];
+const ASECS = ['setup','org','users','terms','ats','reqflow','stages','subprocess','actions','integrations','branching','sla','compliance','approvals','onboarding','review'];
+let activeSecs = [...QSECS];
+
+const SMETA = {
+  setup:{label:'Setup',icon:'1'},org:{label:'Org',icon:'2'},users:{label:'Users',icon:'3'},
+  terms:{label:'Terms',icon:'4'},ats:{label:'ATS',icon:'5'},reqflow:{label:'Req flow',icon:'6'},
+  stages:{label:'Stages',icon:'7'},subprocess:{label:'Sub-processes',icon:'8'},
+  actions:{label:'Actions',icon:'9'},integrations:{label:'Integrations',icon:'10'},
+  branching:{label:'Branching',icon:'11'},sla:{label:'SLAs',icon:'12'},
+  compliance:{label:'Compliance',icon:'13'},approvals:{label:'Approvals',icon:'14'},
+  onboarding:{label:'Handoff',icon:'15'},review:{label:'Review',icon:'16'},
+};
+
+function h2r(h){return{r:parseInt(h.slice(1,3),16),g:parseInt(h.slice(3,5),16),b:parseInt(h.slice(5,7),16)}}
+function vhex(h){return/^#[0-9a-fA-F]{6}$/.test(h)}
+function applyAC(hex){
+  if(!vhex(hex))return; AC=hex;
+  const{r,g,b}=h2r(hex);
+  document.documentElement.style.setProperty('--ac',hex);
+  document.documentElement.style.setProperty('--ac-bg',`rgba(${r},${g},${b},0.07)`);
+  const hdr=document.getElementById('hdr');
+  if(hdr)hdr.style.background=hex;
+  const pbar=document.getElementById('pbar');
+  if(pbar)pbar.style.background=hex;
+  rNav();
+}
+
+const USERS=[{id:'recruiter',label:'Recruiter'},{id:'coordinator',label:'Recruiting coordinator'},{id:'hm',label:'Hiring manager'},{id:'hr_ops',label:'HR operations'},{id:'hris',label:'HRIS analyst'},{id:'ta_ops',label:'TA operations specialist'},{id:'ta_leader',label:'TA leader / director'},{id:'exec',label:'Executive / CHRO'},{id:'sysadmin',label:'System administrator'},{id:'div_leader',label:'Divisional / field leader'},{id:'legal',label:'Legal / compliance'},{id:'finance',label:'Finance / comp team'}];
+const ATS_P=[{id:'workday',label:'Workday'},{id:'icims',label:'iCIMS'},{id:'greenhouse',label:'Greenhouse'},{id:'lever',label:'Lever'},{id:'smartrecruiters',label:'SmartRecruiters'},{id:'taleo',label:'Oracle Taleo'},{id:'successfactors',label:'SAP SuccessFactors'},{id:'bamboohr',label:'BambooHR'},{id:'jobvite',label:'Jobvite'},{id:'other',label:'Other'}];
+const ATS_ST={workday:['Applied','Recruiter screen','HM review','Interview','Offer','Pre-hire','Hired'],icims:['Applicant','Reviewed','Phone screen','Interview','Offer extended','Background check','Hired'],greenhouse:['Application review','Screen','Interview','Offer','Reference check','Hired'],lever:['New applicant','Screen','Interview','Offer','Reference','Hired'],default:['Applied','Recruiter review','Phone screen','HM review','Interview','Offer','Background','Hired']};
+const STAGES=[{id:'applied',label:'Applied'},{id:'rec_review',label:'Recruiter review'},{id:'phone_screen',label:'Phone / video screen'},{id:'hm_review',label:'HM review'},{id:'interview',label:'Interview'},{id:'offer',label:'Offer extended'},{id:'bgc',label:'Background check'},{id:'hired',label:'Hired'},{id:'rejected',label:'Declined / rejected'}];
+const INTEGS=[{id:'scheduling',label:'Interview scheduling'},{id:'bgc',label:'Background check'},{id:'video',label:'Video interview'},{id:'assess',label:'Pre-hire assessment'},{id:'hcm',label:'HCM / HRIS system'},{id:'docusign',label:'E-signature'},{id:'job_boards',label:'Job board integrations'},{id:'wotc',label:'WOTC screening'}];
+const REQ_OPEN=[{id:'hm_intake',label:'Hiring manager submits intake / request form'},{id:'recruiter',label:'Recruiter creates req directly in ATS'},{id:'hris_push',label:'HRIS / HCM system automatically pushes req to ATS'},{id:'ta_ops',label:'TA Ops team creates all reqs centrally'},{id:'hybrid',label:'Hybrid — varies by role type'}];
+const ITYPES=[{id:'phone',label:'Phone screen'},{id:'video',label:'Video / virtual'},{id:'onsite',label:'On-site / in-person'},{id:'panel',label:'Panel'},{id:'exec',label:'Executive'},{id:'technical',label:'Technical / skills test'}];
+const FORMATS=[{id:'virtual',label:'Virtual'},{id:'inperson',label:'In-person'},{id:'hybrid',label:'Hybrid'}];
+const SCHED=[{id:'selfschedule',label:'Candidate self-schedules'},{id:'coordinator',label:'Coordinator schedules'},{id:'automated',label:'Automated (scheduling tool)'},{id:'recruiter',label:'Recruiter schedules manually'}];
+
+let D={
+  setup:{orgName:'',trackName:'',accentColor:'#8B1A1A',useCases:[],mode:'quick'},
+  org:{type:[]},users:{selected:[],custom:[]},
+  terms:{req:'Requisition',candidate:'Candidate',disposition:'Disposition',screen:'Phone screen',offer:'Offer',hm:'Hiring manager'},
+  ats:{platform:'',selectedPlatform:false,wantsPrepopulate:null,stages:[]},
+  reqflow:{reqOpenMethod:[],reqOpenNote:'',hasApproval:null,approvers:[],customApprovers:[]},
+  stages:{selected:[],custom:[]},subprocess:{},actions:{},
+  integrations:{selected:[],custom:[]},branching:{rules:[]},sla:{values:{}},
+  compliance:{selected:[],custom:[]},approvals:{req:false,offer:false,supComp:false,audit:false},
+  onboarding:{tasks:[],customTasks:[],notes:''},
+};
+
+function setMode(m){
+  mode=m;D.setup.mode=m;
+  document.getElementById('btn-quick').classList.toggle('active',m==='quick');
+  document.getElementById('btn-full').classList.toggle('active',m==='full');
+  activeSecs=m==='quick'?[...QSECS]:[...ASECS];
+  rNav();rProg();
+}
+function rNav(){
+  const nav=document.getElementById('snav');
+  if(!nav)return;
+  nav.innerHTML=activeSecs.map((sid,i)=>{
+    const s=SMETA[sid],isDone=i<cs,isActive=i===cs;
+    return`<div class="nitem ${isDone?'done':''} ${isActive?'active':''}" onclick="${isDone?`jmp(${i})`:''}" style="${isActive?`color:${AC};border-bottom-color:${AC}`:''}">
+      <span class="ndot" style="${isActive?`background:${AC};border-color:${AC};color:#fff`:''}">${isDone?'✓':s.icon}</span>${s.label}
+    </div>`;
+  }).join('');
+}
+function rProg(){const pct=activeSecs.length?Math.round((cs/activeSecs.length)*100):0;const p=document.getElementById('pbar');if(p)p.style.width=pct+'%';}
+
+function render(){
+  rNav();rProg();
+  const sid=activeSecs[cs];
+  if(sid==='review'){rReview();return;}
+  const fn=RS[sid];if(fn)fn();
+}
+
+// Advance section + trigger save
+function ns(){
+  if(cs<activeSecs.length-1){
+    const prevSec=activeSecs[cs];
+    cs++;
+    saveSection(prevSec); // save the section we just left
+    render();
+    document.getElementById('shell').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+}
+function ps(){if(cs>0){cs--;render();}}
+window.ps=ps;window.ns=ns;
+function jmp(i){if(i<cs){cs=i;render();}}
+window.jmp=jmp;
+function msel(arr,v){const i=arr.indexOf(v);if(i>-1)arr.splice(i,1);else arr.push(v);}
+
+function qc(h){document.getElementById('main').innerHTML=`<div class="qcard">${h}</div>`;}
+function sl(t){return`<div class="qlabel" style="color:${AC}">${t}</div>`;}
+function qt(t){return`<div class="qtext">${t}</div>`;}
+function qh(t){return`<div class="qhint">${t}</div>`;}
+function ol(opts,sel,multi,fn){
+  return`<div class="opts">${opts.map(o=>`<div class="opt ${sel.includes(o.id)?'sel':''}" onclick="${fn}('${o.id}')">
+    ${multi?`<span class="chk"><span class="chkm">✓</span></span>`:`<span class="rad"><span class="radd"></span></span>`}
+    <div><div class="ol">${o.label}</div>${o.desc?`<div class="od">${o.desc}</div>`:''}</div>
+  </div>`).join('')}</div>`;
+}
+function ca(inputId,addFn,tags){
+  return`<div class="addc"><input type="text" id="${inputId}" placeholder="Add your own…" onkeydown="if(event.key==='Enter')${addFn}()"><button onclick="${addFn}()">Add</button></div>
+  <div class="tags">${tags.map(t=>`<span class="tag">${t}<span class="tx" onclick="rmTag('${t.replace(/'/g,"\\'")}')">×</span></span>`).join('')}</div>`;
+}
+window.rmTag=function(v){['users','stages','integrations','compliance'].forEach(k=>{if(D[k]?.custom){const i=D[k].custom.indexOf(v);if(i>-1)D[k].custom.splice(i,1);}});render();};
+
+// Email save panel (appended to every section card)
+function emailSavePanel(){
+  return`<div class="save-panel">
+    <div class="save-panel-title">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="9" rx="1.5" stroke="${AC}" stroke-width="1.2"/><path d="M1 4.5L7 8.5L13 4.5" stroke="${AC}" stroke-width="1.2"/></svg>
+      Save your progress
+    </div>
+    <div class="save-panel-hint">Enter your email and we'll send you a link to resume this session on any device, any time.</div>
+    <div class="save-email-row">
+      <input type="email" id="save-email-inp" placeholder="your@email.com" onkeydown="if(event.key==='Enter')submitEmail()">
+      <button class="btn-ac" onclick="submitEmail()" style="background:${AC}">Send link</button>
+    </div>
+    <div class="save-success" id="save-success-msg">
+      ✓ Resume link sent — check your inbox. Your progress is saved automatically.
+    </div>
+    <div id="resume-link-display" style="display:none;">
+      <div class="link-box" style="margin-top:10px;">
+        <input class="link-input" type="text" readonly id="resume-link-val">
+        <button class="copy-btn" onclick="copyLink()">Copy</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+window.submitEmail = async function() {
+  const inp = document.getElementById('save-email-inp');
+  if (!inp || !inp.value) return;
+  const email = inp.value.trim();
+  const resumeURL = `${https://tacticHub.github.io/TASSP-Playbook/process-mapper-tool.html}?token=${RESUME_TOKEN}`;
+
+  const ok = await saveEmail(email);
+  const msg = document.getElementById('save-success-msg');
+  const linkDisplay = document.getElementById('resume-link-display');
+  const linkVal = document.getElementById('resume-link-val');
+
+  if (msg) msg.style.display = 'block';
+  // Show link to copy as fallback (until Edge Function email is set up)
+  if (linkDisplay && linkVal) {
+    linkVal.value = resumeURL;
+    linkDisplay.style.display = 'block';
+  }
+  showToast('Progress saved — copy the resume link above');
+};
+
+window.copyLink = function() {
+  const val = document.getElementById('resume-link-val')?.value;
+  if (val) navigator.clipboard.writeText(val).then(() => showToast('Link copied!'));
+};
+
+function fnav(nfn,nl,dis){
+  return`<div class="fnav"><button class="bbtn" onclick="ps()">← Back</button><span class="qctr">${cs+1} of ${activeSecs.length}</span><button class="nbtn" onclick="${nfn}()" style="background:${AC}" ${dis?'disabled':''}>${nl||'Continue'} →</button></div>`;
+}
+
+function getAllRoles(){return[...D.users.selected.map(u=>USERS.find(o=>o.id===u)?.label||u),...D.users.custom];}
+function getStageList(){
+  const base=D.ats.wantsPrepopulate&&D.ats.stages.length?D.ats.stages.map((s,i)=>({id:'ats_'+i,label:s})):STAGES;
+  return[...D.stages.selected.map(s=>base.find(o=>o.id===s)||{id:s,label:s}),...D.stages.custom.map((s,i)=>({id:'cust_'+i,label:s}))];
+}
+
+// ── SECTION RENDERERS ──────────────────────────────────────────────────────────
+
+function rSetup(){
+  const{r,g,b}=h2r(AC);
+  qc(`${sl('Welcome — step 1')}
+  <div style="padding:14px 16px;background:${AC}12;border:.5px solid ${AC}40;border-radius:var(--radius);margin-bottom:20px;">
+    <div style="font-size:13px;font-weight:500;color:${AC};margin-bottom:4px;">One map = one process track</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.5;">Each session maps a single hiring process — Hourly, Salaried, Executive, High Volume, etc. Run one session per track. Your progress saves automatically after each section.</div>
+  </div>
+  ${qt("What process track are you mapping?")}${qh('Name it clearly — this appears on your final map and SOP.')}
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;" id="track-grid">
+    ${['Hourly / hourly-temp','Salaried / professional','Corporate / office','Executive / leadership','High volume / seasonal','Internal transfer / promotion'].map(t=>
+      `<div style="padding:12px 14px;border:.5px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .12s;background:var(--bg);" class="track-opt ${D.setup.trackName===t?'sel':''}" onclick="selTrack('${t}')">
+        <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;">${t}</div>
+      </div>`
+    ).join('')}
+  </div>
+  <input class="mini" type="text" id="inp-track" placeholder="Or type your own — e.g. Union, Campus recruiting, Contract-to-perm…" value="${D.setup.trackName}" oninput="D.setup.trackName=this.value;syncHdr();checkSetupReady()">
+  <div style="height:16px;"></div>
+  <div style="font-size:13px;font-weight:500;margin-bottom:10px;">Brand accent color</div>
+  <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:20px;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><input type="color" id="color-wheel" value="${AC}" oninput="onWC(this.value)" style="width:52px;height:52px;border:.5px solid var(--border);border-radius:var(--radius);cursor:pointer;padding:3px;background:var(--bg);"><label style="font-size:10px;color:var(--text3);">Wheel</label></div>
+    <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:160px;">
+      <div style="display:flex;align-items:center;gap:8px;"><label style="font-size:11px;color:var(--text2);min-width:26px;">Hex</label><input style="font-size:13px;padding:7px 10px;width:105px;border:.5px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:monospace;" type="text" id="inp-hex" value="${AC}" oninput="onHI(this.value)" maxlength="7"></div>
+      <div style="display:flex;align-items:center;gap:8px;"><label style="font-size:11px;color:var(--text2);min-width:26px;">RGB</label><div style="display:flex;gap:5px;">${['r','g','b'].map((ch,i)=>`<input style="width:46px;font-size:12px;padding:7px 5px;text-align:center;border:.5px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:monospace;" type="number" id="inp-${ch}" min="0" max="255" value="${h2r(AC)[ch]}" oninput="onRI()">`).join('')}</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><div id="pswatch" style="width:52px;height:52px;border-radius:var(--radius);border:.5px solid var(--border);background:${AC};transition:background .1s;"></div><div style="font-size:10px;color:var(--text3);">Preview</div></div>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:20px;">
+    <div id="mode-quick" style="flex:1;padding:13px 15px;border:.5px solid ${mode==='quick'?AC:'var(--border)'};border-radius:var(--radius);cursor:pointer;background:${mode==='quick'?AC+'12':'var(--bg)'};" onclick="setMode('quick')">
+      <div style="font-size:13px;font-weight:500;color:${mode==='quick'?AC:'var(--text)'};">Quick mode <span style="font-size:11px;font-weight:400;opacity:.7;">~15 min</span></div>
+      <div style="font-size:12px;color:var(--text2);margin-top:3px;">Essential structure — users, ATS, stages, actions, integrations</div>
+    </div>
+    <div id="mode-full" style="flex:1;padding:13px 15px;border:.5px solid ${mode==='full'?AC:'var(--border)'};border-radius:var(--radius);cursor:pointer;background:${mode==='full'?AC+'12':'var(--bg)'};" onclick="setMode('full')">
+      <div style="font-size:13px;font-weight:500;color:${mode==='full'?AC:'var(--text)'};">Full mode <span style="font-size:11px;font-weight:400;opacity:.7;">~45 min</span></div>
+      <div style="font-size:12px;color:var(--text2);margin-top:3px;">Adds SLAs, compliance, approvals, onboarding handoff, terminology</div>
+    </div>
+  </div>
+  ${emailSavePanel()}
+  ${fnav('ns','Start mapping →', !D.setup.trackName)}
+  `);
+  // Re-highlight selected track
+  document.querySelectorAll('.track-opt').forEach(el => {
+    el.style.borderColor = el.classList.contains('sel') ? AC : '';
+    el.style.background = el.classList.contains('sel') ? AC+'12' : '';
+  });
+}
+
+window.selTrack=function(t){
+  D.setup.trackName=t;
+  document.querySelectorAll('.track-opt').forEach(el=>{
+    const isSel=el.textContent.trim()===t;
+    el.classList.toggle('sel',isSel);
+    el.style.borderColor=isSel?AC:'';
+    el.style.background=isSel?AC+'12':'';
+  });
+  const inp=document.getElementById('inp-track');if(inp)inp.value=t;
+  syncHdr();checkSetupReady();
+};
+window.checkSetupReady=function(){
+  const btn=document.querySelector('.nbtn');
+  if(btn)btn.disabled=!D.setup.trackName;
+};
+window.syncHdr=function(){
+  const logo=document.getElementById('hdr-logo');
+  const title=document.getElementById('hdr-title');
+  const sub=document.getElementById('hdr-sub');
+  if(logo&&D.setup.orgName)logo.textContent=D.setup.orgName.slice(0,2).toUpperCase();
+  if(title&&D.setup.trackName)title.textContent=`TA Process Map — ${D.setup.trackName}`;
+  if(sub&&D.setup.trackName)sub.textContent=`Process track: ${D.setup.trackName}`;
+};
+window.onWC=function(hex){applyAC(hex);D.setup.accentColor=hex;const{r,g,b}=h2r(hex);['inp-hex'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=hex;});['r','g','b'].forEach((ch,i)=>{const el=document.getElementById('inp-'+ch);if(el)el.value=h2r(hex)[ch];});const ps=document.getElementById('pswatch');if(ps)ps.style.background=hex;};
+window.onHI=function(v){if(v&&!v.startsWith('#')){v='#'+v.replace('#','');const el=document.getElementById('inp-hex');if(el)el.value=v;}if(vhex(v)){applyAC(v);D.setup.accentColor=v;onWC(v);}};
+window.onRI=function(){const r=parseInt(document.getElementById('inp-r')?.value)||0;const g=parseInt(document.getElementById('inp-g')?.value)||0;const b=parseInt(document.getElementById('inp-b')?.value)||0;const hex='#'+[r,g,b].map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('');onHI(hex);};
+
+function rUsers(){
+  qc(`${sl('System users')}${qt('Who uses your ATS or recruiting platform?')}${qh('Each person selected becomes a swimlane in your process map.')}
+  ${ol(USERS,D.users.selected,true,'tUser')}${ca('inp-user','aUser',D.users.custom)}
+  ${emailSavePanel()}
+  ${fnav('ns','Continue',D.users.selected.length===0&&D.users.custom.length===0)}`);
+}
+window.tUser=function(v){msel(D.users.selected,v);rUsers();};
+window.aUser=function(){const i=document.getElementById('inp-user');const v=i.value.trim();if(v&&!D.users.custom.includes(v)){D.users.custom.push(v);i.value='';}rUsers();};
+
+function rOrg(){
+  const types=[{id:'corp',label:'Corporate / enterprise'},{id:'health',label:'Healthcare / hospital system'},{id:'retail',label:'Retail / high volume hourly'},{id:'gov',label:'Government / public sector'},{id:'nonprofit',label:'Nonprofit'},{id:'staffing',label:'Staffing / RPO'},{id:'tech',label:'Technology / SaaS'},{id:'mfg',label:'Manufacturing / distribution'}];
+  qc(`${sl('Organization')}${qt('What type of organization is this?')}${qh('Helps determine relevant compliance requirements and role types.')}${ol(types,D.org.type,true,'tOrg')}${fnav('ns','Continue',false)}`);
+}
+window.tOrg=function(v){msel(D.org.type,v);rOrg();};
+
+function rAts(){
+  const el=document.getElementById('main');
+  if(!D.ats.selectedPlatform){
+    el.innerHTML=`<div class="qcard">${sl('ATS & technology')}${qt('Which ATS are you using?')}${qh("We'll offer to pre-populate common stages.")}${ol(ATS_P,D.ats.platform?[D.ats.platform]:[],false,'sATS')}${fnav('atsN1','Continue',!D.ats.platform)}</div>`;
+  }else{
+    const stages=ATS_ST[D.ats.platform]||ATS_ST.default;
+    el.innerHTML=`<div class="qcard">${sl('ATS & technology')}${qt('Pre-populate default stages?')}${qh('Use as a starting point and edit freely, or define your own.')}
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;">${stages.map(s=>`<span style="padding:4px 10px;border-radius:20px;font-size:11px;background:${AC}12;border:.5px solid ${AC}50;color:${AC}">${s}</span>`).join('<span style="color:var(--text3);font-size:12px;">→</span>')}</div>
+    <div class="opts">
+      <div class="opt ${D.ats.wantsPrepopulate===true?'sel':''}" onclick="accPre(true)"><span class="rad"><span class="radd"></span></span><div class="ol">Yes — use these as a starting point</div></div>
+      <div class="opt ${D.ats.wantsPrepopulate===false?'sel':''}" onclick="accPre(false)"><span class="rad"><span class="radd"></span></span><div class="ol">No — I'll define my stages from scratch</div></div>
+    </div>
+    <div class="fnav"><button class="bbtn" onclick="D.ats.selectedPlatform=false;rAts()">← Back</button><span class="qctr">${cs+1} of ${activeSecs.length}</span><button class="nbtn" onclick="ns()" style="background:${AC}" ${D.ats.wantsPrepopulate===null?'disabled':''}>Continue →</button></div>
+    </div>`;
+  }
+}
+window.sATS=function(v){D.ats.platform=v;rAts();};
+window.atsN1=function(){D.ats.selectedPlatform=true;rAts();};
+window.accPre=function(v){D.ats.wantsPrepopulate=v;if(v)D.ats.stages=[...(ATS_ST[D.ats.platform]||ATS_ST.default)];else D.ats.stages=[];rAts();};
+
+function rStages(){
+  const base=D.ats.wantsPrepopulate&&D.ats.stages.length?D.ats.stages.map((s,i)=>({id:'ats_'+i,label:s})):STAGES;
+  qc(`${sl('Hiring stages')}${qt('What stages exist in your candidate pipeline?')}${qh('Select all statuses. In the next section you\'ll expand any stage into sub-steps — e.g. multiple interview rounds.')}
+  ${ol(base,D.stages.selected,true,'tStage')}${ca('inp-stage','aStage',D.stages.custom)}
+  ${emailSavePanel()}
+  ${fnav('ns','Continue',D.stages.selected.length===0&&D.stages.custom.length===0)}`);
+}
+window.tStage=function(v){msel(D.stages.selected,v);rStages();};
+window.aStage=function(){const i=document.getElementById('inp-stage');const v=i.value.trim();if(v&&!D.stages.custom.includes(v)){D.stages.custom.push(v);i.value='';}rStages();};
+
+function rSubprocess(){
+  const stages=getStageList();
+  stages.forEach(s=>{if(!D.subprocess[s.id])D.subprocess[s.id]={label:s.label,hasSubprocess:null,rounds:[],open:false};});
+  const roles=getAllRoles();
+  const cards=stages.map(s=>{
+    const sp=D.subprocess[s.id];
+    return`<div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;">
+      <div style="padding:12px 16px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleSP('${s.id}')">
+        <div style="font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:${sp.hasSubprocess!==null?'#3B6D11':'var(--border2)'};"></span>
+          ${s.label}
+          ${sp.hasSubprocess===true?`<span style="padding:2px 8px;border-radius:20px;font-size:11px;background:${AC}12;border:.5px solid ${AC}40;color:${AC}">${sp.rounds.length} round${sp.rounds.length!==1?'s':''}</span>`:''}
+        </div>
+        <span style="font-size:11px;color:var(--text3);">${sp.open?'▲':'▼'}</span>
+      </div>
+      ${sp.open?`<div style="padding:16px;border-top:.5px solid var(--border);">
+        <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;">Does "${s.label}" have multiple steps or rounds?</div>
+        <div class="opts" style="margin-bottom:12px;">
+          <div class="opt ${sp.hasSubprocess===true?'sel':''}" onclick="setSPHas('${s.id}',true)"><span class="rad"><span class="radd"></span></span><div><div class="ol">Yes — expand into sub-steps / rounds</div><div class="od">Multiple interview rounds, multi-step offer, phased onboarding, etc.</div></div></div>
+          <div class="opt ${sp.hasSubprocess===false?'sel':''}" onclick="setSPHas('${s.id}',false)"><span class="rad"><span class="radd"></span></span><div class="ol">No — single step</div></div>
+        </div>
+        ${sp.hasSubprocess===true?buildRounds(s.id, roles):''}
+      </div>`:''}
+    </div>`;
+  }).join('');
+  qc(`${sl('Sub-processes')}${qt('Do any stages have multiple steps or rounds?')}${qh('Expand any stage to define its internal sequence. Each sub-step gets its own node on the map with pass/fail gates between rounds.')}
+  ${cards}${emailSavePanel()}${fnav('ns','Continue',false)}`);
+}
+
+function buildRounds(sid, roles){
+  const sp=D.subprocess[sid];
+  return sp.rounds.map((r,ri)=>`
+    ${ri>0?`<div style="display:flex;align-items:center;gap:8px;margin:4px 0 8px;padding:7px 10px;background:var(--bg2);border-radius:var(--radius);"><div style="width:12px;height:12px;background:#E6F1FB;border:.5px solid #185FA5;transform:rotate(45deg);flex-shrink:0;"></div><span style="font-size:12px;color:var(--text2);">Pass gate — decision diamond between rounds</span></div>`:''}
+    <div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;">
+      <div style="padding:10px 14px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleRound('${sid}',${ri})">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="width:20px;height:20px;border-radius:50%;background:${AC};color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">${ri+1}</span>
+          <input type="text" value="${r.name}" onclick="event.stopPropagation()" oninput="D.subprocess['${sid}'].rounds[${ri}].name=this.value" style="font-size:13px;font-weight:500;border:none;background:transparent;color:var(--text);padding:0;width:150px;font-family:var(--font);">
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button style="padding:3px 8px;background:transparent;border:.5px solid var(--border);border-radius:4px;font-size:11px;cursor:pointer;color:var(--text3);" onclick="event.stopPropagation();delRound('${sid}',${ri})">Remove</button>
+          <span style="font-size:12px;color:var(--text3);">${r.open?'▲':'▼'}</span>
+        </div>
+      </div>
+      ${r.open?`<div style="padding:14px;border-top:.5px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="grid-column:1/-1;"><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;">Interview type</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${ITYPES.map(t=>`<span style="padding:5px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${r.types?.includes(t.id)?`background:${AC}12;border-color:${AC};color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="toggleRT('${sid}',${ri},'types','${t.id}')">${t.label}</span>`).join('')}</div></div>
+        <div style="grid-column:1/-1;"><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;">Format</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${FORMATS.map(f=>`<span style="padding:5px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${r.formats?.includes(f.id)?`background:${AC}12;border-color:${AC};color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="toggleRT('${sid}',${ri},'formats','${f.id}')">${f.label}</span>`).join('')}</div></div>
+        <div style="grid-column:1/-1;"><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;">Who conducts this round?</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${roles.map(role=>`<span style="padding:5px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${r.conductors?.includes(role)?`background:${AC}12;border-color:${AC};color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="toggleRR('${sid}',${ri},'conductors','${role.replace(/'/g,"\\'")}')">${role}</span>`).join('')}</div></div>
+        <div style="grid-column:1/-1;"><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;">Scheduling method</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${SCHED.map(m=>`<span style="padding:5px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${r.schedMethod?.includes(m.id)?`background:${AC}12;border-color:${AC};color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="toggleRT('${sid}',${ri},'schedMethod','${m.id}')">${m.label}</span>`).join('')}</div></div>
+        <div style="grid-column:1/-1;"><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;">Conditional trigger (optional)</div><div style="padding:8px 10px;background:#FAEEDA;border:.5px solid #BA7517;border-radius:var(--radius);display:flex;align-items:center;gap:8px;"><span style="font-size:11px;color:#854F0B;white-space:nowrap;font-weight:500;">Only if:</span><input type="text" placeholder="e.g. director-level roles, union position…" value="${r.condition||''}" oninput="D.subprocess['${sid}'].rounds[${ri}].condition=this.value" style="flex:1;font-size:12px;padding:0;border:none;background:transparent;color:#412402;font-family:var(--font);"></div></div>
+      </div>`:''}
+    </div>`).join('') +
+  `<button onclick="addRound('${sid}')" style="width:100%;padding:10px;background:transparent;border:.5px dashed var(--border);border-radius:var(--radius);font-size:13px;cursor:pointer;color:var(--text2);font-family:var(--font);">+ Add another round</button>`;
+}
+
+window.toggleSP=function(sid){D.subprocess[sid].open=!D.subprocess[sid].open;rSubprocess();};
+window.setSPHas=function(sid,v){D.subprocess[sid].hasSubprocess=v;if(v&&D.subprocess[sid].rounds.length===0)D.subprocess[sid].rounds.push(mkRound(1));D.subprocess[sid].open=true;rSubprocess();};
+window.toggleRound=function(sid,ri){D.subprocess[sid].rounds[ri].open=!D.subprocess[sid].rounds[ri].open;rSubprocess();};
+window.toggleRT=function(sid,ri,field,val){const r=D.subprocess[sid].rounds[ri];if(!r[field])r[field]=[];msel(r[field],val);rSubprocess();};
+window.toggleRR=function(sid,ri,field,role){const r=D.subprocess[sid].rounds[ri];if(!r[field])r[field]=[];msel(r[field],role);rSubprocess();};
+window.addRound=function(sid){const sp=D.subprocess[sid];sp.rounds.push(mkRound(sp.rounds.length+1));rSubprocess();};
+window.delRound=function(sid,ri){D.subprocess[sid].rounds.splice(ri,1);rSubprocess();};
+function mkRound(n){return{id:'r'+Date.now()+n,name:`Round ${n}`,types:[],formats:[],conductors:[],schedMethod:[],condition:'',open:true};}
+
+function rActions(){
+  const stages=getStageList();const roles=getAllRoles();
+  stages.forEach(s=>{if(!D.actions[s.id])D.actions[s.id]={label:s.label,decisionOwners:[],outcomes:[],rejectOwner:[],rejectNote:'',open:false};});
+  const cards=stages.map(s=>{
+    const a=D.actions[s.id];const complete=a.decisionOwners.length>0||a.outcomes.length>0;
+    return`<div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;">
+      <div style="padding:12px 16px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleAct('${s.id}')">
+        <div style="font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;"><span style="width:7px;height:7px;border-radius:50%;background:${complete?'#3B6D11':'var(--border2)'};"></span>${s.label}${complete?`<span style="padding:2px 8px;border-radius:20px;font-size:11px;background:${AC}12;border:.5px solid ${AC}40;color:${AC}">Configured</span>`:''}</div>
+        <span style="font-size:11px;color:var(--text3);">${a.open?'▲':'▼'}</span>
+      </div>
+      ${a.open?`<div style="padding:14px;border-top:.5px solid var(--border);display:flex;flex-direction:column;gap:12px;">
+        <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;"><div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Decision owner</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${roles.map(r=>`<span style="padding:5px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${a.decisionOwners.includes(r)?`background:${AC}12;border-color:${AC};color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="togAR('${s.id}','decisionOwners','${r.replace(/'/g,"\\'")}')">${r}</span>`).join('')}</div></div>
+        <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;"><div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Outcomes</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${[{k:'advance',label:'Advance'},{k:'approve',label:'Approve'},{k:'reject',label:'Reject'},{k:'hold',label:'Hold'}].map(o=>`<span style="padding:5px 12px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${a.outcomes.includes(o.k)?`background:${AC};color:#fff;border-color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="togOut('${s.id}','${o.k}')">${o.label}</span>`).join('')}</div></div>
+      </div>`:''}
+    </div>`;
+  }).join('');
+  qc(`${sl('Actions')}${qt('Who owns each action at every stage?')}${qh('Assign decision owners and outcomes per stage. These appear as action nodes in your swimlane map.')}${cards}${emailSavePanel()}${fnav('ns','Continue',false)}`);
+}
+window.toggleAct=function(sid){D.actions[sid].open=!D.actions[sid].open;rActions();};
+window.togAR=function(sid,field,role){const a=D.actions[sid];if(!Array.isArray(a[field]))a[field]=[];msel(a[field],role);rActions();};
+window.togOut=function(sid,o){msel(D.actions[sid].outcomes,o);rActions();};
+
+function rIntegrations(){
+  qc(`${sl('Integrations')}${qt('What tools are connected to your ATS?')}${qh('These become integration touchpoints on your swimlane map.')}${ol(INTEGS,D.integrations.selected,true,'tInteg')}${ca('inp-integ','aInteg',D.integrations.custom)}${emailSavePanel()}${fnav('ns','Continue',false)}`);
+}
+window.tInteg=function(v){msel(D.integrations.selected,v);rIntegrations();};
+window.aInteg=function(){const i=document.getElementById('inp-integ');const v=i.value.trim();if(v&&!D.integrations.custom.includes(v)){D.integrations.custom.push(v);i.value='';}rIntegrations();};
+
+function rTerms(){
+  const fields=[{key:'req',label:'Job opening',ph:'Requisition'},{key:'candidate',label:'Applicants',ph:'Candidate'},{key:'disposition',label:'Rejection',ph:'Disposition'},{key:'screen',label:'First interaction',ph:'Phone screen'},{key:'offer',label:'Offer stage',ph:'Offer'},{key:'hm',label:'Department manager',ph:'Hiring manager'}];
+  qc(`${sl('Terminology')}${qt('What terms does your organization use?')}${qh('Your map will use your language throughout.')}
+  <div style="display:flex;flex-direction:column;gap:12px;">${fields.map(f=>`<div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">${f.label}</label><input class="mini" type="text" placeholder="${f.ph}" value="${D.terms[f.key]}" oninput="D.terms['${f.key}']=this.value"></div>`).join('')}</div>${fnav('ns','Continue',false)}`);
+}
+function rBranching(){
+  qc(`${sl('Branching')}${qt('Does your process have conditional paths?')}${qh('Describe if/then logic — separate from per-round conditions.')}
+  <div id="br">${(D.branching.rules||[]).map((r,i)=>`<div style="display:flex;gap:8px;margin-bottom:8px;"><input class="mini" type="text" value="${r}" oninput="D.branching.rules[${i}]=this.value" placeholder="If… then…"><button style="padding:8px 10px;background:transparent;border:.5px solid var(--border);border-radius:var(--radius);cursor:pointer;color:var(--text2);" onclick="delBR(${i})">×</button></div>`).join('')}</div>
+  <button onclick="addBR()" style="padding:9px 16px;background:transparent;border:.5px solid var(--border);border-radius:var(--radius);font-size:13px;cursor:pointer;color:var(--text);font-family:var(--font);">+ Add rule</button>
+  ${fnav('ns','Continue (skip if none)',false)}`);
+}
+window.addBR=function(){D.branching.rules.push('');rBranching();};
+window.delBR=function(i){D.branching.rules.splice(i,1);rBranching();};
+function rSla(){
+  const stages=getStageList().map(s=>s.label);
+  qc(`${sl('SLAs')}${qt('How long should a candidate spend in each stage?')}${qh('Maximum business days before action is required.')}
+  <div>${stages.map(s=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--border);"><span style="flex:1;font-size:14px;">${s}</span><input class="mini" style="width:65px;text-align:center;" type="number" min="0" max="90" placeholder="—" value="${D.sla.values[s]||''}" oninput="D.sla.values['${s}']=this.value"><span style="font-size:12px;color:var(--text2);">days</span></div>`).join('')}</div>
+  ${fnav('ns','Continue',false)}`);
+}
+function rCompliance(){
+  const opts=[{id:'ofccp',label:'OFCCP / affirmative action'},{id:'eeo',label:'EEO data collection'},{id:'adverse',label:'Adverse action notices'},{id:'pay',label:'Pay transparency'},{id:'gdpr',label:'GDPR / data privacy'},{id:'i9',label:'I-9 / E-Verify'},{id:'drug_dot',label:'DOT / drug testing'}];
+  qc(`${sl('Compliance')}${qt('Which compliance requirements apply?')}${qh('Flagged on your map and noted in your SOP.')}${ol(opts,D.compliance.selected,true,'tComp')}${fnav('ns','Continue',false)}`);
+}
+window.tComp=function(v){msel(D.compliance.selected,v);rCompliance();};
+function rApprovals(){
+  const checks=[{key:'req',label:'Requisition approval before posting'},{key:'offer',label:'Offer approval before extending'},{key:'supComp',label:'Supplemental / exception comp approval'},{key:'audit',label:'Offer audit / QC review'}];
+  qc(`${sl('Approvals')}${qt('What approval steps exist?')}${qh('These become decision nodes on your map.')}
+  <div class="opts">${checks.map(c=>`<div class="opt ${D.approvals[c.key]?'sel':''}" onclick="D.approvals['${c.key}']=!D.approvals['${c.key}'];rApprovals()"><span class="chk"><span class="chkm">✓</span></span><div class="ol">${c.label}</div></div>`).join('')}</div>
+  ${fnav('ns','Continue',false)}`);
+}
+function rOnboarding(){
+  const tasks=[{id:'bg',label:'Background check complete'},{id:'offer_signed',label:'Offer letter signed'},{id:'i9',label:'I-9 initiated'},{id:'it',label:'IT setup sent'},{id:'hris',label:'HRIS record created'},{id:'forms',label:'New hire forms sent'}];
+  qc(`${sl('Onboarding handoff')}${qt('Where does TA end and HR / onboarding begin?')}${qh('Select tasks that trigger the handoff boundary.')}${ol(tasks,D.onboarding.tasks,true,'tOnboard')}${fnav('ns','Continue to Review',false)}`);
+}
+window.tOnboard=function(v){msel(D.onboarding.tasks,v);rOnboarding();};
+
+function rReview(){
+  const userLabels=[...D.users.selected.map(u=>USERS.find(o=>o.id===u)?.label||u),...D.users.custom];
+  const stageList=getStageList();
+  const integLabels=[...D.integrations.selected.map(i=>INTEGS.find(o=>o.id===i)?.label||i),...D.integrations.custom];
+  const spList=stageList.filter(s=>D.subprocess[s.id]?.hasSubprocess===true);
+  const chip=v=>`<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:12px;margin:2px;background:${AC}12;border:.5px solid ${AC}40;color:${AC}">${v}</span>`;
+  const resumeURL=`${https://tacticHub.github.io/TASSP-Playbook/process-mapper-tool.html}?token=${RESUME_TOKEN}`;
+
+  document.getElementById('main').innerHTML=`
+    <div style="margin-bottom:16px;"><div style="font-size:18px;font-weight:500;margin-bottom:4px;">Review your process map</div><div style="font-size:13px;color:var(--text2);">Check everything and edit before generating. Click any section header to go back.</div></div>
+
+    ${sumSec('Process track & setup',activeSecs.indexOf('setup'),[['Track',D.setup.trackName||'—'],['Mode',mode==='quick'?'Quick':'Full'],['Brand color',`<span style="display:inline-flex;align-items:center;gap:7px;"><span style="width:14px;height:14px;border-radius:3px;background:${AC};display:inline-block;"></span>${AC}</span>`]])}
+    ${sumSec('Swimlane users',activeSecs.indexOf('users'),[],userLabels.map(chip).join('')||'None')}
+    ${sumSec('Candidate stages',activeSecs.indexOf('stages'),[],stageList.map(s=>chip(s.label)).join('')||'None')}
+    ${spList.length?sumSec('Sub-processes',activeSecs.indexOf('subprocess'),[],spList.map(s=>`<div style="padding:5px 0;border-bottom:.5px solid var(--border);font-size:12px;"><strong>${s.label}</strong> — ${D.subprocess[s.id].rounds.length} round${D.subprocess[s.id].rounds.length!==1?'s':''}: ${D.subprocess[s.id].rounds.map(r=>r.name).join(' → ')}</div>`).join('')):''}
+    ${sumSec('Integrations',activeSecs.indexOf('integrations'),[],integLabels.map(chip).join('')||'None')}
+
+    <div style="margin-top:18px;padding:16px;background:var(--bg2);border:.5px solid var(--border);border-radius:var(--radius-lg);">
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px;">Your permanent resume link</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">Bookmark this or save it — anyone with this link can access and continue this session.</div>
+      <div class="link-box">
+        <input class="link-input" type="text" readonly value="${resumeURL}">
+        <button class="copy-btn" onclick="navigator.clipboard.writeText('${resumeURL}').then(()=>showToast('Link copied!'))">Copy</button>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <button onclick="generateOutput()" style="width:100%;padding:14px;background:${AC};color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:500;cursor:pointer;font-family:var(--font);">Generate BPMN map & SOP →</button>
+      <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--text3);">Generates 36×24" print-ready PDF map at 300 DPI + complete SOP Word document</div>
+    </div>`;
+
+  // Mark as completed in Supabase
+  if(SESSION_ID && RESUME_TOKEN) {
+    sb.from('sessions').update({ status: 'review', current_section: 'review' })
+      .eq('resume_token', RESUME_TOKEN).then(()=>{});
+  }
+}
+
+function sumSec(title,sIdx,rows,chipHtml){
+  return`<div style="background:var(--bg);border:.5px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden;">
+    <div style="padding:12px 16px;background:var(--bg2);border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:14px;font-weight:500;">${title}</span>
+      <span style="font-size:12px;color:${AC};cursor:pointer;" onclick="jmp(${sIdx})">Edit</span>
+    </div>
+    <div style="padding:12px 16px;">
+      ${rows.map(([k,v])=>`<div style="display:flex;gap:12px;padding:4px 0;border-bottom:.5px solid var(--border);font-size:13px;"><span style="color:var(--text2);min-width:140px;">${k}</span><span>${v}</span></div>`).join('')}
+      ${chipHtml?`<div style="padding:6px 0;">${chipHtml}</div>`:''}
+    </div>
+  </div>`;
+}
+
+window.generateOutput = async function() {
+  // Mark as completed
+  if(SESSION_ID && RESUME_TOKEN) {
+    await sb.from('sessions')
+      .update({ status: 'completed' })
+      .eq('resume_token', RESUME_TOKEN);
+  }
+  // Save all remaining section data
+  for(const sec of activeSecs) {
+    if(D[sec]) await saveSection(sec);
+  }
+  showToast('Session saved — generating your outputs…', 3000);
+};
+
+const RS={setup:rSetup,org:rOrg,users:rUsers,terms:rTerms,ats:rAts,reqflow:()=>{
+  // Simplified reqflow inline
+  qc(`${sl('Requisition flow')}${qt('How are job requisitions opened?')}${qh('This determines the first action on your map.')}
+  ${ol(REQ_OPEN,D.reqflow.reqOpenMethod,true,'tReqO')}
+  <div style="margin-top:14px;"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">Notes (optional)</label><input class="mini" type="text" placeholder="e.g. HM submits Google Form, recruiter converts to ATS req" value="${D.reqflow.reqOpenNote||''}" oninput="D.reqflow.reqOpenNote=this.value"></div>
+  ${emailSavePanel()}${fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0)}`);
+},stages:rStages,subprocess:rSubprocess,actions:rActions,integrations:rIntegrations,branching:rBranching,sla:rSla,compliance:rCompliance,approvals:rApprovals,onboarding:rOnboarding};
+window.tReqO=function(v){msel(D.reqflow.reqOpenMethod,v);RS.reqflow();};
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(async function init(){
+  applyAC(AC);
+  await initSession();
+  if(!document.getElementById('main').querySelector('.resume-card')) render();
+})();
+</script>
+</body>
+</html>

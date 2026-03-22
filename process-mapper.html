@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TA Process Mapper — TASSP Playbook</title>
+<meta name="description" content="Map your talent acquisition process from start to finish. Generate a print-ready BPMN swimlane diagram and written SOP — built for TA teams implementing a new ATS or documenting their process for the first time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   MATCH YOUR EXISTING TASSP-PLAYBOOK STYLES HERE
+   Replace the CSS variables below with your actual values
+   from index.html / library.html if anything looks off.
+   ============================================================ */
+:root {
+  --bg:        #0e0e0f;
+  --bg2:       #161618;
+  --bg3:       #1e1e21;
+  --bg4:       #26262a;
+  --border:    rgba(255,255,255,0.08);
+  --border2:   rgba(255,255,255,0.14);
+  --text:      #f0ede8;
+  --text2:     #9e9b94;
+  --text3:     #5c5a56;
+  --accent:    #c0392b;
+  --accent2:   #e74c3c;
+  --accent-bg: rgba(192,57,43,0.12);
+  --green:     #27ae60;
+  --blue:      #2980b9;
+  --amber:     #d68910;
+  --font-head: 'DM Serif Display', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, sans-serif;
+  --radius:    8px;
+  --radius-lg: 14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(14,14,15,0.92);backdrop-filter:blur(12px);border-bottom:0.5px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:58px;}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--font-head);font-size:17px;color:var(--text);}
+.nav-dot{width:8px;height:8px;border-radius:50%;background:var(--accent2);}
+.nav-links{display:flex;align-items:center;gap:4px;}
+.nav-links a{padding:7px 13px;color:var(--text2);text-decoration:none;font-size:14px;border-radius:var(--radius);transition:all .15s;}
+.nav-links a:hover{color:var(--text);background:var(--bg3);}
+.nav-links a.active{color:var(--accent2);}
+.nav-cta{background:var(--accent)!important;color:#fff!important;font-weight:500!important;}
+.nav-cta:hover{background:var(--accent2)!important;}
+
+/* HERO */
+.hero{padding:90px 32px 72px;max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;background:var(--accent-bg);border:0.5px solid rgba(192,57,43,0.3);border-radius:20px;font-size:12px;font-weight:500;color:var(--accent2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:22px;}
+.eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--accent2);}
+h1{font-family:var(--font-head);font-size:clamp(34px,4.5vw,52px);line-height:1.12;margin-bottom:20px;letter-spacing:-.01em;}
+h1 em{font-style:italic;color:var(--accent2);}
+.hero-desc{font-size:17px;color:var(--text2);line-height:1.65;margin-bottom:34px;max-width:480px;}
+.hero-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.btn-primary{display:inline-flex;align-items:center;gap:10px;padding:13px 26px;background:var(--accent);color:#fff;text-decoration:none;border-radius:var(--radius);font-size:15px;font-weight:500;transition:all .15s;border:none;cursor:pointer;font-family:var(--font-body);}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px);}
+.btn-primary svg{transition:transform .15s;}
+.btn-primary:hover svg{transform:translateX(3px);}
+.btn-secondary{display:inline-flex;align-items:center;gap:8px;padding:13px 20px;background:transparent;color:var(--text2);text-decoration:none;border-radius:var(--radius);font-size:15px;border:0.5px solid var(--border2);transition:all .15s;}
+.btn-secondary:hover{color:var(--text);background:var(--bg3);}
+.hero-note{font-size:12px;color:var(--text3);margin-top:14px;}
+.hero-note span{color:var(--green);}
+
+/* MAP MOCKUP */
+.map-mockup{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5);}
+.map-bar{background:#5a126b;padding:10px 16px;font-size:12px;font-weight:500;color:rgba(255,255,255,.9);display:flex;justify-content:space-between;}
+.map-bar span{font-size:10px;opacity:.6;}
+.lane{display:flex;border-bottom:.5px solid rgba(255,255,255,.05);min-height:44px;}
+.lane:last-of-type{border-bottom:none;}
+.lane-lbl{width:106px;min-width:106px;padding:8px 10px;font-size:10px;font-weight:500;color:rgba(255,255,255,.35);border-right:.5px solid rgba(255,255,255,.05);display:flex;align-items:center;background:rgba(255,255,255,.02);}
+.lane-body{flex:1;padding:8px 10px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.nd{padding:3px 8px;border-radius:4px;font-size:10px;white-space:nowrap;border:.5px solid;}
+.nd.p{background:rgba(135,26,137,.2);border-color:rgba(135,26,137,.5);color:#d4a0d6;}
+.nd.b{background:rgba(41,128,185,.15);border-color:rgba(41,128,185,.4);color:#7db9d8;}
+.nd.g{background:rgba(39,174,96,.15);border-color:rgba(39,174,96,.4);color:#7dcc9e;}
+.nd.a{background:rgba(214,137,16,.15);border-color:rgba(214,137,16,.4);color:#e8c06a;}
+.nd.r{background:rgba(192,57,43,.15);border-color:rgba(192,57,43,.4);color:#e8806e;}
+.dia{width:20px;height:20px;min-width:20px;background:rgba(41,128,185,.15);border:.5px solid rgba(41,128,185,.5);transform:rotate(45deg);flex-shrink:0;}
+.arr{font-size:10px;color:rgba(255,255,255,.2);}
+.pill{padding:2px 7px;border-radius:20px;font-size:10px;}
+.pill.ok{background:rgba(39,174,96,.15);color:#7dcc9e;border:.5px solid rgba(39,174,96,.3);}
+.pill.no{background:rgba(192,57,43,.15);color:#e8806e;border:.5px solid rgba(192,57,43,.3);}
+.map-leg{padding:7px 12px;background:rgba(255,255,255,.02);display:flex;gap:12px;flex-wrap:wrap;}
+.leg-i{display:flex;align-items:center;gap:4px;font-size:10px;color:rgba(255,255,255,.25);}
+
+/* SECTIONS */
+.sec{padding:76px 32px;}
+.sec-inner{max-width:1100px;margin:0 auto;}
+.sec-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);margin-bottom:14px;display:block;}
+h2{font-family:var(--font-head);font-size:clamp(26px,3.5vw,40px);line-height:1.15;margin-bottom:14px;letter-spacing:-.01em;}
+.sec-desc{font-size:17px;color:var(--text2);max-width:600px;line-height:1.65;}
+
+/* USE CASE GRID */
+.uc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:44px;}
+.uc-card{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:22px;transition:all .2s;}
+.uc-card:hover{border-color:var(--border2);background:var(--bg3);transform:translateY(-2px);}
+.uc-icon{width:36px;height:36px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:17px;}
+.uc-card h3{font-size:14px;font-weight:600;margin-bottom:7px;}
+.uc-card p{font-size:13px;color:var(--text2);line-height:1.55;}
+
+/* CALLOUT */
+.callout{background:var(--bg2);border:.5px solid rgba(214,137,16,.25);border-left:3px solid var(--amber);border-radius:var(--radius-lg);padding:22px 26px;margin:48px 0;display:flex;gap:16px;align-items:flex-start;}
+.callout-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+.callout h3{font-size:14px;font-weight:600;margin-bottom:5px;}
+.callout p{font-size:13px;color:var(--text2);line-height:1.6;}
+.track-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.tp{padding:3px 10px;background:var(--bg3);border:.5px solid var(--border2);border-radius:20px;font-size:12px;color:var(--text2);}
+
+/* HOW IT WORKS */
+.how{background:var(--bg2);border-top:.5px solid var(--border);border-bottom:.5px solid var(--border);}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:48px;position:relative;}
+.steps::before{content:'';position:absolute;top:21px;left:10%;right:10%;height:.5px;background:var(--border2);}
+.step{text-align:center;padding:0 14px;position:relative;}
+.step-n{width:42px;height:42px;border-radius:50%;background:var(--bg3);border:.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--accent2);margin:0 auto 14px;position:relative;z-index:1;}
+.step h4{font-size:13px;font-weight:600;margin-bottom:5px;}
+.step p{font-size:12px;color:var(--text2);line-height:1.5;}
+
+/* OUTPUTS */
+.out-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px;}
+.out-card{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:26px;display:flex;flex-direction:column;gap:10px;}
+.out-num{font-family:var(--font-head);font-size:30px;color:var(--accent);opacity:.55;line-height:1;}
+.out-card h3{font-size:15px;font-weight:600;}
+.out-card p{font-size:13px;color:var(--text2);line-height:1.55;flex:1;}
+.specs{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
+.sp{padding:3px 8px;background:var(--bg4);border:.5px solid var(--border);border-radius:20px;font-size:11px;color:var(--text3);}
+
+/* CTA */
+.cta{text-align:center;padding:96px 32px;background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);border-top:.5px solid var(--border);}
+.cta-inner{max-width:600px;margin:0 auto;}
+.cta h2{font-family:var(--font-head);font-size:clamp(28px,4vw,44px);line-height:1.15;margin-bottom:14px;}
+.cta p{font-size:17px;color:var(--text2);margin-bottom:32px;line-height:1.6;}
+.cta-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+
+/* FOOTER */
+footer{padding:28px 32px;border-top:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--text3);}
+footer a{color:var(--text3);text-decoration:none;}
+footer a:hover{color:var(--text2);}
+
+/* RESPONSIVE */
+@media(max-width:900px){.hero{grid-template-columns:1fr;gap:36px;padding:56px 24px;}.uc-grid{grid-template-columns:1fr 1fr;}.steps{grid-template-columns:1fr 1fr;gap:20px;}.steps::before{display:none;}.out-grid{grid-template-columns:1fr;}}
+@media(max-width:600px){nav{padding:0 18px;}.sec{padding:52px 18px;}.uc-grid{grid-template-columns:1fr;}.steps{grid-template-columns:1fr;}}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.fu{animation:fadeUp .5s ease both;}
+.fu:nth-child(2){animation-delay:.09s;}
+.fu:nth-child(3){animation-delay:.18s;}
+.fu:nth-child(4){animation-delay:.27s;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     NAV — replace with your existing nav from index.html
+     ══════════════════════════════════════════════════════ -->
+<nav>
+  <a class="nav-brand" href="index.html">
+    <span class="nav-dot"></span>
+    TASSP Playbook
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="library.html">Library</a>
+    <a href="process-mapper.html" class="active">Process Mapper</a>
+    <a href="process-mapper-tool.html" class="nav-cta">Launch tool →</a>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════
+     HERO
+     ══════════════════════════════════════════════════════ -->
+<div style="max-width:1100px;margin:0 auto;padding:0 32px;">
+  <div class="hero">
+    <div>
+      <div class="eyebrow fu"><span class="eyebrow-dot"></span>TA Process Mapping Tool</div>
+      <h1 class="fu">Map your hiring process.<br><em>Once, properly.</em></h1>
+      <p class="hero-desc fu">A guided interview that captures your end-to-end talent acquisition process and generates a print-ready BPMN swimlane diagram and written SOP — built for TA teams implementing a new ATS or documenting their process for the first time.</p>
+      <div class="hero-actions fu">
+        <a href="process-mapper-tool.html" class="btn-primary">
+          Start mapping your process
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="#how-it-works" class="btn-secondary">See how it works</a>
+      </div>
+      <p class="hero-note fu"><span>✓</span> Free to use &nbsp;<span>✓</span> No account required &nbsp;<span>✓</span> Progress saves automatically</p>
+    </div>
+
+    <!-- Mini process map preview -->
+    <div class="fu">
+      <div class="map-mockup">
+        <div class="map-bar">Acme Corp — Hourly hiring<span>iCIMS · BPMN notation</span></div>
+        <div class="lane"><div class="lane-lbl">Candidate</div><div class="lane-body"><div class="nd g">Start</div><span class="arr">→</span><div class="nd a">Applies via portal</div><span class="arr">→</span><div class="nd g">Hired ✓</div></div></div>
+        <div class="lane"><div class="lane-lbl">Hiring manager</div><div class="lane-body"><div class="nd a">Submits intake</div><span class="arr">→</span><div class="nd p">Leads interview</div><span class="arr">→</span><div class="dia"></div><div class="pill ok">Advance</div><div class="pill no">Decline</div></div></div>
+        <div class="lane"><div class="lane-lbl">Recruiter</div><div class="lane-body"><div class="nd p">Creates req</div><span class="arr">→</span><div class="dia"></div><div class="pill ok">Post</div><div class="pill no">Reject</div></div></div>
+        <div class="lane"><div class="lane-lbl">Rec. coordinator</div><div class="lane-body"><div class="nd b">Schedules R1</div><span class="arr">→</span><div class="nd b">Schedules R2</div></div></div>
+        <div class="lane"><div class="lane-lbl">TA ops specialist</div><div class="lane-body"><div class="nd p">Offer audit & QC</div><span class="arr">→</span><div class="dia"></div><div class="pill ok">Approved</div></div></div>
+        <div class="lane"><div class="lane-lbl">Credentialing</div><div class="lane-body"><div class="nd a">Initiates BGC</div><span class="arr">→</span><div class="dia"></div><div class="pill ok">Pass</div><div class="pill no">Fail</div></div></div>
+        <div class="map-leg">
+          <div class="leg-i"><span style="width:9px;height:9px;border-radius:2px;background:rgba(135,26,137,.3);border:.5px solid rgba(135,26,137,.5);display:inline-block;"></span>Task</div>
+          <div class="leg-i"><span style="width:9px;height:9px;background:rgba(41,128,185,.2);border:.5px solid rgba(41,128,185,.4);transform:rotate(45deg);display:inline-block;"></span>Decision</div>
+          <div class="leg-i"><span style="width:9px;height:3px;background:#27ae60;display:inline-block;border-radius:1px;"></span>Approved</div>
+          <div class="leg-i"><span style="width:9px;height:3px;background:#c0392b;display:inline-block;border-radius:1px;"></span>Rejected</div>
+        </div>
+      </div>
+      <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px;">Sample output — your map generates from your actual process data</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     USE CASES
+     ══════════════════════════════════════════════════════ -->
+<section class="sec" id="use-cases">
+  <div class="sec-inner">
+    <span class="sec-label">Who this is for</span>
+    <h2>Built for the moments that matter most in TA</h2>
+    <p class="sec-desc">Whether you're standing up a new ATS, documenting your process for the first time, or creating a deliverable for a client — this tool guides you through it.</p>
+    <div class="uc-grid">
+      <div class="uc-card"><div class="uc-icon" style="background:rgba(192,57,43,.1);">🏗️</div><h3>New ATS implementation</h3><p>Your implementation consultant needs to understand your process before they can configure the system. This tool captures it in the format they need — before your kickoff call.</p></div>
+      <div class="uc-card"><div class="uc-icon" style="background:rgba(39,174,96,.1);">📄</div><h3>First-time documentation</h3><p>Many TA teams have never formally mapped their process — it lives in people's heads. This tool walks you through it step by step. No process design experience required.</p></div>
+      <div class="uc-card"><div class="uc-icon" style="background:rgba(41,128,185,.1);">🔄</div><h3>Process redesign</h3><p>Map the as-is state before designing the to-be. Identifying what you currently do is the necessary first step to improving it — use the output to facilitate a structured redesign.</p></div>
+      <div class="uc-card"><div class="uc-icon" style="background:rgba(214,137,16,.1);">🤝</div><h3>Stakeholder alignment</h3><p>Get recruiters, hiring managers, HR, and leadership on the same page about who does what and when. The swimlane map makes ownership visible in a way a conversation never can.</p></div>
+      <div class="uc-card"><div class="uc-icon" style="background:rgba(135,26,137,.1);">⚖️</div><h3>Compliance & audit prep</h3><p>Documenting your process for OFCCP, internal audit, or SOX requires a clear record of decision points, role assignments, and disposition procedures. The SOP output is built for this.</p></div>
+      <div class="uc-card"><div class="uc-icon" style="background:rgba(192,57,43,.1);">📊</div><h3>Consultant deliverables</h3><p>RPO, HR consulting, or implementation firms: run this on behalf of a client and deliver a branded, print-ready map and SOP as part of your engagement. White-labeling is built in.</p></div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-icon">⚠️</div>
+      <div>
+        <h3>One session maps one process track</h3>
+        <p>Each session captures a single hiring process. If your organization runs different processes for different populations, each requires its own session. Common tracks include:</p>
+        <div class="track-pills">
+          <span class="tp">Hourly / hourly-temp</span><span class="tp">Salaried / professional</span><span class="tp">Corporate / office</span><span class="tp">Executive / leadership</span><span class="tp">High volume / seasonal</span><span class="tp">Internal transfer / promotion</span><span class="tp">Union</span><span class="tp">Campus recruiting</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     HOW IT WORKS
+     ══════════════════════════════════════════════════════ -->
+<section class="sec how" id="how-it-works">
+  <div class="sec-inner">
+    <span class="sec-label">How it works</span>
+    <h2>A guided interview that builds your map</h2>
+    <p class="sec-desc">Answer structured questions about your process — no BPMN knowledge or process design experience required. The tool handles the notation, layout, and documentation automatically.</p>
+    <div class="steps">
+      <div class="step"><div class="step-n">1</div><h4>Choose your track</h4><p>Select the specific hiring process you're mapping. One session, one track.</p></div>
+      <div class="step"><div class="step-n">2</div><h4>Define your users</h4><p>Identify everyone who interacts with the system. Each person becomes a swimlane.</p></div>
+      <div class="step"><div class="step-n">3</div><h4>Capture stages & actions</h4><p>Map every stage, decision owner, outcome, and integration touchpoint.</p></div>
+      <div class="step"><div class="step-n">4</div><h4>Expand sub-processes</h4><p>Define multiple interview rounds, multi-step offers, or phased onboarding.</p></div>
+      <div class="step"><div class="step-n">5</div><h4>Generate outputs</h4><p>Receive a 300 DPI print-ready BPMN map and a complete SOP document.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     OUTPUTS
+     ══════════════════════════════════════════════════════ -->
+<section class="sec" id="outputs">
+  <div class="sec-inner">
+    <span class="sec-label">What you get</span>
+    <h2>Three outputs, built for real use</h2>
+    <p class="sec-desc">Not a screenshot. Not a wireframe. Production-ready documents you can hand directly to a consultant, print for a wall, or attach to a compliance filing.</p>
+    <div class="out-grid">
+      <div class="out-card"><div class="out-num">01</div><h3>BPMN swimlane process map</h3><p>A fully notated swimlane diagram with proper BPMN shapes — ovals for start/end events, diamonds for decision gateways, pentagons for cross-lane handoffs, parallelograms for data in/out. Every role, stage, and decision rendered correctly.</p><div class="specs"><span class="sp">36" × 24" poster</span><span class="sp">300 DPI minimum</span><span class="sp">Vector PDF</span><span class="sp">Print-ready</span></div></div>
+      <div class="out-card"><div class="out-num">02</div><h3>Written SOP document</h3><p>A structured Standard Operating Procedure with role responsibilities, phase-by-phase narrative, RACI matrix, per-stage action ownership, sub-process documentation, and process rules. Ready for a compliance binder or consultant handoff.</p><div class="specs"><span class="sp">Word document</span><span class="sp">RACI matrix</span><span class="sp">Sub-process docs</span><span class="sp">Branded</span></div></div>
+      <div class="out-card"><div class="out-num">03</div><h3>Shareable session link</h3><p>A permanent link to your completed session. Share with implementation consultants, leadership, or your ATS vendor. Your progress saves automatically — pick up where you left off on any device.</p><div class="specs"><span class="sp">Auto-saves progress</span><span class="sp">Resume anytime</span><span class="sp">Email link</span><span class="sp">90-day retention</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     CTA
+     ══════════════════════════════════════════════════════ -->
+<section class="cta">
+  <div class="cta-inner">
+    <h2>Ready to map your process?</h2>
+    <p>Quick mode takes about 15 minutes. Full mode is 45. Either way, you'll end the session with something you can actually use.</p>
+    <div class="cta-actions">
+      <a href="process-mapper-tool.html" class="btn-primary" style="font-size:16px;padding:15px 30px;">
+        Start mapping now
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+    <p style="font-size:13px;color:var(--text3);margin-top:16px;">No account required · Progress saves automatically · 300 DPI print-ready outputs</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     FOOTER — replace with your existing footer from index.html
+     ══════════════════════════════════════════════════════ -->
+<footer>
+  <span>© 2026 TacticHub — TASSP Playbook</span>
+  <div style="display:flex;gap:20px;">
+    <a href="index.html">Home</a>
+    <a href="library.html">Library</a>
+    <a href="process-mapper.html">Process Mapper</a>
+  </div>
+</footer>
+
+</body>
+</html>
