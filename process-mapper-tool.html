@@ -41,8 +41,8 @@
   .hdr-title { font-size: 15px; font-weight: 500; }
   .hdr-sub { font-size: 12px; opacity: .65; margin-top: 1px; }
   .hdr-right { display: flex; align-items: center; gap: 10px; }
-  .save-indicator { font-size: 11px; opacity: .75; display: flex; align-items: center; gap: 5px; }
-  .save-dot { width: 6px; height: 6px; border-radius: 50%; background: #7fff7f; }
+  .save-indicator { font-size: 11px; opacity: .8; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.12); padding: 4px 10px; border-radius: 20px; }
+  .save-dot { width: 7px; height: 7px; border-radius: 50%; background: #7fff7f; flex-shrink: 0; }
   .save-dot.saving { background: #ffdd44; animation: pulse .8s ease-in-out infinite; }
   .save-dot.error { background: #ff6b6b; }
   @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
@@ -180,7 +180,7 @@
     <div class="hdr-right">
       <div class="save-indicator" id="save-indicator" style="display:none;">
         <div class="save-dot" id="save-dot"></div>
-        <span id="save-label">Saved</span>
+        <span id="save-label">Not saved yet</span>
       </div>
     </div>
   </div>
@@ -205,6 +205,10 @@ let SESSION_ID = null;
 let RESUME_TOKEN = null;
 let SAVE_TIMEOUT = null;
 let SAVE_STATUS = 'idle'; // idle | saving | saved | error
+let HAS_INTERACTION = false;  // autosave only starts after first answer
+let LAST_SAVED_AT = null;     // timestamp of last successful save
+let AUTOSAVE_INTERVAL = null; // 30-second interval handle
+let TIMESTAMP_INTERVAL = null; // updates the "last saved X ago" display
 
 // Generate or load resume token from URL
 function getOrCreateToken() {
@@ -350,13 +354,55 @@ async function sendResumeEmail(email) {
 
 function setSaveStatus(status) {
   SAVE_STATUS = status;
+  if (status === 'saved') LAST_SAVED_AT = new Date();
   const ind = document.getElementById('save-indicator');
   const dot = document.getElementById('save-dot');
   const lbl = document.getElementById('save-label');
   if (!ind) return;
   ind.style.display = 'flex';
   dot.className = 'save-dot' + (status === 'saving' ? ' saving' : status === 'error' ? ' error' : '');
-  lbl.textContent = status === 'saving' ? 'Saving…' : status === 'error' ? 'Save error' : 'Saved';
+  updateSaveLabel();
+}
+
+function updateSaveLabel() {
+  const lbl = document.getElementById('save-label');
+  if (!lbl) return;
+  if (SAVE_STATUS === 'saving') { lbl.textContent = 'Saving…'; return; }
+  if (SAVE_STATUS === 'error')  { lbl.textContent = 'Save error'; return; }
+  if (!LAST_SAVED_AT)           { lbl.textContent = 'Not saved yet'; return; }
+  const secs = Math.floor((new Date() - LAST_SAVED_AT) / 1000);
+  if (secs < 5)   lbl.textContent = 'Saved just now';
+  else if (secs < 60)  lbl.textContent = `Saved ${secs}s ago`;
+  else if (secs < 3600) lbl.textContent = `Saved ${Math.floor(secs/60)}m ago`;
+  else lbl.textContent = 'Saved';
+}
+
+function startTimestampInterval() {
+  if (TIMESTAMP_INTERVAL) return;
+  TIMESTAMP_INTERVAL = setInterval(updateSaveLabel, 5000);
+}
+
+function markInteraction() {
+  if (HAS_INTERACTION) return;
+  HAS_INTERACTION = true;
+  startAutosave();
+  startTimestampInterval();
+}
+
+function startAutosave() {
+  if (AUTOSAVE_INTERVAL) return;
+  AUTOSAVE_INTERVAL = setInterval(async () => {
+    if (!SESSION_ID || !RESUME_TOKEN || !HAS_INTERACTION) return;
+    const currentSec = activeSecs[cs];
+    if (currentSec && currentSec !== 'review' && D[currentSec]) {
+      await saveSection(currentSec);
+    }
+  }, 30000); // every 30 seconds
+}
+
+function stopAutosave() {
+  if (AUTOSAVE_INTERVAL) { clearInterval(AUTOSAVE_INTERVAL); AUTOSAVE_INTERVAL = null; }
+  if (TIMESTAMP_INTERVAL) { clearInterval(TIMESTAMP_INTERVAL); TIMESTAMP_INTERVAL = null; }
 }
 
 function showToast(msg, dur = 2800) {
@@ -504,9 +550,10 @@ function render(){
 // Advance section + trigger save
 function ns(){
   if(cs<activeSecs.length-1){
+    markInteraction(); // start autosave on first section advance
     const prevSec=activeSecs[cs];
     cs++;
-    saveSection(prevSec); // save the section we just left
+    saveSection(prevSec);
     render();
     document.getElementById('shell').scrollIntoView({behavior:'smooth',block:'start'});
   }
@@ -640,7 +687,7 @@ function rSetup(){
   });
 }
 
-window.selTrack=function(t){
+window.selTrack=function(t){markInteraction();
   D.setup.trackName=t;
   document.querySelectorAll('.track-opt').forEach(el=>{
     const isSel=el.textContent.trim()===t;
@@ -673,14 +720,14 @@ function rUsers(){
   ${emailSavePanel()}
   ${fnav('ns','Continue',D.users.selected.length===0&&D.users.custom.length===0)}`);
 }
-window.tUser=function(v){msel(D.users.selected,v);rUsers();};
+window.tUser=function(v){markInteraction();msel(D.users.selected,v);rUsers();};
 window.aUser=function(){const i=document.getElementById('inp-user');const v=i.value.trim();if(v&&!D.users.custom.includes(v)){D.users.custom.push(v);i.value='';}rUsers();};
 
 function rOrg(){
   const types=[{id:'corp',label:'Corporate / enterprise'},{id:'health',label:'Healthcare / hospital system'},{id:'retail',label:'Retail / high volume hourly'},{id:'gov',label:'Government / public sector'},{id:'nonprofit',label:'Nonprofit'},{id:'staffing',label:'Staffing / RPO'},{id:'tech',label:'Technology / SaaS'},{id:'mfg',label:'Manufacturing / distribution'}];
   qc(`${sl('Organization')}${qt('What type of organization is this?')}${qh('Helps determine relevant compliance requirements and role types.')}${ol(types,D.org.type,true,'tOrg')}${fnav('ns','Continue',false)}`);
 }
-window.tOrg=function(v){msel(D.org.type,v);rOrg();};
+window.tOrg=function(v){markInteraction();msel(D.org.type,v);rOrg();};
 
 function rAts(){
   const el=document.getElementById('main');
@@ -709,7 +756,7 @@ function rStages(){
   ${emailSavePanel()}
   ${fnav('ns','Continue',D.stages.selected.length===0&&D.stages.custom.length===0)}`);
 }
-window.tStage=function(v){msel(D.stages.selected,v);rStages();};
+window.tStage=function(v){markInteraction();msel(D.stages.selected,v);rStages();};
 window.aStage=function(){const i=document.getElementById('inp-stage');const v=i.value.trim();if(v&&!D.stages.custom.includes(v)){D.stages.custom.push(v);i.value='';}rStages();};
 
 function rSubprocess(){
@@ -768,7 +815,7 @@ function buildRounds(sid, roles){
 }
 
 window.toggleSP=function(sid){D.subprocess[sid].open=!D.subprocess[sid].open;rSubprocess();};
-window.setSPHas=function(sid,v){D.subprocess[sid].hasSubprocess=v;if(v&&D.subprocess[sid].rounds.length===0)D.subprocess[sid].rounds.push(mkRound(1));D.subprocess[sid].open=true;rSubprocess();};
+window.setSPHas=function(sid,v){markInteraction();D.subprocess[sid].hasSubprocess=v;if(v&&D.subprocess[sid].rounds.length===0)D.subprocess[sid].rounds.push(mkRound(1));D.subprocess[sid].open=true;rSubprocess();};
 window.toggleRound=function(sid,ri){D.subprocess[sid].rounds[ri].open=!D.subprocess[sid].rounds[ri].open;rSubprocess();};
 window.toggleRT=function(sid,ri,field,val){const r=D.subprocess[sid].rounds[ri];if(!r[field])r[field]=[];msel(r[field],val);rSubprocess();};
 window.toggleRR=function(sid,ri,field,role){const r=D.subprocess[sid].rounds[ri];if(!r[field])r[field]=[];msel(r[field],role);rSubprocess();};
@@ -794,14 +841,14 @@ function rActions(){
   }).join('');
   qc(`${sl('Actions')}${qt('Who owns each action at every stage?')}${qh('Assign decision owners and outcomes per stage. These appear as action nodes in your swimlane map.')}${cards}${emailSavePanel()}${fnav('ns','Continue',false)}`);
 }
-window.toggleAct=function(sid){D.actions[sid].open=!D.actions[sid].open;rActions();};
+window.toggleAct=function(sid){markInteraction();D.actions[sid].open=!D.actions[sid].open;rActions();};
 window.togAR=function(sid,field,role){const a=D.actions[sid];if(!Array.isArray(a[field]))a[field]=[];msel(a[field],role);rActions();};
-window.togOut=function(sid,o){msel(D.actions[sid].outcomes,o);rActions();};
+window.togOut=function(sid,o){markInteraction();msel(D.actions[sid].outcomes,o);rActions();};
 
 function rIntegrations(){
   qc(`${sl('Integrations')}${qt('What tools are connected to your ATS?')}${qh('These become integration touchpoints on your swimlane map.')}${ol(INTEGS,D.integrations.selected,true,'tInteg')}${ca('inp-integ','aInteg',D.integrations.custom)}${emailSavePanel()}${fnav('ns','Continue',false)}`);
 }
-window.tInteg=function(v){msel(D.integrations.selected,v);rIntegrations();};
+window.tInteg=function(v){markInteraction();msel(D.integrations.selected,v);rIntegrations();};
 window.aInteg=function(){const i=document.getElementById('inp-integ');const v=i.value.trim();if(v&&!D.integrations.custom.includes(v)){D.integrations.custom.push(v);i.value='';}rIntegrations();};
 
 function rTerms(){
@@ -827,7 +874,7 @@ function rCompliance(){
   const opts=[{id:'ofccp',label:'OFCCP / affirmative action'},{id:'eeo',label:'EEO data collection'},{id:'adverse',label:'Adverse action notices'},{id:'pay',label:'Pay transparency'},{id:'gdpr',label:'GDPR / data privacy'},{id:'i9',label:'I-9 / E-Verify'},{id:'drug_dot',label:'DOT / drug testing'}];
   qc(`${sl('Compliance')}${qt('Which compliance requirements apply?')}${qh('Flagged on your map and noted in your SOP.')}${ol(opts,D.compliance.selected,true,'tComp')}${fnav('ns','Continue',false)}`);
 }
-window.tComp=function(v){msel(D.compliance.selected,v);rCompliance();};
+window.tComp=function(v){markInteraction();msel(D.compliance.selected,v);rCompliance();};
 function rApprovals(){
   const checks=[{key:'req',label:'Requisition approval before posting'},{key:'offer',label:'Offer approval before extending'},{key:'supComp',label:'Supplemental / exception comp approval'},{key:'audit',label:'Offer audit / QC review'}];
   qc(`${sl('Approvals')}${qt('What approval steps exist?')}${qh('These become decision nodes on your map.')}
@@ -838,7 +885,7 @@ function rOnboarding(){
   const tasks=[{id:'bg',label:'Background check complete'},{id:'offer_signed',label:'Offer letter signed'},{id:'i9',label:'I-9 initiated'},{id:'it',label:'IT setup sent'},{id:'hris',label:'HRIS record created'},{id:'forms',label:'New hire forms sent'}];
   qc(`${sl('Onboarding handoff')}${qt('Where does TA end and HR / onboarding begin?')}${qh('Select tasks that trigger the handoff boundary.')}${ol(tasks,D.onboarding.tasks,true,'tOnboard')}${fnav('ns','Continue to Review',false)}`);
 }
-window.tOnboard=function(v){msel(D.onboarding.tasks,v);rOnboarding();};
+window.tOnboard=function(v){markInteraction();msel(D.onboarding.tasks,v);rOnboarding();};
 
 function rReview(){
   const userLabels=[...D.users.selected.map(u=>USERS.find(o=>o.id===u)?.label||u),...D.users.custom];
@@ -897,6 +944,7 @@ window.generateOutput = async function() {
     await sb.from('sessions').update({ status: 'completed' }).eq('resume_token', RESUME_TOKEN);
   }
   for(const sec of activeSecs) { if(D[sec]) await saveSection(sec); }
+  HAS_INTERACTION = false; // prevent beforeunload after successful generate
 
   // Show generating state
   const btn = document.querySelector('button[onclick="generateOutput()"]');
@@ -1499,13 +1547,28 @@ const RS={setup:rSetup,org:rOrg,users:rUsers,terms:rTerms,ats:rAts,reqflow:()=>{
   <div style="margin-top:14px;"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">Notes (optional)</label><input class="mini" type="text" placeholder="e.g. HM submits Google Form, recruiter converts to ATS req" value="${D.reqflow.reqOpenNote||''}" oninput="D.reqflow.reqOpenNote=this.value"></div>
   ${emailSavePanel()}${fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0)}`);
 },stages:rStages,subprocess:rSubprocess,actions:rActions,integrations:rIntegrations,branching:rBranching,sla:rSla,compliance:rCompliance,approvals:rApprovals,onboarding:rOnboarding};
-window.tReqO=function(v){msel(D.reqflow.reqOpenMethod,v);RS.reqflow();};
+window.tReqO=function(v){markInteraction();msel(D.reqflow.reqOpenMethod,v);RS.reqflow();};
+
+// ── BEFOREUNLOAD — warn if session has unsaved progress ──────────────────────
+window.addEventListener('beforeunload', function(e) {
+  if (!HAS_INTERACTION || SAVE_STATUS === 'saved') return;
+  const msg = 'You have unsaved progress. Are you sure you want to leave?';
+  e.preventDefault();
+  e.returnValue = msg;
+  return msg;
+});
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 (async function init(){
   applyAC(AC);
   await initSession();
   if(!document.getElementById('main').querySelector('.resume-card')) render();
+  // Start timestamp updater if we already have a saved session
+  if (SESSION_ID) {
+    LAST_SAVED_AT = new Date();
+    startTimestampInterval();
+    setSaveStatus('saved');
+  }
 })();
 </script>
 </body>
