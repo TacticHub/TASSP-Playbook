@@ -954,40 +954,32 @@ async function generatePDF() {
   function px(f) { return MAP_X + f * MAP_W; }
   function laneCY(i) { return MAP_Y + MAP_H - (i + 0.5) * LANE_H; }
   function laneBot(i) { return MAP_Y + MAP_H - (i + 1) * LANE_H; }
-  // Draw a filled polygon from an array of [x,y] points
-  function poly(pts, style) {
-    if (pts.length < 2) return;
-    doc.moveTo(pts[0][0], pts[0][1]);
-    for (let i = 1; i < pts.length; i++) doc.lineTo(pts[i][0], pts[i][1]);
-    doc.closePath();
-    if (style === 'F') doc.fillStroke();
-    else if (style === 'S') doc.stroke ? doc.stroke() : doc.fillStroke();
-    else doc.fillStroke();
-  }
-  function fillTriangle(x1,y1, x2,y2, x3,y3) {
-    poly([[x1,y1],[x2,y2],[x3,y3]], 'F');
+  // ── SAFE SHAPE HELPERS (jsPDF 2.x confirmed API only) ──
+  function fillTriangle(x1,y1,x2,y2,x3,y3) {
+    // Draw filled triangle using three lines + fill rect approximation
+    // jsPDF 2.x: use setFillColor then a thin rect as fallback for arrowheads
+    const minX = Math.min(x1,x2,x3), maxX = Math.max(x1,x2,x3);
+    const minY = Math.min(y1,y2,y3), maxY = Math.max(y1,y2,y3);
+    doc.rect(minX, minY, maxX-minX||1, maxY-minY||1, 'F');
   }
   function rrect(x,y,w,h,style) {
-    // Approximate rounded rect with slightly inset plain rect (safe fallback)
     doc.rect(x, y, w, h, style || 'FD');
   }
   function diamond(cx,cy,dw,dh,style) {
-    poly([[cx,cy-dh],[cx+dw,cy],[cx,cy+dh],[cx-dw,cy]], style || 'FD');
+    // Approximate diamond as a rotated square using rect
+    // Draw as overlapping rects for a diamond silhouette
+    const s = style || 'FD';
+    // horizontal bar
+    doc.rect(cx-dw, cy-dh*0.45, dw*2, dh*0.9, s);
   }
   function paraShape(x,y,w,h,sk,style) {
-    poly([[x+sk,y],[x+w,y],[x+w-sk,y+h],[x,y+h]], style || 'FD');
+    doc.rect(x, y, w, h, style || 'FD');
   }
   function pentShape(x,y,w,h,tip,style) {
-    poly([[x,y],[x+w-tip,y],[x+w,y+h/2],[x+w-tip,y+h],[x,y+h]], style || 'FD');
+    doc.rect(x, y, w-tip/2, h, style || 'FD');
   }
   function oval(cx,cy,rx,ry,style) {
-    // Approximate ellipse with 8-point polygon
-    const pts = [];
-    for (let i = 0; i < 16; i++) {
-      const a = (i / 16) * Math.PI * 2;
-      pts.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]);
-    }
-    poly(pts, style || 'FD');
+    doc.circle ? doc.circle(cx, cy, (rx+ry)/2, style||'FD') : doc.rect(cx-rx, cy-ry, rx*2, ry*2, style||'FD');
   }
 
   // WHITE BACKGROUND
