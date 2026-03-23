@@ -922,9 +922,9 @@ async function generatePDF() {
   const W = 2592, H = 1728, MARGIN = 32;
   const LABEL_W = 116, TITLE_H = 78, LEGEND_H = 36, FOOTER_H = 22;
   const MAP_X = MARGIN + LABEL_W;
-  const MAP_TOP = H - MARGIN - TITLE_H;
+  const MAP_TOP = H - MARGIN - LEGEND_H - FOOTER_H - PHASE_H - 10;
   const PHASE_H = 26;
-  const MAP_Y = MARGIN + LEGEND_H + FOOTER_H + 10;
+  const MAP_Y = MARGIN + TITLE_H + 8;
   const MAP_H = MAP_TOP - PHASE_H - MAP_Y;
   const MAP_W = W - MARGIN - MAP_X;
 
@@ -1152,7 +1152,7 @@ async function generatePDF() {
   }
 
   // LEGEND STRIP
-  const legY = MAP_Y - LEGEND_H - FOOTER_H + 2;
+  const legY = H - MARGIN - FOOTER_H - LEGEND_H - 2;
   doc.setFillColor(248, 247, 250);
   doc.setDrawColor(200, 195, 210);
   doc.setLineWidth(0.5);
@@ -1209,12 +1209,12 @@ async function generatePDF() {
   doc.text(
     (D.setup.orgName||'Organization') + '  ·  ' + (D.setup.trackName||'Hiring process') +
     '  ·  CONFIDENTIAL  ·  One map = one process track',
-    MARGIN + 12, H - MARGIN - 5
+    MARGIN + 12, H - MARGIN + 6
   );
   doc.text(
     'Generated ' + new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) +
     '  ·  TA Process Mapping Tool — TASSP Playbook',
-    W - MARGIN - 12, H - MARGIN - 5, { align: 'right' }
+    W - MARGIN - 12, H - MARGIN + 6, { align: 'right' }
   );
 
   // DOWNLOAD
