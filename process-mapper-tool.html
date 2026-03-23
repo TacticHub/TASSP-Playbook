@@ -340,7 +340,7 @@ async function saveEmail(email) {
 async function sendResumeEmail(email) {
   // Supabase Edge Function or direct magic link
   // For now, use Supabase Auth OTP as the email mechanism
-  const resumeURL = `${https://tacticHub.github.io/TASSP-Playbook/process-mapper-tool.html}?token=${RESUME_TOKEN}`;
+  const resumeURL = `https://tacticHub.github.io/TASSP-Playbook/process-mapper-tool.html?token=${RESUME_TOKEN}`;
   // We store the URL — in production you'd trigger a Supabase Edge Function
   // to send a custom email. For now show the link to copy.
   return resumeURL;
@@ -367,7 +367,7 @@ function showToast(msg, dur = 2800) {
 function showResumeScreen(session) {
   const main = document.getElementById('main');
   const trackLabel = session.track_name || 'Unnamed track';
-  const resumeURL = `${https://tacticHub.github.io/TASSP-Playbook/process-mapper-tool.html}?token=${RESUME_TOKEN}`;
+  const resumeURL = `https://tacticHub.github.io/TASSP-Playbook/process-mapper-tool.html?token=${RESUME_TOKEN}`;
 
   main.innerHTML = `
     <div class="resume-screen">
@@ -559,7 +559,7 @@ window.submitEmail = async function() {
   const inp = document.getElementById('save-email-inp');
   if (!inp || !inp.value) return;
   const email = inp.value.trim();
-  const resumeURL = `${https://tacticHub.github.io/TASSP-Playbook/process-mapper-tool.html}?token=${RESUME_TOKEN}`;
+  const resumeURL = `https://tacticHub.github.io/TASSP-Playbook/process-mapper-tool.html?token=${RESUME_TOKEN}`;
 
   const ok = await saveEmail(email);
   const msg = document.getElementById('save-success-msg');
@@ -844,7 +844,7 @@ function rReview(){
   const integLabels=[...D.integrations.selected.map(i=>INTEGS.find(o=>o.id===i)?.label||i),...D.integrations.custom];
   const spList=stageList.filter(s=>D.subprocess[s.id]?.hasSubprocess===true);
   const chip=v=>`<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:12px;margin:2px;background:${AC}12;border:.5px solid ${AC}40;color:${AC}">${v}</span>`;
-  const resumeURL=`${https://tacticHub.github.io/TASSP-Playbook/process-mapper-tool.html}?token=${RESUME_TOKEN}`;
+  const resumeURL=`https://tacticHub.github.io/TASSP-Playbook/process-mapper-tool.html?token=${RESUME_TOKEN}`;
 
   document.getElementById('main').innerHTML=`
     <div style="margin-bottom:16px;"><div style="font-size:18px;font-weight:500;margin-bottom:4px;">Review your process map</div><div style="font-size:13px;color:var(--text2);">Check everything and edit before generating. Click any section header to go back.</div></div>
