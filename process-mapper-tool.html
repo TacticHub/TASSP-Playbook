@@ -920,11 +920,10 @@ async function generatePDF() {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [2592, 1728] });
 
   const W = 2592, H = 1728, MARGIN = 32;
-  const LABEL_W = 116, TITLE_H = 78, LEGEND_H = 36, FOOTER_H = 22;
+  const LABEL_W = 116, TITLE_H = 78, LEGEND_H = 36, FOOTER_H = 22, PHASE_H = 26;
   const MAP_X = MARGIN + LABEL_W;
-  const MAP_TOP = H - MARGIN - LEGEND_H - FOOTER_H - PHASE_H - 10;
-  const PHASE_H = 26;
   const MAP_Y = MARGIN + TITLE_H + 8;
+  const MAP_TOP = H - MARGIN - LEGEND_H - FOOTER_H - PHASE_H - 10;
   const MAP_H = MAP_TOP - PHASE_H - MAP_Y;
   const MAP_W = W - MARGIN - MAP_X;
 
