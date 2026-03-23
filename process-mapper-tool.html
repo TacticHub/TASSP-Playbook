@@ -523,9 +523,27 @@ let D={
 
 function setMode(m){
   mode=m;D.setup.mode=m;
-  document.getElementById('btn-quick').classList.toggle('active',m==='quick');
-  document.getElementById('btn-full').classList.toggle('active',m==='full');
   activeSecs=m==='quick'?[...QSECS]:[...ASECS];
+  // Update nav mode buttons if present
+  const bq=document.getElementById('btn-quick');
+  const bf=document.getElementById('btn-full');
+  if(bq)bq.classList.toggle('active',m==='quick');
+  if(bf)bf.classList.toggle('active',m==='full');
+  // Update setup card mode options if visible
+  const mq=document.getElementById('mode-quick');
+  const mf=document.getElementById('mode-full');
+  if(mq){
+    mq.style.border='.5px solid '+(m==='quick'?AC:'var(--border)');
+    mq.style.background=m==='quick'?AC+'18':'var(--bg)';
+    const nq=mq.querySelector('.mode-opt-name');
+    if(nq)nq.style.color=m==='quick'?AC:'var(--text)';
+  }
+  if(mf){
+    mf.style.border='.5px solid '+(m==='full'?AC:'var(--border)');
+    mf.style.background=m==='full'?AC+'18':'var(--bg)';
+    const nf=mf.querySelector('.mode-opt-name');
+    if(nf)nf.style.color=m==='full'?AC:'var(--text)';
+  }
   rNav();rProg();
 }
 function rNav(){
@@ -658,7 +676,8 @@ function rSetup(){
   </div>
   <input class="mini" type="text" id="inp-track" placeholder="Or type your own — e.g. Union, Campus recruiting, Contract-to-perm…" value="${D.setup.trackName}" oninput="D.setup.trackName=this.value;syncHdr();checkSetupReady()">
   <div style="height:16px;"></div>
-  <div style="font-size:13px;font-weight:500;margin-bottom:10px;">Brand accent color</div>
+  <div style="font-size:13px;font-weight:500;margin-bottom:4px;">Brand accent color</div>
+  <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5;">This color will appear throughout your process map and SOP — in the header, swimlane labels, stage nodes, and phase bars. Use your company&#39;s brand color, or the brand of the client you&#39;re building this map for.</div>
   <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:20px;">
     <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><input type="color" id="color-wheel" value="${AC}" oninput="onWC(this.value)" style="width:52px;height:52px;border:.5px solid var(--border);border-radius:var(--radius);cursor:pointer;padding:3px;background:var(--bg);"><label style="font-size:10px;color:var(--text3);">Wheel</label></div>
     <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:160px;">
@@ -668,12 +687,12 @@ function rSetup(){
     <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><div id="pswatch" style="width:52px;height:52px;border-radius:var(--radius);border:.5px solid var(--border);background:${AC};transition:background .1s;"></div><div style="font-size:10px;color:var(--text3);">Preview</div></div>
   </div>
   <div style="display:flex;gap:10px;margin-bottom:20px;">
-    <div id="mode-quick" style="flex:1;padding:13px 15px;border:.5px solid ${mode==='quick'?AC:'var(--border)'};border-radius:var(--radius);cursor:pointer;background:${mode==='quick'?AC+'12':'var(--bg)'};" onclick="setMode('quick')">
-      <div style="font-size:13px;font-weight:500;color:${mode==='quick'?AC:'var(--text)'};">Quick mode <span style="font-size:11px;font-weight:400;opacity:.7;">~15 min</span></div>
+    <div id="mode-quick" style="flex:1;padding:13px 15px;border:.5px solid ${mode==='quick'?AC:'var(--border)'};border-radius:var(--radius);cursor:pointer;background:${mode==='quick'?AC+'18':'var(--bg)'};" onclick="setMode('quick')">
+      <div class="mode-opt-name" style="font-size:13px;font-weight:500;color:${mode==='quick'?AC:'var(--text)'};">Quick mode <span style="font-size:11px;font-weight:400;opacity:.7;">~15 min</span></div>
       <div style="font-size:12px;color:var(--text2);margin-top:3px;">Essential structure — users, ATS, stages, actions, integrations</div>
     </div>
-    <div id="mode-full" style="flex:1;padding:13px 15px;border:.5px solid ${mode==='full'?AC:'var(--border)'};border-radius:var(--radius);cursor:pointer;background:${mode==='full'?AC+'12':'var(--bg)'};" onclick="setMode('full')">
-      <div style="font-size:13px;font-weight:500;color:${mode==='full'?AC:'var(--text)'};">Full mode <span style="font-size:11px;font-weight:400;opacity:.7;">~45 min</span></div>
+    <div id="mode-full" style="flex:1;padding:13px 15px;border:.5px solid ${mode==='full'?AC:'var(--border)'};border-radius:var(--radius);cursor:pointer;background:${mode==='full'?AC+'18':'var(--bg)'};" onclick="setMode('full')">
+      <div class="mode-opt-name" style="font-size:13px;font-weight:500;color:${mode==='full'?AC:'var(--text)'};">Full mode <span style="font-size:11px;font-weight:400;opacity:.7;">~45 min</span></div>
       <div style="font-size:12px;color:var(--text2);margin-top:3px;">Adds SLAs, compliance, approvals, onboarding handoff, terminology</div>
     </div>
   </div>
