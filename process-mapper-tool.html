@@ -957,8 +957,77 @@ async function generatePDF() {
   function laneBot(i) { return MAP_Y + MAP_H - (i + 1) * LANE_H; }
   function arrowHead(x, y, dir) {
     const s = 5;
-    if (dir === 'right') doc.triangle(x-s, y-s*0.6, x-s, y+s*0.6, x, y, 'F');
-    else if (dir === 'down') doc.triangle(x-s*0.6, y-s, x+s*0.6, y-s, x, y, 'F');
+    doc.setLineWidth(0);
+    if (dir === 'right') {
+      doc.moveTo(x-s, y-s*0.6); doc.lineTo(x-s, y+s*0.6); doc.lineTo(x, y);
+      doc.closePath(); doc.fillStroke ? doc.fillStroke() : doc.path([
+        {op:'m', c:[x-s, y-s*0.6]},{op:'l', c:[x-s, y+s*0.6]},{op:'l', c:[x, y]},{op:'h'}
+      ], 'F');
+    } else {
+      doc.path([
+        {op:'m', c:[x-s*0.6, y-s]},{op:'l', c:[x+s*0.6, y-s]},{op:'l', c:[x, y]},{op:'h'}
+      ], 'F');
+    }
+  }
+  function fillTriangle(x1,y1, x2,y2, x3,y3) {
+    doc.path([{op:'m',c:[x1,y1]},{op:'l',c:[x2,y2]},{op:'l',c:[x3,y3]},{op:'h'}], 'F');
+  }
+  function strokeRect(x,y,w,h) {
+    doc.rect(x, y, w, h, 'FD');
+  }
+  function rrect(x,y,w,h,r,style) {
+    // Rounded rect via manual path
+    doc.path([
+      {op:'m', c:[x+r, y]},
+      {op:'l', c:[x+w-r, y]},
+      {op:'c', c:[x+w, y, x+w, y, x+w, y+r]},
+      {op:'l', c:[x+w, y+h-r]},
+      {op:'c', c:[x+w, y+h, x+w, y+h, x+w-r, y+h]},
+      {op:'l', c:[x+r, y+h]},
+      {op:'c', c:[x, y+h, x, y+h, x, y+h-r]},
+      {op:'l', c:[x, y+r]},
+      {op:'c', c:[x, y, x, y, x+r, y]},
+      {op:'h'}
+    ], style || 'FD');
+  }
+  function diamond(cx,cy,dw,dh,style) {
+    doc.path([
+      {op:'m', c:[cx, cy-dh]},
+      {op:'l', c:[cx+dw, cy]},
+      {op:'l', c:[cx, cy+dh]},
+      {op:'l', c:[cx-dw, cy]},
+      {op:'h'}
+    ], style || 'FD');
+  }
+  function paraShape(x,y,w,h,sk,style) {
+    doc.path([
+      {op:'m', c:[x+sk, y]},
+      {op:'l', c:[x+w, y]},
+      {op:'l', c:[x+w-sk, y+h]},
+      {op:'l', c:[x, y+h]},
+      {op:'h'}
+    ], style || 'FD');
+  }
+  function pentShape(x,y,w,h,tip,style) {
+    doc.path([
+      {op:'m', c:[x, y]},
+      {op:'l', c:[x+w-tip, y]},
+      {op:'l', c:[x+w, y+h/2]},
+      {op:'l', c:[x+w-tip, y+h]},
+      {op:'l', c:[x, y+h]},
+      {op:'h'}
+    ], style || 'FD');
+  }
+  function oval(cx,cy,rx,ry,style) {
+    const k = 0.5523;
+    doc.path([
+      {op:'m', c:[cx+rx, cy]},
+      {op:'c', c:[cx+rx, cy-k*ry, cx+k*rx, cy-ry, cx, cy-ry]},
+      {op:'c', c:[cx-k*rx, cy-ry, cx-rx, cy-k*ry, cx-rx, cy]},
+      {op:'c', c:[cx-rx, cy+k*ry, cx-k*rx, cy+ry, cx, cy+ry]},
+      {op:'c', c:[cx+k*rx, cy+ry, cx+rx, cy+k*ry, cx+rx, cy]},
+      {op:'h'}
+    ], style || 'FD');
   }
 
   // WHITE BACKGROUND
@@ -1068,13 +1137,13 @@ async function generatePDF() {
     doc.setDrawColor(AR, AG, AB);
     doc.setLineWidth(hasSP ? 1.8 : 1);
     if (hasSP) doc.setLineDash([5, 2]); else doc.setLineDash([]);
-    doc.roundedRect(cx - TW/2, cy - TH/2, TW, TH, 4, 4, 'FD');
+    rrect(cx - TW/2, cy - TH/2, TW, TH, 'FD');
     doc.setLineDash([]);
 
     // [+] sub-process badge
     if (hasSP) {
       doc.setFillColor(AR, AG, AB);
-      doc.roundedRect(cx - TW/2 + 3, cy - TH/2 + 3, 18, 11, 2, 2, 'F');
+      rrect(cx - TW/2 + 3, cy - TH/2 + 3, 18, 11, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(6.5); doc.setFont('helvetica', 'bold');
       doc.text('[+]', cx - TW/2 + 12, cy - TH/2 + 11, { align: 'center' });
@@ -1096,7 +1165,7 @@ async function generatePDF() {
       doc.setLineWidth(0.8);
       doc.line(cx + TW/2 + 1, cy, nCX - TW/2 - 8, cy);
       doc.setFillColor(160, 148, 172);
-      arrowHead(nCX - TW/2 - 2, cy, 'right');
+      fillTriangle(nCX-TW/2-8, cy-3.5, nCX-TW/2-8, cy+3.5, nCX-TW/2-2, cy);
     }
 
     // Decision diamond
@@ -1105,7 +1174,7 @@ async function generatePDF() {
       doc.setFillColor(225, 240, 252);
       doc.setDrawColor(24, 95, 165);
       doc.setLineWidth(0.9);
-      doc.lines([[dw,dh],[dw,-dh],[-dw,-dh],[-dw,dh]], dx-dw, cy, [1,1], 'FD', true);
+      diamond(dx, cy, dw, dh, 'FD');
       doc.setTextColor(4, 44, 83);
       doc.setFontSize(7); doc.setFont('helvetica', 'bold');
       doc.text('?', dx, cy + 2.5, { align: 'center' });
@@ -1116,7 +1185,7 @@ async function generatePDF() {
         doc.setLineWidth(1.3);
         doc.line(dx + dw + 2, cy, dx + dw + 24, cy);
         doc.setFillColor(30, 120, 70);
-        arrowHead(dx + dw + 24, cy, 'right');
+        fillTriangle(dx+dw+18, cy-3.5, dx+dw+18, cy+3.5, dx+dw+24, cy);
         doc.setTextColor(30, 120, 70);
         doc.setFontSize(7.5); doc.setFont('helvetica', 'bold');
         doc.text('Yes', dx + dw + 13, cy - 5, { align: 'center' });
@@ -1128,7 +1197,7 @@ async function generatePDF() {
         doc.setLineWidth(1.3);
         doc.line(dx, cy + dh + 2, dx, cy + dh + 22);
         doc.setFillColor(170, 35, 25);
-        arrowHead(dx, cy + dh + 22, 'down');
+        fillTriangle(dx-3.5, cy+dh+16, dx+3.5, cy+dh+16, dx, cy+dh+22);
         doc.setTextColor(170, 35, 25);
         doc.setFontSize(7.5); doc.setFont('helvetica', 'bold');
         doc.text('No', dx + 6, cy + dh + 17);
@@ -1144,7 +1213,7 @@ async function generatePDF() {
       doc.setFillColor(232, 244, 255);
       doc.setDrawColor(100, 148, 200);
       doc.setLineWidth(0.6);
-      doc.roundedRect(ix, badgeY - 8, 156, 16, 3, 3, 'FD');
+      rrect(ix, badgeY - 8, 156, 16, 'FD');
       doc.setTextColor(24, 70, 130);
       doc.setFontSize(7.5); doc.setFont('helvetica', 'normal');
       doc.text(integ, ix + 78, badgeY + 4, { align: 'center' });
@@ -1182,20 +1251,20 @@ async function generatePDF() {
 
     switch(item.shape) {
       case 'oval':
-        doc.ellipse(lx, ly, 14, 8, 'FD'); break;
+        oval(lx, ly, 14, 8, 'FD'); break;
       case 'rect':
-        doc.roundedRect(lx-14, ly-7, 28, 14, 2, 2, 'FD'); break;
+        rrect(lx-14, ly-7, 28, 14, 'FD'); break;
       case 'diamond':
-        doc.lines([[12,8],[12,-8],[-12,-8],[-12,8]], lx-12, ly, [1,1], 'FD', true); break;
+        diamond(lx, ly, 12, 8, 'FD'); break;
       case 'para':
-        doc.lines([[8,0],[18,0],[0,14],[-18,0]], lx-10, ly-7, [1,1], 'FD', true); break;
+        paraShape(lx-14, ly-7, 28, 14, 7, 'FD'); break;
       case 'pent':
-        doc.lines([[20,0],[8,0],[8,8],[0,4],[-20,0],[0,-8]], lx-10, ly-4, [1,1], 'FD', true); break;
+        pentShape(lx-14, ly-7, 28, 14, 8, 'FD'); break;
       case 'arrow':
         doc.setDrawColor(...item.strokeRGB); doc.setLineWidth(1.5);
         doc.line(lx-14, ly, lx+6, ly);
         doc.setFillColor(...item.fillRGB);
-        doc.triangle(lx+6, ly-3.5, lx+6, ly+3.5, lx+14, ly, 'F'); break;
+        fillTriangle(lx+6, ly-3.5, lx+6, ly+3.5, lx+14, ly); break;
     }
     doc.setLineDash([]);
     doc.setTextColor(80, 72, 92);
