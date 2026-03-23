@@ -917,213 +917,308 @@ window.generateOutput = async function() {
 // ── PDF MAP GENERATOR ──────────────────────────────────────────────────────────
 async function generatePDF() {
   const { jsPDF } = window.jspdf;
-  // 36x24 inches at 72 pts/inch = 2592 x 1728 pts
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [2592, 1728] });
 
-  const AC_color = hexToRgbArr(AC);
-  const W = 2592, H = 1728;
-  const MARGIN = 28;
-  const LABEL_W = 105;
-  const TITLE_H = 72;
-  const LEGEND_H = 30;
-  const FOOTER_H = 18;
+  const W = 2592, H = 1728, MARGIN = 32;
+  const LABEL_W = 116, TITLE_H = 78, LEGEND_H = 36, FOOTER_H = 22;
   const MAP_X = MARGIN + LABEL_W;
   const MAP_TOP = H - MARGIN - TITLE_H;
-  const MAP_Y = MARGIN + LEGEND_H + FOOTER_H + 8;
-  const PHASE_H = 24;
+  const PHASE_H = 26;
+  const MAP_Y = MARGIN + LEGEND_H + FOOTER_H + 10;
   const MAP_H = MAP_TOP - PHASE_H - MAP_Y;
+  const MAP_W = W - MARGIN - MAP_X;
 
   const userLabels = [...D.users.selected.map(u => USERS.find(o=>o.id===u)?.label||u), ...D.users.custom];
   const stageList = getStageList();
   const integLabels = [...D.integrations.selected.map(i => INTEGS.find(o=>o.id===i)?.label||i), ...D.integrations.custom];
   const LANE_COUNT = Math.max(userLabels.length, 1);
   const LANE_H = MAP_H / LANE_COUNT;
-  const MAP_W = W - MARGIN - MAP_X;
+
+  const [AR, AG, AB] = hexToRgbArr(AC);
+  // Darkened brand color for text on light backgrounds
+  const DR = Math.round(AR * 0.52), DG = Math.round(AG * 0.52), DB = Math.round(AB * 0.52);
+  // Light brand tint for label column
+  const LR = Math.min(255, 232 + Math.round((255-AR)*0.28));
+  const LG = Math.min(255, 232 + Math.round((255-AG)*0.28));
+  const LB = Math.min(255, 232 + Math.round((255-AB)*0.28));
 
   const PHASES = [
-    { label: 'Req opening',          f0: 0.000, f1: 0.135 },
-    { label: 'Req approval',         f0: 0.135, f1: 0.265 },
-    { label: 'Sourcing & posting',   f0: 0.265, f1: 0.375 },
-    { label: 'Screening',            f0: 0.375, f1: 0.495 },
-    { label: 'Interview',            f0: 0.495, f1: 0.735 },
-    { label: 'Offer',                f0: 0.735, f1: 0.865 },
-    { label: 'Pre-hire & handoff',   f0: 0.865, f1: 1.000 },
+    { label: 'Req opening',        f0: 0.000, f1: 0.135 },
+    { label: 'Req approval',       f0: 0.135, f1: 0.265 },
+    { label: 'Sourcing & posting', f0: 0.265, f1: 0.375 },
+    { label: 'Screening',          f0: 0.375, f1: 0.495 },
+    { label: 'Interview',          f0: 0.495, f1: 0.735 },
+    { label: 'Offer',              f0: 0.735, f1: 0.865 },
+    { label: 'Pre-hire & handoff', f0: 0.865, f1: 1.000 },
   ];
 
   function px(f) { return MAP_X + f * MAP_W; }
   function laneCY(i) { return MAP_Y + MAP_H - (i + 0.5) * LANE_H; }
   function laneBot(i) { return MAP_Y + MAP_H - (i + 1) * LANE_H; }
+  function arrowHead(x, y, dir) {
+    const s = 5;
+    if (dir === 'right') doc.triangle(x-s, y-s*0.6, x-s, y+s*0.6, x, y, 'F');
+    else if (dir === 'down') doc.triangle(x-s*0.6, y-s, x+s*0.6, y-s, x, y, 'F');
+  }
 
-  // Background
-  doc.setFillColor(14, 14, 15);
+  // WHITE BACKGROUND
+  doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, W, H, 'F');
 
-  // Title bar
-  doc.setFillColor(...AC_color);
+  // TITLE BAR
+  doc.setFillColor(AR, AG, AB);
   doc.rect(0, MARGIN, W, TITLE_H, 'F');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.text(D.setup.orgName || 'Organization', MARGIN + 10, MARGIN + 26);
-  doc.setFontSize(13);
-  doc.setFont('helvetica', 'normal');
-  doc.text((D.setup.trackName || 'Hiring process') + '  ·  ' + (ATS_P.find(p=>p.id===D.ats.platform)?.label || 'ATS') + '  ·  BPMN Notation  ·  300 DPI', MARGIN + 10, MARGIN + 48);
+  doc.setFontSize(24); doc.setFont('helvetica', 'bold');
+  doc.text(D.setup.orgName || 'Organization', MARGIN + 14, MARGIN + 30);
+  doc.setFontSize(13); doc.setFont('helvetica', 'normal');
+  doc.text(
+    (D.setup.trackName || 'Hiring process') + '  ·  ' +
+    (ATS_P.find(p=>p.id===D.ats.platform)?.label || 'ATS') + '  ·  BPMN Notation',
+    MARGIN + 14, MARGIN + 52
+  );
   doc.setFontSize(10);
-  doc.text('Print spec: 36" × 24"  ·  300 DPI  ·  10,800 × 7,200 px equivalent  ·  Vector PDF', W - MARGIN - 10, MARGIN + 38, { align: 'right' });
+  doc.text(
+    'Print: 36" × 24"  ·  300 DPI  ·  ' +
+    new Date().toLocaleDateString('en-US', {month:'long', year:'numeric'}),
+    W - MARGIN - 14, MARGIN + 44, { align: 'right' }
+  );
 
-  // Phase headers
+  // PHASE HEADERS
   PHASES.forEach((ph, idx) => {
     const x0 = px(ph.f0), x1 = px(ph.f1);
-    const shade = idx % 2 === 0 ? [90, 18, 107] : [110, 21, 130];
-    doc.setFillColor(...shade);
-    doc.rect(x0, MAP_TOP, x1 - x0, PHASE_H, 'F');
+    const lighter = idx % 2 === 1;
+    doc.setFillColor(
+      Math.min(255, AR + (lighter ? 22 : 0)),
+      Math.min(255, AG + (lighter ? 14 : 0)),
+      Math.min(255, AB + (lighter ? 22 : 0))
+    );
+    doc.rect(x0, MAP_TOP, x1-x0, PHASE_H, 'F');
+    doc.setDrawColor(255, 255, 255);
+    doc.setLineWidth(0.7);
+    doc.line(x0, MAP_TOP, x0, MAP_TOP + PHASE_H);
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text(ph.label, (x0 + x1) / 2, MAP_TOP + 16, { align: 'center' });
+    doc.setFontSize(8.5); doc.setFont('helvetica', 'bold');
+    doc.text(ph.label, (x0+x1)/2, MAP_TOP + 17, { align: 'center' });
   });
 
-  // Lane label column
-  doc.setFillColor(30, 20, 35);
-  doc.rect(MARGIN, MAP_Y, LABEL_W, MAP_H + PHASE_H, 'F');
-  doc.setFillColor(...AC_color);
+  // LABEL COLUMN HEADER
+  doc.setFillColor(AR, AG, AB);
   doc.rect(MARGIN, MAP_TOP, LABEL_W, PHASE_H, 'F');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Role / Swimlane', MARGIN + LABEL_W / 2, MAP_TOP + 16, { align: 'center' });
+  doc.setFontSize(8); doc.setFont('helvetica', 'bold');
+  doc.text('Role / Swimlane', MARGIN + LABEL_W/2, MAP_TOP + 17, { align: 'center' });
 
-  // Draw lanes
+  // LABEL COLUMN BACKGROUND
+  doc.setFillColor(LR, LG, LB);
+  doc.rect(MARGIN, MAP_Y, LABEL_W, MAP_H, 'F');
+
+  // LANES
   userLabels.forEach((name, i) => {
     const yb = laneBot(i);
-    const bg = i % 2 === 0 ? [22, 22, 26] : [18, 18, 22];
-    doc.setFillColor(...bg);
+    // White / very light gray alternating rows
+    doc.setFillColor(i % 2 === 0 ? 255 : 250, i % 2 === 0 ? 255 : 249, i % 2 === 0 ? 255 : 252);
     doc.rect(MAP_X, yb, MAP_W, LANE_H, 'F');
-    doc.setFillColor(26, 18, 30);
+    // Label cell — tinted
+    doc.setFillColor(i % 2 === 0 ? LR : Math.max(LR-8,220), i % 2 === 0 ? LG : Math.max(LG-8,218), i % 2 === 0 ? LB : Math.max(LB-6,225));
     doc.rect(MARGIN, yb, LABEL_W, LANE_H, 'F');
-    doc.setTextColor(160, 150, 170);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text(name, MARGIN + LABEL_W / 2, yb + LANE_H / 2 + 3, { align: 'center' });
-    // Lane divider
-    doc.setDrawColor(50, 45, 55);
-    doc.setLineWidth(0.5);
-    doc.line(MARGIN, yb, W - MARGIN, yb);
+    // Name
+    doc.setTextColor(DR, DG, DB);
+    doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+    const nameLines = doc.splitTextToSize(name, LABEL_W - 14);
+    const lh = 11;
+    const ty = yb + LANE_H/2 - (nameLines.length-1)*lh/2 + 3;
+    nameLines.forEach((ln, li) => doc.text(ln, MARGIN + LABEL_W/2, ty + li*lh, { align: 'center' }));
+    // Divider
+    doc.setDrawColor(200, 195, 208);
+    doc.setLineWidth(0.4);
+    doc.line(MARGIN, yb, W-MARGIN, yb);
   });
 
-  // Outer border
-  doc.setDrawColor(...AC_color);
-  doc.setLineWidth(2);
-  doc.rect(MARGIN, MAP_Y, W - 2 * MARGIN, MAP_H + PHASE_H, 'S');
-  doc.setDrawColor(80, 60, 90);
-  doc.setLineWidth(1);
-  doc.line(MAP_X, MAP_Y, MAP_X, MAP_TOP);
+  // PHASE COLUMN DIVIDERS
+  doc.setLineDash([4, 4]);
+  PHASES.forEach(ph => {
+    doc.setDrawColor(210, 205, 218);
+    doc.setLineWidth(0.4);
+    doc.line(px(ph.f0), MAP_Y, px(ph.f0), MAP_TOP);
+  });
+  doc.setLineDash([]);
 
-  // Place stage nodes across lanes
-  const stagesPerLane = Math.max(1, Math.ceil(stageList.length / Math.max(userLabels.length, 1)));
-  const colW = MAP_W / Math.max(stageList.length + 2, 8);
-  const TW = Math.min(colW * 0.85, 120), TH = 28;
+  // BORDERS
+  doc.setDrawColor(AR, AG, AB);
+  doc.setLineWidth(1.2);
+  doc.line(MAP_X, MAP_Y, MAP_X, MAP_TOP + PHASE_H);
+  doc.setLineWidth(2);
+  doc.rect(MARGIN, MAP_Y, W-2*MARGIN, MAP_H + PHASE_H, 'S');
+
+  // STAGE NODES
+  const colW = MAP_W / Math.max(stageList.length + 1, 9);
+  const TW = Math.min(colW * 0.82, 120), TH = 30;
 
   stageList.forEach((stage, si) => {
     const laneIdx = si % Math.max(userLabels.length, 1);
-    const cx = MAP_X + (si + 0.5) * colW + colW * 0.5;
+    const cx = MAP_X + (si + 0.9) * colW + colW * 0.35;
     const cy = laneCY(laneIdx);
-    const ac = D.actions[stage.id];
+    const a = D.actions[stage.id];
     const sp = D.subprocess[stage.id];
     const hasSP = sp?.hasSubprocess === true;
 
-    // Task rectangle
-    doc.setFillColor(60, 20, 65);
-    doc.setDrawColor(...AC_color);
-    doc.setLineWidth(hasSP ? 1.5 : 0.8);
-    if(hasSP) doc.setLineDash([4, 2]); else doc.setLineDash([]);
-    doc.roundedRect(cx - TW/2, cy - TH/2, TW, TH, 3, 3, 'FD');
+    // Task rectangle — white fill, brand color stroke
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(AR, AG, AB);
+    doc.setLineWidth(hasSP ? 1.8 : 1);
+    if (hasSP) doc.setLineDash([5, 2]); else doc.setLineDash([]);
+    doc.roundedRect(cx - TW/2, cy - TH/2, TW, TH, 4, 4, 'FD');
     doc.setLineDash([]);
-    doc.setTextColor(220, 180, 225);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', hasSP ? 'bold' : 'normal');
-    const lbl = hasSP ? '[+] ' + stage.label : stage.label;
-    doc.text(lbl, cx, cy + 3, { align: 'center', maxWidth: TW - 8 });
 
-    // Arrow to next stage
-    if(si < stageList.length - 1) {
-      const nextCX = MAP_X + (si + 1.5) * colW + colW * 0.5;
-      doc.setDrawColor(100, 80, 110);
-      doc.setLineWidth(0.8);
-      doc.line(cx + TW/2, cy, nextCX - TW/2, cy);
+    // [+] sub-process badge
+    if (hasSP) {
+      doc.setFillColor(AR, AG, AB);
+      doc.roundedRect(cx - TW/2 + 3, cy - TH/2 + 3, 18, 11, 2, 2, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(6.5); doc.setFont('helvetica', 'bold');
+      doc.text('[+]', cx - TW/2 + 12, cy - TH/2 + 11, { align: 'center' });
     }
 
-    // Decision diamond for action outcomes
-    if(ac && ac.outcomes.length > 0) {
-      const dx = cx + TW/2 + 18, dy = cy;
-      const dw = 16, dh = 12;
-      doc.setFillColor(20, 50, 90);
-      doc.setDrawColor(41, 128, 185);
-      doc.setLineWidth(0.8);
-      const pts = [[dx, dy - dh],[dx + dw, dy],[dx, dy + dh],[dx - dw, dy]];
-      doc.lines([[dw,dh],[dw,-dh],[-dw,-dh],[-dw,dh]], dx - dw, dy, [1,1], 'FD', true);
+    // Label
+    doc.setTextColor(DR, DG, DB);
+    doc.setFontSize(8); doc.setFont('helvetica', hasSP ? 'bold' : 'normal');
+    const lblLines = doc.splitTextToSize(stage.label, TW - 12);
+    const lh = 10;
+    const ly = cy - (lblLines.length - 1) * lh / 2 + 2;
+    lblLines.forEach((ln, li) => doc.text(ln, cx, ly + li*lh, { align: 'center' }));
 
-      // Yes path (green)
-      if(ac.outcomes.includes('advance') || ac.outcomes.includes('approve')) {
-        doc.setDrawColor(39, 174, 96);
-        doc.setLineWidth(1);
-        doc.line(dx + dw + 2, dy, dx + dw + 20, dy);
-        doc.setFontSize(7); doc.setTextColor(39, 174, 96);
-        doc.text('Yes', dx + dw + 11, dy - 3, { align: 'center' });
+    // Forward arrow to next node in same lane
+    const nextSI = stageList.findIndex((s, idx) => idx > si && (idx % Math.max(userLabels.length,1)) === laneIdx);
+    if (nextSI > -1) {
+      const nCX = MAP_X + (nextSI + 0.9) * colW + colW * 0.35;
+      doc.setDrawColor(160, 148, 172);
+      doc.setLineWidth(0.8);
+      doc.line(cx + TW/2 + 1, cy, nCX - TW/2 - 8, cy);
+      doc.setFillColor(160, 148, 172);
+      arrowHead(nCX - TW/2 - 2, cy, 'right');
+    }
+
+    // Decision diamond
+    if (a && a.outcomes.length > 0) {
+      const dx = cx + TW/2 + 28, dw = 18, dh = 13;
+      doc.setFillColor(225, 240, 252);
+      doc.setDrawColor(24, 95, 165);
+      doc.setLineWidth(0.9);
+      doc.lines([[dw,dh],[dw,-dh],[-dw,-dh],[-dw,dh]], dx-dw, cy, [1,1], 'FD', true);
+      doc.setTextColor(4, 44, 83);
+      doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+      doc.text('?', dx, cy + 2.5, { align: 'center' });
+
+      // Yes path
+      if (a.outcomes.includes('advance') || a.outcomes.includes('approve')) {
+        doc.setDrawColor(30, 120, 70);
+        doc.setLineWidth(1.3);
+        doc.line(dx + dw + 2, cy, dx + dw + 24, cy);
+        doc.setFillColor(30, 120, 70);
+        arrowHead(dx + dw + 24, cy, 'right');
+        doc.setTextColor(30, 120, 70);
+        doc.setFontSize(7.5); doc.setFont('helvetica', 'bold');
+        doc.text('Yes', dx + dw + 13, cy - 5, { align: 'center' });
       }
-      // No path (red)
-      if(ac.outcomes.includes('reject')) {
-        doc.setDrawColor(192, 57, 43);
-        doc.setLineWidth(1);
-        doc.line(dx, dy + dh + 2, dx, dy + dh + 16);
-        doc.setFontSize(7); doc.setTextColor(192, 57, 43);
-        doc.text('No', dx + 3, dy + dh + 12);
+
+      // No path (downward)
+      if (a.outcomes.includes('reject')) {
+        doc.setDrawColor(170, 35, 25);
+        doc.setLineWidth(1.3);
+        doc.line(dx, cy + dh + 2, dx, cy + dh + 22);
+        doc.setFillColor(170, 35, 25);
+        arrowHead(dx, cy + dh + 22, 'down');
+        doc.setTextColor(170, 35, 25);
+        doc.setFontSize(7.5); doc.setFont('helvetica', 'bold');
+        doc.text('No', dx + 6, cy + dh + 17);
       }
     }
   });
 
-  // Integration badges
-  integLabels.slice(0, 4).forEach((integ, i) => {
-    const ix = MAP_X + 20 + i * 160;
-    const iy = MAP_Y + MAP_H + 4;
-    doc.setFillColor(20, 40, 70);
-    doc.setDrawColor(41, 128, 185);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(ix, iy - 8, 150, 16, 3, 3, 'FD');
-    doc.setTextColor(100, 160, 200);
-    doc.setFontSize(7.5);
-    doc.text('⬡ ' + integ, ix + 75, iy + 3, { align: 'center' });
-  });
+  // INTEGRATION BADGES
+  if (integLabels.length > 0) {
+    const badgeY = MAP_Y + LANE_H * 0.18;
+    integLabels.slice(0, 6).forEach((integ, i) => {
+      const ix = MAP_X + 14 + i * 168;
+      doc.setFillColor(232, 244, 255);
+      doc.setDrawColor(100, 148, 200);
+      doc.setLineWidth(0.6);
+      doc.roundedRect(ix, badgeY - 8, 156, 16, 3, 3, 'FD');
+      doc.setTextColor(24, 70, 130);
+      doc.setFontSize(7.5); doc.setFont('helvetica', 'normal');
+      doc.text(integ, ix + 78, badgeY + 4, { align: 'center' });
+    });
+  }
 
-  // Legend strip
-  doc.setFillColor(20, 18, 24);
-  doc.rect(MARGIN, H - MARGIN - LEGEND_H - FOOTER_H, W - 2 * MARGIN, LEGEND_H, 'F');
+  // LEGEND STRIP
+  const legY = MAP_Y - LEGEND_H - FOOTER_H + 2;
+  doc.setFillColor(248, 247, 250);
+  doc.setDrawColor(200, 195, 210);
+  doc.setLineWidth(0.5);
+  doc.rect(MARGIN, legY, W - 2*MARGIN, LEGEND_H, 'FD');
+
   const legItems = [
-    { label: 'Task / process step', color: [135, 26, 137] },
-    { label: 'Decision gateway', color: [41, 128, 185] },
-    { label: 'Approved path', color: [39, 174, 96] },
-    { label: 'Rejected path', color: [192, 57, 43] },
-    { label: '[+] Sub-process', color: [135, 26, 137] },
+    { label: 'Start event',       fillRGB: [234,243,222], strokeRGB: [59,109,17],  shape: 'oval' },
+    { label: 'End: hired',        fillRGB: [234,243,222], strokeRGB: [59,109,17],  shape: 'oval', thick: true },
+    { label: 'End: exit',         fillRGB: [252,235,235], strokeRGB: [163,45,45],  shape: 'oval', thick: true },
+    { label: 'Task',              fillRGB: [255,255,255], strokeRGB: [AR,AG,AB],   shape: 'rect' },
+    { label: 'Decision gateway',  fillRGB: [225,240,252], strokeRGB: [24,95,165],  shape: 'diamond' },
+    { label: 'Data in / out',     fillRGB: [250,238,218], strokeRGB: [133,79,11],  shape: 'para' },
+    { label: 'Cross-lane handoff',fillRGB: [238,237,254], strokeRGB: [83,74,183],  shape: 'pent' },
+    { label: 'Approved path',     fillRGB: [30,120,70],   strokeRGB: [30,120,70],  shape: 'arrow' },
+    { label: 'Rejected path',     fillRGB: [170,35,25],   strokeRGB: [170,35,25],  shape: 'arrow' },
+    { label: '[+] Sub-process',   fillRGB: [255,255,255], strokeRGB: [AR,AG,AB],   shape: 'rect', dashed: true },
   ];
-  const legStep = (W - 2 * MARGIN) / legItems.length;
+
+  const legStep = (W - 2*MARGIN) / legItems.length;
   legItems.forEach((item, i) => {
-    const lx = MARGIN + i * legStep + legStep / 2;
-    const ly = H - MARGIN - LEGEND_H - FOOTER_H + LEGEND_H / 2;
-    doc.setFillColor(...item.color);
-    doc.rect(lx - 50, ly - 5, 10, 10, 'F');
-    doc.setTextColor(150, 140, 160);
-    doc.setFontSize(8);
-    doc.text(item.label, lx - 36, ly + 3);
+    const lx = MARGIN + i * legStep + legStep/2;
+    const ly = legY + LEGEND_H/2 - 2;
+    doc.setFillColor(...item.fillRGB);
+    doc.setDrawColor(...item.strokeRGB);
+    doc.setLineWidth(item.thick ? 2.2 : 0.8);
+    if (item.dashed) doc.setLineDash([3,2]); else doc.setLineDash([]);
+
+    switch(item.shape) {
+      case 'oval':
+        doc.ellipse(lx, ly, 14, 8, 'FD'); break;
+      case 'rect':
+        doc.roundedRect(lx-14, ly-7, 28, 14, 2, 2, 'FD'); break;
+      case 'diamond':
+        doc.lines([[12,8],[12,-8],[-12,-8],[-12,8]], lx-12, ly, [1,1], 'FD', true); break;
+      case 'para':
+        doc.lines([[8,0],[18,0],[0,14],[-18,0]], lx-10, ly-7, [1,1], 'FD', true); break;
+      case 'pent':
+        doc.lines([[20,0],[8,0],[8,8],[0,4],[-20,0],[0,-8]], lx-10, ly-4, [1,1], 'FD', true); break;
+      case 'arrow':
+        doc.setDrawColor(...item.strokeRGB); doc.setLineWidth(1.5);
+        doc.line(lx-14, ly, lx+6, ly);
+        doc.setFillColor(...item.fillRGB);
+        doc.triangle(lx+6, ly-3.5, lx+6, ly+3.5, lx+14, ly, 'F'); break;
+    }
+    doc.setLineDash([]);
+    doc.setTextColor(80, 72, 92);
+    doc.setFontSize(7.5); doc.setFont('helvetica', 'normal');
+    doc.text(item.label, lx, legY + LEGEND_H - 3, { align: 'center' });
   });
 
-  // Footer
-  doc.setTextColor(80, 75, 90);
-  doc.setFontSize(8);
-  doc.text((D.setup.orgName || 'Organization') + '  ·  ' + (D.setup.trackName || 'Hiring process') + '  ·  Generated ' + new Date().toLocaleDateString('en-US', {month:'long', year:'numeric'}) + '  ·  CONFIDENTIAL', MARGIN + 10, H - MARGIN - 4);
-  doc.text('Print: 36" × 24"  ·  300 DPI minimum  ·  10,800 × 7,200 px equivalent  ·  Vector PDF', W - MARGIN - 10, H - MARGIN - 4, { align: 'right' });
+  // FOOTER
+  doc.setTextColor(130, 120, 145);
+  doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+  doc.text(
+    (D.setup.orgName||'Organization') + '  ·  ' + (D.setup.trackName||'Hiring process') +
+    '  ·  CONFIDENTIAL  ·  One map = one process track',
+    MARGIN + 12, H - MARGIN - 5
+  );
+  doc.text(
+    'Generated ' + new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) +
+    '  ·  TA Process Mapping Tool — TASSP Playbook',
+    W - MARGIN - 12, H - MARGIN - 5, { align: 'right' }
+  );
 
-  // Download
-  const fileName = ((D.setup.orgName || 'TA') + '_' + (D.setup.trackName || 'Process') + '_Map.pdf').replace(/\s+/g, '_');
+  // DOWNLOAD
+  const fileName = ((D.setup.orgName||'TA')+'_'+(D.setup.trackName||'Process')+'_Map.pdf').replace(/\s+/g,'_');
   doc.save(fileName);
 }
 
