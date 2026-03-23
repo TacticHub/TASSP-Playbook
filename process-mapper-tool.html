@@ -954,79 +954,40 @@ async function generatePDF() {
   function px(f) { return MAP_X + f * MAP_W; }
   function laneCY(i) { return MAP_Y + MAP_H - (i + 0.5) * LANE_H; }
   function laneBot(i) { return MAP_Y + MAP_H - (i + 1) * LANE_H; }
-  function arrowHead(x, y, dir) {
-    const s = 5;
-    doc.setLineWidth(0);
-    if (dir === 'right') {
-      doc.moveTo(x-s, y-s*0.6); doc.lineTo(x-s, y+s*0.6); doc.lineTo(x, y);
-      doc.closePath(); doc.fillStroke ? doc.fillStroke() : doc.path([
-        {op:'m', c:[x-s, y-s*0.6]},{op:'l', c:[x-s, y+s*0.6]},{op:'l', c:[x, y]},{op:'h'}
-      ], 'F');
-    } else {
-      doc.path([
-        {op:'m', c:[x-s*0.6, y-s]},{op:'l', c:[x+s*0.6, y-s]},{op:'l', c:[x, y]},{op:'h'}
-      ], 'F');
-    }
+  // Draw a filled polygon from an array of [x,y] points
+  function poly(pts, style) {
+    if (pts.length < 2) return;
+    doc.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) doc.lineTo(pts[i][0], pts[i][1]);
+    doc.closePath();
+    if (style === 'F') doc.fillStroke();
+    else if (style === 'S') doc.stroke ? doc.stroke() : doc.fillStroke();
+    else doc.fillStroke();
   }
   function fillTriangle(x1,y1, x2,y2, x3,y3) {
-    doc.path([{op:'m',c:[x1,y1]},{op:'l',c:[x2,y2]},{op:'l',c:[x3,y3]},{op:'h'}], 'F');
+    poly([[x1,y1],[x2,y2],[x3,y3]], 'F');
   }
-  function strokeRect(x,y,w,h) {
-    doc.rect(x, y, w, h, 'FD');
-  }
-  function rrect(x,y,w,h,r,style) {
-    // Rounded rect via manual path
-    doc.path([
-      {op:'m', c:[x+r, y]},
-      {op:'l', c:[x+w-r, y]},
-      {op:'c', c:[x+w, y, x+w, y, x+w, y+r]},
-      {op:'l', c:[x+w, y+h-r]},
-      {op:'c', c:[x+w, y+h, x+w, y+h, x+w-r, y+h]},
-      {op:'l', c:[x+r, y+h]},
-      {op:'c', c:[x, y+h, x, y+h, x, y+h-r]},
-      {op:'l', c:[x, y+r]},
-      {op:'c', c:[x, y, x, y, x+r, y]},
-      {op:'h'}
-    ], style || 'FD');
+  function rrect(x,y,w,h,style) {
+    // Approximate rounded rect with slightly inset plain rect (safe fallback)
+    doc.rect(x, y, w, h, style || 'FD');
   }
   function diamond(cx,cy,dw,dh,style) {
-    doc.path([
-      {op:'m', c:[cx, cy-dh]},
-      {op:'l', c:[cx+dw, cy]},
-      {op:'l', c:[cx, cy+dh]},
-      {op:'l', c:[cx-dw, cy]},
-      {op:'h'}
-    ], style || 'FD');
+    poly([[cx,cy-dh],[cx+dw,cy],[cx,cy+dh],[cx-dw,cy]], style || 'FD');
   }
   function paraShape(x,y,w,h,sk,style) {
-    doc.path([
-      {op:'m', c:[x+sk, y]},
-      {op:'l', c:[x+w, y]},
-      {op:'l', c:[x+w-sk, y+h]},
-      {op:'l', c:[x, y+h]},
-      {op:'h'}
-    ], style || 'FD');
+    poly([[x+sk,y],[x+w,y],[x+w-sk,y+h],[x,y+h]], style || 'FD');
   }
   function pentShape(x,y,w,h,tip,style) {
-    doc.path([
-      {op:'m', c:[x, y]},
-      {op:'l', c:[x+w-tip, y]},
-      {op:'l', c:[x+w, y+h/2]},
-      {op:'l', c:[x+w-tip, y+h]},
-      {op:'l', c:[x, y+h]},
-      {op:'h'}
-    ], style || 'FD');
+    poly([[x,y],[x+w-tip,y],[x+w,y+h/2],[x+w-tip,y+h],[x,y+h]], style || 'FD');
   }
   function oval(cx,cy,rx,ry,style) {
-    const k = 0.5523;
-    doc.path([
-      {op:'m', c:[cx+rx, cy]},
-      {op:'c', c:[cx+rx, cy-k*ry, cx+k*rx, cy-ry, cx, cy-ry]},
-      {op:'c', c:[cx-k*rx, cy-ry, cx-rx, cy-k*ry, cx-rx, cy]},
-      {op:'c', c:[cx-rx, cy+k*ry, cx-k*rx, cy+ry, cx, cy+ry]},
-      {op:'c', c:[cx+k*rx, cy+ry, cx+rx, cy+k*ry, cx+rx, cy]},
-      {op:'h'}
-    ], style || 'FD');
+    // Approximate ellipse with 8-point polygon
+    const pts = [];
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2;
+      pts.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]);
+    }
+    poly(pts, style || 'FD');
   }
 
   // WHITE BACKGROUND
