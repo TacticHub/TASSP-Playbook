@@ -137,6 +137,15 @@
   .copy-btn { padding: 8px 14px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 12px; cursor: pointer; color: var(--text2); font-family: var(--font); transition: all .12s; white-space: nowrap; }
   .copy-btn:hover { border-color: var(--ac); color: var(--ac); }
 
+  /* ── EDITABLE OPTION LABELS ── */
+  .opt-edit-btn { background: none; border: none; cursor: pointer; padding: 2px 4px; color: var(--text3); font-size: 11px; line-height: 1; border-radius: 3px; margin-left: 4px; opacity: 0; transition: opacity .12s, color .12s; flex-shrink: 0; }
+  .opt.sel .opt-edit-btn { opacity: 1; }
+  .opt.sel:hover .opt-edit-btn { color: var(--ac); }
+  .opt-edit-btn:hover { color: var(--ac) !important; }
+  .opt-label-wrap { display: flex; align-items: center; gap: 2px; flex: 1; }
+  .opt-inline-input { font-size: 14px; font-family: var(--font); border: none; border-bottom: 1.5px solid var(--ac); background: transparent; color: var(--text); padding: 0 2px; width: 100%; outline: none; }
+  .opt-custom-badge { font-size: 10px; padding: 1px 5px; background: var(--ac-bg); border: 0.5px solid var(--ac); border-radius: 3px; color: var(--ac); margin-left: 5px; white-space: nowrap; }
+
   /* ── CALLOUT ── */
   .callout { border-radius: var(--radius); padding: 14px 16px; margin-bottom: 18px; border-left: 3px solid; }
   .callout.info { background: #f0f7ff; border-color: #185FA5; }
@@ -478,7 +487,7 @@ let activeSecs = [...QSECS];
 const SMETA = {
   setup:{label:'Setup',icon:'1'},org:{label:'Org',icon:'2'},users:{label:'Users',icon:'3'},
   terms:{label:'Terms',icon:'4'},ats:{label:'ATS',icon:'5'},reqflow:{label:'Req flow',icon:'6'},
-  stages:{label:'Stages',icon:'7'},subprocess:{label:'Sub-processes',icon:'8'},
+  stages:{label:'Stages & statuses',icon:'7'},subprocess:{label:'Sub-processes',icon:'8'},
   actions:{label:'Actions',icon:'9'},integrations:{label:'Integrations',icon:'10'},
   branching:{label:'Branching',icon:'11'},sla:{label:'SLAs',icon:'12'},
   compliance:{label:'Compliance',icon:'13'},approvals:{label:'Approvals',icon:'14'},
@@ -501,22 +510,29 @@ function applyAC(hex){
 
 const USERS=[{id:'recruiter',label:'Recruiter'},{id:'coordinator',label:'Recruiting coordinator'},{id:'hm',label:'Hiring manager'},{id:'hr_ops',label:'HR operations'},{id:'hris',label:'HRIS analyst'},{id:'ta_ops',label:'TA operations specialist'},{id:'ta_leader',label:'TA leader / director'},{id:'exec',label:'Executive / CHRO'},{id:'sysadmin',label:'System administrator'},{id:'div_leader',label:'Divisional / field leader'},{id:'legal',label:'Legal / compliance'},{id:'finance',label:'Finance / comp team'}];
 const ATS_P=[{id:'workday',label:'Workday'},{id:'icims',label:'iCIMS'},{id:'greenhouse',label:'Greenhouse'},{id:'lever',label:'Lever'},{id:'smartrecruiters',label:'SmartRecruiters'},{id:'taleo',label:'Oracle Taleo'},{id:'successfactors',label:'SAP SuccessFactors'},{id:'bamboohr',label:'BambooHR'},{id:'jobvite',label:'Jobvite'},{id:'other',label:'Other'}];
-const ATS_ST={workday:['Applied','Recruiter screen','HM review','Interview','Offer','Pre-hire','Hired'],icims:['Applicant','Reviewed','Phone screen','Interview','Offer extended','Background check','Hired'],greenhouse:['Application review','Screen','Interview','Offer','Reference check','Hired'],lever:['New applicant','Screen','Interview','Offer','Reference','Hired'],default:['Applied','Recruiter review','Phone screen','HM review','Interview','Offer','Background','Hired']};
+const ATS_ST={workday:['Applied','Recruiter screen','HM review','Interview','Offer','Pre-hire','Hired'],icims:['Initial Review','Screen','Interview','Offer','Hire'],greenhouse:['Application review','Screen','Interview','Offer','Reference check','Hired'],lever:['New applicant','Screen','Interview','Offer','Reference','Hired'],default:['Applied','Recruiter review','Phone screen','HM review','Interview','Offer','Background','Hired']};
 const STAGES=[{id:'applied',label:'Applied'},{id:'rec_review',label:'Recruiter review'},{id:'phone_screen',label:'Phone / video screen'},{id:'hm_review',label:'HM review'},{id:'interview',label:'Interview'},{id:'offer',label:'Offer extended'},{id:'bgc',label:'Background check'},{id:'hired',label:'Hired'},{id:'rejected',label:'Declined / rejected'}];
 const INTEGS=[{id:'scheduling',label:'Interview scheduling'},{id:'bgc',label:'Background check'},{id:'video',label:'Video interview'},{id:'assess',label:'Pre-hire assessment'},{id:'hcm',label:'HCM / HRIS system'},{id:'docusign',label:'E-signature'},{id:'job_boards',label:'Job board integrations'},{id:'wotc',label:'WOTC screening'}];
-const REQ_OPEN=[{id:'hm_intake',label:'Hiring manager submits intake / request form'},{id:'recruiter',label:'Recruiter creates req directly in ATS'},{id:'hris_push',label:'HRIS / HCM system automatically pushes req to ATS'},{id:'ta_ops',label:'TA Ops team creates all reqs centrally'},{id:'hybrid',label:'Hybrid — varies by role type'}];
+const REQ_OPEN=[
+  {id:'hm_intake',   label:'Hiring manager submits intake / request form (recruiter creates req in ATS)'},
+  {id:'hm_direct',   label:'Hiring manager creates the req directly in the ATS'},
+  {id:'recruiter',   label:'Recruiter creates the req directly in the ATS (no HM intake)'},
+  {id:'hris_push',   label:'HRIS / HCM system automatically pushes req to ATS'},
+  {id:'ta_ops',      label:'TA Ops team creates all reqs centrally'},
+  {id:'hybrid',      label:'Hybrid — varies by role type or department'},
+];
 const ITYPES=[{id:'phone',label:'Phone screen'},{id:'video',label:'Video / virtual'},{id:'onsite',label:'On-site / in-person'},{id:'panel',label:'Panel'},{id:'exec',label:'Executive'},{id:'technical',label:'Technical / skills test'}];
 const FORMATS=[{id:'virtual',label:'Virtual'},{id:'inperson',label:'In-person'},{id:'hybrid',label:'Hybrid'}];
 const SCHED=[{id:'selfschedule',label:'Candidate self-schedules'},{id:'coordinator',label:'Coordinator schedules'},{id:'automated',label:'Automated (scheduling tool)'},{id:'recruiter',label:'Recruiter schedules manually'}];
 
 let D={
   setup:{orgName:'',trackName:'',accentColor:'#8B1A1A',useCases:[],mode:'quick'},
-  org:{type:[]},users:{selected:[],custom:[]},
+  org:{type:[]},users:{selected:[],custom:[],customLabels:{}},
   terms:{req:'Requisition',candidate:'Candidate',disposition:'Disposition',screen:'Phone screen',offer:'Offer',hm:'Hiring manager'},
   ats:{platform:'',selectedPlatform:false,wantsPrepopulate:null,stages:[]},
-  reqflow:{reqOpenMethod:[],reqOpenNote:'',hasApproval:null,approvers:[],customApprovers:[]},
+  reqflow:{reqOpenMethod:[],reqOpenNote:'',hasApproval:null,approvers:[],customApprovers:[],customLabels:{}},
   stages:{selected:[],custom:[]},subprocess:{},actions:{},
-  integrations:{selected:[],custom:[]},branching:{rules:[]},sla:{values:{}},
+  integrations:{selected:[],custom:[],customLabels:{}},branching:{rules:[]},sla:{values:{}},
   compliance:{selected:[],custom:[]},approvals:{req:false,offer:false,supComp:false,audit:false},
   onboarding:{tasks:[],customTasks:[],notes:''},
 };
@@ -592,6 +608,77 @@ function ol(opts,sel,multi,fn){
     <div><div class="ol">${o.label}</div>${o.desc?`<div class="od">${o.desc}</div>`:''}</div>
   </div>`).join('')}</div>`;
 }
+
+// Returns display label — custom override or default
+function getLabel(section, id, defaultLabel) {
+  return (D[section]?.customLabels?.[id]) || defaultLabel;
+}
+
+// Saves a custom label and re-renders the given section
+function saveLabel(section, id, newLabel, reRenderFn) {
+  if (!D[section].customLabels) D[section].customLabels = {};
+  const trimmed = newLabel.trim();
+  if (trimmed && trimmed !== '') {
+    D[section].customLabels[id] = trimmed;
+  } else {
+    delete D[section].customLabels[id]; // reset to default if cleared
+  }
+  if (reRenderFn) reRenderFn();
+}
+
+// Editable option list — same as ol() but selected items get a pencil edit icon
+// section: key in D (e.g. 'users'), editFn: name of the rerender function string
+function olEditable(opts, sel, multi, toggleFn, section, reRenderFnName) {
+  return `<div class="opts">${opts.map(o => {
+    const isSel = sel.includes(o.id);
+    const customLbl = D[section]?.customLabels?.[o.id];
+    const displayLbl = customLbl || o.label;
+    const isEditing = false; // edit is triggered via DOM, not state
+    return `<div class="opt ${isSel ? 'sel' : ''}" onclick="if(event.target.closest('.opt-edit-btn')||event.target.closest('.opt-inline-input'))return;${toggleFn}('${o.id}')">
+      ${multi
+        ? `<span class="chk"><span class="chkm">✓</span></span>`
+        : `<span class="rad"><span class="radd"></span></span>`
+      }
+      <div class="opt-label-wrap">
+        <span class="ol opt-label-display" id="lbl-${section}-${o.id}">${displayLbl}${customLbl ? `<span class="opt-custom-badge">edited</span>` : ''}</span>
+        ${isSel ? `<button class="opt-edit-btn" title="Rename this option" onclick="event.stopPropagation();startEditLabel('${section}','${o.id}','${o.label.replace(/'/g,"\'")}','${reRenderFnName}',this)">✏️</button>` : ''}
+      </div>
+      ${o.desc ? `<div class="od">${o.desc}</div>` : ''}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// Called when pencil is clicked — swaps label span for inline input
+window.startEditLabel = function(section, id, defaultLabel, reRenderFnName, btn) {
+  const wrap = btn.closest('.opt-label-wrap');
+  const span = wrap.querySelector('.opt-label-display');
+  const currentVal = D[section]?.customLabels?.[id] || defaultLabel;
+
+  // Replace span with input
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'opt-inline-input';
+  input.value = currentVal;
+  input.style.width = Math.max(currentVal.length * 9, 120) + 'px';
+  input.onclick = e => e.stopPropagation();
+
+  const commitEdit = () => {
+    saveLabel(section, id, input.value,
+      reRenderFnName ? window[reRenderFnName] : null
+    );
+  };
+
+  input.onblur = commitEdit;
+  input.onkeydown = e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { input.value = currentVal; input.blur(); }
+  };
+
+  span.replaceWith(input);
+  btn.style.display = 'none';
+  input.focus();
+  input.select();
+};
 function ca(inputId,addFn,tags){
   return`<div class="addc"><input type="text" id="${inputId}" placeholder="Add your own…" onkeydown="if(event.key==='Enter')${addFn}()"><button onclick="${addFn}()">Add</button></div>
   <div class="tags">${tags.map(t=>`<span class="tag">${t}<span class="tx" onclick="rmTag('${t.replace(/'/g,"\\'")}')">×</span></span>`).join('')}</div>`;
@@ -734,8 +821,8 @@ window.onHI=function(v){if(v&&!v.startsWith('#')){v='#'+v.replace('#','');const 
 window.onRI=function(){const r=parseInt(document.getElementById('inp-r')?.value)||0;const g=parseInt(document.getElementById('inp-g')?.value)||0;const b=parseInt(document.getElementById('inp-b')?.value)||0;const hex='#'+[r,g,b].map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('');onHI(hex);};
 
 function rUsers(){
-  qc(`${sl('System users')}${qt('Who uses your ATS or recruiting platform?')}${qh('Each person selected becomes a swimlane in your process map.')}
-  ${ol(USERS,D.users.selected,true,'tUser')}${ca('inp-user','aUser',D.users.custom)}
+  qc(`${sl('System users')}${qt('Who uses your ATS or recruiting platform?')}${qh('Each person you select becomes a swimlane in your process map. In many ATS platforms — including iCIMS, Workday, and Greenhouse — these roles also correspond to your <strong>login groups or permission groups</strong>, which control what each user can see and do inside the system. Select everyone who plays a role in your hiring workflow.')}
+  ${olEditable(USERS,D.users.selected,true,'tUser','users','rUsers')}${ca('inp-user','aUser',D.users.custom)}
   ${emailSavePanel()}
   ${fnav('ns','Continue',D.users.selected.length===0&&D.users.custom.length===0)}`);
 }
@@ -754,7 +841,7 @@ function rAts(){
     el.innerHTML=`<div class="qcard">${sl('ATS & technology')}${qt('Which ATS are you using?')}${qh("We'll offer to pre-populate common stages.")}${ol(ATS_P,D.ats.platform?[D.ats.platform]:[],false,'sATS')}${fnav('atsN1','Continue',!D.ats.platform)}</div>`;
   }else{
     const stages=ATS_ST[D.ats.platform]||ATS_ST.default;
-    el.innerHTML=`<div class="qcard">${sl('ATS & technology')}${qt('Pre-populate default stages?')}${qh('Use as a starting point and edit freely, or define your own.')}
+    el.innerHTML=`<div class="qcard">${sl('ATS & technology')}${qt('Pre-populate default stages / bins?')}${qh('These are the default <strong>bins or stages</strong> used by your selected ATS platform. In iCIMS these are called Bins — the top-level folders candidates move through. Use them as a starting point or define your own. You'll add statuses within each stage in the next step.')}
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;">${stages.map(s=>`<span style="padding:4px 10px;border-radius:20px;font-size:11px;background:${AC}12;border:.5px solid ${AC}50;color:${AC}">${s}</span>`).join('<span style="color:var(--text3);font-size:12px;">→</span>')}</div>
     <div class="opts">
       <div class="opt ${D.ats.wantsPrepopulate===true?'sel':''}" onclick="accPre(true)"><span class="rad"><span class="radd"></span></span><div class="ol">Yes — use these as a starting point</div></div>
@@ -770,7 +857,7 @@ window.accPre=function(v){D.ats.wantsPrepopulate=v;if(v)D.ats.stages=[...(ATS_ST
 
 function rStages(){
   const base=D.ats.wantsPrepopulate&&D.ats.stages.length?D.ats.stages.map((s,i)=>({id:'ats_'+i,label:s})):STAGES;
-  qc(`${sl('Hiring stages')}${qt('What stages exist in your candidate pipeline?')}${qh('Select all statuses. In the next section you\'ll expand any stage into sub-steps — e.g. multiple interview rounds.')}
+  qc(`${sl('Stages & statuses')}${qt('What stages (bins) and statuses exist in your candidate pipeline?')}${qh('In most ATS platforms, <strong>stages or bins</strong> are the top-level folders (e.g. Interview, Offer), and <strong>statuses</strong> are the specific disposition values within each stage (e.g. Phone Screen Scheduled, Offer Extended, Hired). Select your top-level stages here — you'll define statuses and sub-steps within each stage in the next section.')}
   ${ol(base,D.stages.selected,true,'tStage')}${ca('inp-stage','aStage',D.stages.custom)}
   ${emailSavePanel()}
   ${fnav('ns','Continue',D.stages.selected.length===0&&D.stages.custom.length===0)}`);
@@ -803,7 +890,7 @@ function rSubprocess(){
       </div>`:''}
     </div>`;
   }).join('');
-  qc(`${sl('Sub-processes')}${qt('Do any stages have multiple steps or rounds?')}${qh('Expand any stage to define its internal sequence. Each sub-step gets its own node on the map with pass/fail gates between rounds.')}
+  qc(`${sl('Sub-processes & statuses')}${qt('Do any stages have multiple steps, rounds, or statuses within them?')}${qh('Expand any stage to define the internal sequence of actions and statuses. For example, the <strong>Interview</strong> stage might have statuses like "Phone Screen Scheduled", "Phone Screen Complete", "On-site Interview", and "Interview Complete" — each representing a discrete step within that bin. These become sub-process nodes on your map with pass/fail gates between them.')}
   ${cards}${emailSavePanel()}${fnav('ns','Continue',false)}`);
 }
 
@@ -854,7 +941,13 @@ function rActions(){
       </div>
       ${a.open?`<div style="padding:14px;border-top:.5px solid var(--border);display:flex;flex-direction:column;gap:12px;">
         <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;"><div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Decision owner</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${roles.map(r=>`<span style="padding:5px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${a.decisionOwners.includes(r)?`background:${AC}12;border-color:${AC};color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="togAR('${s.id}','decisionOwners','${r.replace(/'/g,"\\'")}')">${r}</span>`).join('')}</div></div>
-        <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;"><div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Outcomes</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${[{k:'advance',label:'Advance'},{k:'approve',label:'Approve'},{k:'reject',label:'Reject'},{k:'hold',label:'Hold'}].map(o=>`<span style="padding:5px 12px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${a.outcomes.includes(o.k)?`background:${AC};color:#fff;border-color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="togOut('${s.id}','${o.k}')">${o.label}</span>`).join('')}</div></div>
+        <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;"><div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Outcomes</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${[{k:'advance',label:'Advance'},{k:'approve',label:'Approve'},{k:'reject',label:'Reject'},{k:'hold',label:'Hold'}].map(o=>{
+  const isSel=a.outcomes.includes(o.k);
+  const customLbl=D.actions[s.id]?.outcomeLabels?.[o.k]||o.label;
+  return `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${isSel?`background:${AC};color:#fff;border-color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="togOut('${s.id}','${o.k}')">
+    ${customLbl}
+    ${isSel?`<span style="font-size:10px;opacity:.8;cursor:pointer;" onclick="event.stopPropagation();editOutcomeLabel('${s.id}','${o.k}','${o.label}')" title="Rename">✏️</span>`:''}
+  </span>`;}).join('')}</div></div>
       </div>`:''}
     </div>`;
   }).join('');
@@ -864,8 +957,19 @@ window.toggleAct=function(sid){markInteraction();D.actions[sid].open=!D.actions[
 window.togAR=function(sid,field,role){const a=D.actions[sid];if(!Array.isArray(a[field]))a[field]=[];msel(a[field],role);rActions();};
 window.togOut=function(sid,o){markInteraction();msel(D.actions[sid].outcomes,o);rActions();};
 
+window.editOutcomeLabel = function(sid, outcomeKey, defaultLabel) {
+  const newLabel = window.prompt('Rename "' + defaultLabel + '" outcome to:',
+    D.actions[sid]?.outcomeLabels?.[outcomeKey] || defaultLabel);
+  if (newLabel === null) return;
+  if (!D.actions[sid].outcomeLabels) D.actions[sid].outcomeLabels = {};
+  const trimmed = newLabel.trim();
+  if (trimmed) D.actions[sid].outcomeLabels[outcomeKey] = trimmed;
+  else delete D.actions[sid].outcomeLabels[outcomeKey];
+  rActions();
+};
+
 function rIntegrations(){
-  qc(`${sl('Integrations')}${qt('What tools are connected to your ATS?')}${qh('These become integration touchpoints on your swimlane map.')}${ol(INTEGS,D.integrations.selected,true,'tInteg')}${ca('inp-integ','aInteg',D.integrations.custom)}${emailSavePanel()}${fnav('ns','Continue',false)}`);
+  qc(`${sl('Integrations')}${qt('What tools are connected to your ATS?')}${qh('These become integration touchpoints on your swimlane map.')}${olEditable(INTEGS,D.integrations.selected,true,'tInteg','integrations','rIntegrations')}${ca('inp-integ','aInteg',D.integrations.custom)}${emailSavePanel()}${fnav('ns','Continue',false)}`);
 }
 window.tInteg=function(v){markInteraction();msel(D.integrations.selected,v);rIntegrations();};
 window.aInteg=function(){const i=document.getElementById('inp-integ');const v=i.value.trim();if(v&&!D.integrations.custom.includes(v)){D.integrations.custom.push(v);i.value='';}rIntegrations();};
@@ -1559,13 +1663,14 @@ function hexToRgbArr(hex) {
   return [r, g, b];
 }
 
-const RS={setup:rSetup,org:rOrg,users:rUsers,terms:rTerms,ats:rAts,reqflow:()=>{
-  // Simplified reqflow inline
+function rReqFlow(){
   qc(`${sl('Requisition flow')}${qt('How are job requisitions opened?')}${qh('This determines the first action on your map.')}
-  ${ol(REQ_OPEN,D.reqflow.reqOpenMethod,true,'tReqO')}
+  ${olEditable(REQ_OPEN,D.reqflow.reqOpenMethod,true,'tReqO','reqflow','rReqFlow')}
   <div style="margin-top:14px;"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">Notes (optional)</label><input class="mini" type="text" placeholder="e.g. HM submits Google Form, recruiter converts to ATS req" value="${D.reqflow.reqOpenNote||''}" oninput="D.reqflow.reqOpenNote=this.value"></div>
-  ${emailSavePanel()}${fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0)}`);
-},stages:rStages,subprocess:rSubprocess,actions:rActions,integrations:rIntegrations,branching:rBranching,sla:rSla,compliance:rCompliance,approvals:rApprovals,onboarding:rOnboarding};
+  ${emailSavePanel()}${fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0)}\`);
+}
+const RS={setup:rSetup,org:rOrg,users:rUsers,terms:rTerms,ats:rAts,reqflow:rReqFlow,//
+stages:rStages,subprocess:rSubprocess,actions:rActions,integrations:rIntegrations,branching:rBranching,sla:rSla,compliance:rCompliance,approvals:rApprovals,onboarding:rOnboarding};
 window.tReqO=function(v){markInteraction();msel(D.reqflow.reqOpenMethod,v);RS.reqflow();};
 
 // ── BEFOREUNLOAD — warn if session has unsaved progress ──────────────────────
