@@ -99,13 +99,20 @@ document.addEventListener('click', function(e) {
   var pill = e.target.closest('.outcome-pill');
   var editBtn = e.target.closest('.outcome-edit-btn');
   var addBtn = e.target.closest('.add-status-btn');
+  var statusPill = e.target.closest('.status-pill');
   if (editBtn) {
     e.stopPropagation();
     editOutcomeLabel(editBtn.getAttribute('data-sid'), editBtn.getAttribute('data-ok'), editBtn.getAttribute('data-lbl'));
     return;
   }
   if (addBtn) {
+    e.stopPropagation();
     addCustomStatus(addBtn.getAttribute('data-stage'));
+    return;
+  }
+  if (statusPill) {
+    e.stopPropagation();
+    toggleStatus(statusPill);
     return;
   }
   if (pill) {
@@ -780,11 +787,13 @@ const USERS=[{id:'recruiter',label:'Recruiter'},{id:'coordinator',label:'Recruit
 const ATS_P=[{id:'workday',label:'Workday'},{id:'icims',label:'iCIMS'},{id:'greenhouse',label:'Greenhouse'},{id:'lever',label:'Lever'},{id:'smartrecruiters',label:'SmartRecruiters'},{id:'taleo',label:'Oracle Taleo'},{id:'successfactors',label:'SAP SuccessFactors'},{id:'bamboohr',label:'BambooHR'},{id:'jobvite',label:'Jobvite'},{id:'other',label:'Other'}];
 const ATS_ST={workday:['Applied','Recruiter screen','HM review','Interview','Offer','Pre-hire','Hired'],icims:['Initial Review','Screen','Interview','Offer','Hire'],greenhouse:['Application review','Screen','Interview','Offer','Reference check','Hired'],lever:['New applicant','Screen','Interview','Offer','Reference','Hired'],default:['Applied','Recruiter review','Phone screen','HM review','Interview','Offer','Background','Hired']};
 const STATUS_SUGGESTIONS = {
-  'Initial Review': ['New Applicant','Under Review','Recruiter Screen Pending','Reviewed - Advance','Reviewed - Decline'],
+  'Initial Review': ['New Applicant','Incomplete Application','Under Review','Recruiter Screen Pending','Reviewed - Advance','Reviewed - Decline','Withdrawn'],
   'Screen':         ['Phone Screen Scheduled','Phone Screen Complete','Video Screen Scheduled','Video Screen Complete','Assessment Sent','Assessment Complete'],
   'Interview':      ['Interview Scheduled','1st Interview Complete','2nd Interview Scheduled','2nd Interview Complete','Panel Interview Scheduled','Panel Interview Complete','Executive Interview Scheduled','Executive Interview Complete','Debrief Pending','Debrief Complete'],
   'Offer':          ['Verbal Offer Extended','Offer Letter Pending','Offer Extended','Offer Accepted','Offer Declined','Offer Rescinded'],
   'Hire':           ['Pre-hire Initiated','BGC Initiated','BGC Clear','BGC Adverse','Drug Screen Pending','Onboarding Initiated','Hired'],
+  'Background Check': ['BGC Initiated','BGC In Progress','BGC Clear','BGC Adverse Action','Drug Screen Pending','Drug Screen Complete'],
+  'Hired':            ['Offer Accepted','Pre-hire Initiated','BGC Complete','Onboarding Initiated','Active'],
   'default':        ['In Progress','Pending Review','Complete','On Hold','Cancelled'],
 };
 function getStatusSuggestions(stageLabel) {
@@ -1063,7 +1072,7 @@ function rStages(){
   }
   // Ensure D.statuses has an entry for each stage
   stages.forEach(function(s) {
-    if (!D.statuses[s.id]) D.statuses[s.id] = { label: s.label, selected: [], custom: [] };
+    if (!D.statuses[s.id]) D.statuses[s.id] = { label: s.label, selected: [], custom: [], open: false };
   });
 
   var cards = stages.map(function(s) {
@@ -1126,6 +1135,17 @@ window.toggleStageCard = function(hdr) {
   var sid = hdr.getAttribute('data-stage');
   if (!D.statuses[sid]) return;
   D.statuses[sid].open = !D.statuses[sid].open;
+  rStages();
+};
+// Also remove toggleStatus from delegated handler - it's handled inline via data attr
+window.toggleStatus = function(el) {
+  markInteraction();
+  var sid = el.getAttribute('data-stage');
+  var status = el.getAttribute('data-status');
+  if (!D.statuses[sid]) return;
+  var idx = D.statuses[sid].selected.indexOf(status);
+  if (idx > -1) D.statuses[sid].selected.splice(idx, 1);
+  else D.statuses[sid].selected.push(status);
   rStages();
 };
 window.toggleStatus = function(el) {
