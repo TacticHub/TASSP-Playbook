@@ -841,7 +841,7 @@ function rAts(){
     el.innerHTML=`<div class="qcard">${sl('ATS & technology')}${qt('Which ATS are you using?')}${qh("We'll offer to pre-populate common stages.")}${ol(ATS_P,D.ats.platform?[D.ats.platform]:[],false,'sATS')}${fnav('atsN1','Continue',!D.ats.platform)}</div>`;
   }else{
     const stages=ATS_ST[D.ats.platform]||ATS_ST.default;
-    el.innerHTML=`<div class="qcard">${sl('ATS & technology')}${qt('Pre-populate default stages / bins?')}${qh('These are the default <strong>bins or stages</strong> used by your selected ATS platform. In iCIMS these are called Bins — the top-level folders candidates move through. Use them as a starting point or define your own. You'll add statuses within each stage in the next step.')}
+    el.innerHTML=`<div class="qcard">${sl('ATS & technology')}${qt('Pre-populate default stages / bins?')}${qh('These are the default <strong>bins or stages</strong> used by your selected ATS platform. In iCIMS these are called Bins — the top-level folders candidates move through. Use them as a starting point or define your own. You\'ll add statuses within each stage in the next step.')}
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;">${stages.map(s=>`<span style="padding:4px 10px;border-radius:20px;font-size:11px;background:${AC}12;border:.5px solid ${AC}50;color:${AC}">${s}</span>`).join('<span style="color:var(--text3);font-size:12px;">→</span>')}</div>
     <div class="opts">
       <div class="opt ${D.ats.wantsPrepopulate===true?'sel':''}" onclick="accPre(true)"><span class="rad"><span class="radd"></span></span><div class="ol">Yes — use these as a starting point</div></div>
@@ -857,7 +857,7 @@ window.accPre=function(v){D.ats.wantsPrepopulate=v;if(v)D.ats.stages=[...(ATS_ST
 
 function rStages(){
   const base=D.ats.wantsPrepopulate&&D.ats.stages.length?D.ats.stages.map((s,i)=>({id:'ats_'+i,label:s})):STAGES;
-  qc(`${sl('Stages & statuses')}${qt('What stages (bins) and statuses exist in your candidate pipeline?')}${qh('In most ATS platforms, <strong>stages or bins</strong> are the top-level folders (e.g. Interview, Offer), and <strong>statuses</strong> are the specific disposition values within each stage (e.g. Phone Screen Scheduled, Offer Extended, Hired). Select your top-level stages here — you'll define statuses and sub-steps within each stage in the next section.')}
+  qc(`${sl('Stages & statuses')}${qt('What stages (bins) and statuses exist in your candidate pipeline?')}${qh('In most ATS platforms, <strong>stages or bins</strong> are the top-level folders (e.g. Interview, Offer), and <strong>statuses</strong> are the specific disposition values within each stage (e.g. Phone Screen Scheduled, Offer Extended, Hired). Select your top-level stages here — you\'ll define statuses and sub-steps within each stage in the next section.')}
   ${ol(base,D.stages.selected,true,'tStage')}${ca('inp-stage','aStage',D.stages.custom)}
   ${emailSavePanel()}
   ${fnav('ns','Continue',D.stages.selected.length===0&&D.stages.custom.length===0)}`);
