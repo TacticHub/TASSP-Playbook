@@ -71,13 +71,11 @@ function buildOutcomePills(sid, a) {
     var isSel = a.outcomes && a.outcomes.includes(o.k);
     var lbl = (D.actions[sid] && D.actions[sid].outcomeLabels && D.actions[sid].outcomeLabels[o.k]) || o.label;
     var bg = isSel ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)';
-    var eb = '';
-    if (isSel) {
-      eb = '<button style="background:none;border:none;font-size:11px;cursor:pointer;margin-left:4px;color:rgba(255,255,255,0.8);" '
-         + 'data-sid="'+sid+'" data-ok="'+o.k+'" data-lbl="'+o.label+'" '
-         + 'onclick="event.stopPropagation();editOutcomeLabel(this.getAttribute('data-sid'),this.getAttribute('data-ok'),this.getAttribute('data-lbl'))" '
-         + 'title="Rename">&#9998;</button>';
-    }
+    var eb = isSel ? '<button class="outcome-edit-btn" style="background:none;border:none;font-size:11px;cursor:pointer;margin-left:4px;" data-sid="'+sid+'" data-ok="'+o.k+'" data-lbl="'+o.label+'" title="Rename">&#9998;</button>' : '';
+    h += '<span class="outcome-pill" style="display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;'+bg+'" data-sid="'+sid+'" data-ok="'+o.k+'">'+lbl+eb+'</span>';
+  }
+  return h;
+}
     h += '<span style="display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;'+bg+'" '
        + 'data-sid="'+sid+'" data-ok="'+o.k+'" onclick="togOut(this.getAttribute('data-sid'),this.getAttribute('data-ok'))">'+lbl+eb+'</span>';
   }
@@ -101,6 +99,20 @@ function rReqFlow() {
   ${emailSavePanel()}${fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0)}`);
 }
 // ── BEFOREUNLOAD ──────────────────────────────────────────────────────────────
+// Delegated handlers for outcome pills - avoids inline onclick quote issues
+document.addEventListener('click', function(e) {
+  var pill = e.target.closest('.outcome-pill');
+  var editBtn = e.target.closest('.outcome-edit-btn');
+  if (editBtn) {
+    e.stopPropagation();
+    editOutcomeLabel(editBtn.getAttribute('data-sid'), editBtn.getAttribute('data-ok'), editBtn.getAttribute('data-lbl'));
+    return;
+  }
+  if (pill) {
+    togOut(pill.getAttribute('data-sid'), pill.getAttribute('data-ok'));
+  }
+});
+
 window.addEventListener('beforeunload', function(e) {
   if (!HAS_INTERACTION || SAVE_STATUS === 'saved') return;
   e.preventDefault(); e.returnValue = 'You have unsaved progress. Leave?';
