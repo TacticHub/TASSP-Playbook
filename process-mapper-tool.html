@@ -4,9 +4,804 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TA Process Mapper — TASSP Playbook</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+// ── PDF GENERATOR ────────────────────────────────────────────────────────────
+async function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [2592, 1728] });
+  const W=2592,H=1728,MARGIN=32,LABEL_W=116,TITLE_H=78,LEGEND_H=36,FOOTER_H=22,PHASE_H=26;
+  const MAP_X=MARGIN+LABEL_W, MAP_Y=MARGIN+TITLE_H+8;
+  const MAP_TOP=H-MARGIN-LEGEND_H-FOOTER_H-PHASE_H-10;
+  const MAP_H=MAP_TOP-PHASE_H-MAP_Y, MAP_W=W-MARGIN-MAP_X;
+  const userLabels=[...D.users.selected.map(u=>{var f=USERS.find(o=>o.id===u);return(D.users.customLabels&&D.users.customLabels[u])||f&&f.label||u;}),...D.users.custom];
+  const stageList=getStageList();
+  const integLabels=[...D.integrations.selected.map(i=>{var f=INTEGS.find(o=>o.id===i);return(D.integrations.customLabels&&D.integrations.customLabels[i])||f&&f.label||i;}),...D.integrations.custom];
+  const LANE_COUNT=Math.max(userLabels.length,1), LANE_H=MAP_H/LANE_COUNT;
+  const ac=hexToRgbArr(AC), AR=ac[0],AG=ac[1],AB=ac[2];
+  const DR=Math.round(AR*0.52),DG=Math.round(AG*0.52),DB=Math.round(AB*0.52);
+  const LR=Math.min(255,232+Math.round((255-AR)*0.28));
+  const LG=Math.min(255,232+Math.round((255-AG)*0.28));
+  const LB=Math.min(255,232+Math.round((255-AB)*0.28));
+  const PHASES=[
+    {label:'Req opening',f0:0.000,f1:0.135},{label:'Req approval',f0:0.135,f1:0.265},
+    {label:'Sourcing & posting',f0:0.265,f1:0.375},{label:'Screening',f0:0.375,f1:0.495},
+    {label:'Interview',f0:0.495,f1:0.735},{label:'Offer',f0:0.735,f1:0.865},
+    {label:'Pre-hire & handoff',f0:0.865,f1:1.000},
+  ];
+  function px(f){return MAP_X+f*MAP_W;}
+  function laneCY(i){return MAP_Y+MAP_H-(i+0.5)*LANE_H;}
+  function laneBot(i){return MAP_Y+MAP_H-(i+1)*LANE_H;}
+  function fillPoly(pts){
+    if(!pts.length)return;
+    doc.moveTo(pts[0][0],pts[0][1]);
+    for(var i=1;i<pts.length;i++)doc.lineTo(pts[i][0],pts[i][1]);
+    doc.closePath();doc.fillStroke();
+  }
+  // White background
+  doc.setFillColor(255,255,255);doc.rect(0,0,W,H,'F');
+  // Title bar
+  doc.setFillColor(AR,AG,AB);doc.rect(0,MARGIN,W,TITLE_H,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(24);doc.setFont('helvetica','bold');
+  doc.text(D.setup.orgName||'Organization',MARGIN+14,MARGIN+30);
+  doc.setFontSize(13);doc.setFont('helvetica','normal');
+  doc.text((D.setup.trackName||'Hiring process')+' · '+(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label||'ATS')+' · BPMN Notation',MARGIN+14,MARGIN+52);
+  doc.setFontSize(10);doc.text('Print: 36" × 24" · 300 DPI · '+new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'}),W-MARGIN-14,MARGIN+44,{align:'right'});
+  // Phase headers
+  PHASES.forEach(function(ph,idx){
+    var x0=px(ph.f0),x1=px(ph.f1);
+    var lt=idx%2===1;
+    doc.setFillColor(Math.min(255,AR+(lt?22:0)),Math.min(255,AG+(lt?14:0)),Math.min(255,AB+(lt?22:0)));
+    doc.rect(x0,MAP_TOP,x1-x0,PHASE_H,'F');
+    doc.setDrawColor(255,255,255);doc.setLineWidth(0.7);doc.line(x0,MAP_TOP,x0,MAP_TOP+PHASE_H);
+    doc.setTextColor(255,255,255);doc.setFontSize(8.5);doc.setFont('helvetica','bold');
+    doc.text(ph.label,(x0+x1)/2,MAP_TOP+17,{align:'center'});
+  });
+  // Label column
+  doc.setFillColor(AR,AG,AB);doc.rect(MARGIN,MAP_TOP,LABEL_W,PHASE_H,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text('Role / Swimlane',MARGIN+LABEL_W/2,MAP_TOP+17,{align:'center'});
+  doc.setFillColor(LR,LG,LB);doc.rect(MARGIN,MAP_Y,LABEL_W,MAP_H,'F');
+  // Lanes
+  userLabels.forEach(function(name,i){
+    var yb=laneBot(i);
+    doc.setFillColor(i%2===0?255:250,i%2===0?255:249,i%2===0?255:252);
+    doc.rect(MAP_X,yb,MAP_W,LANE_H,'F');
+    doc.setFillColor(i%2===0?LR:Math.max(LR-8,220),i%2===0?LG:Math.max(LG-8,218),i%2===0?LB:Math.max(LB-6,225));
+    doc.rect(MARGIN,yb,LABEL_W,LANE_H,'F');
+    doc.setTextColor(DR,DG,DB);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    var nlines=doc.splitTextToSize(name,LABEL_W-14);
+    var lh=11,ty=yb+LANE_H/2-(nlines.length-1)*lh/2+3;
+    nlines.forEach(function(ln,li){doc.text(ln,MARGIN+LABEL_W/2,ty+li*lh,{align:'center'});});
+    doc.setDrawColor(200,195,208);doc.setLineWidth(0.4);doc.line(MARGIN,yb,W-MARGIN,yb);
+  });
+  // Phase dividers
+  doc.setLineDash([4,4]);
+  PHASES.forEach(function(ph){doc.setDrawColor(210,205,218);doc.setLineWidth(0.4);doc.line(px(ph.f0),MAP_Y,px(ph.f0),MAP_TOP);});
+  doc.setLineDash([]);
+  // Borders
+  doc.setDrawColor(AR,AG,AB);doc.setLineWidth(1.2);doc.line(MAP_X,MAP_Y,MAP_X,MAP_TOP+PHASE_H);
+  doc.setLineWidth(2);doc.rect(MARGIN,MAP_Y,W-2*MARGIN,MAP_H+PHASE_H,'S');
+  // Stage nodes
+  var colW=MAP_W/Math.max(stageList.length+1,9);
+  var TW=Math.min(colW*0.82,120),TH=30;
+  stageList.forEach(function(stage,si){
+    var laneIdx=si%Math.max(userLabels.length,1);
+    var cx=MAP_X+(si+0.9)*colW+colW*0.35,cy=laneCY(laneIdx);
+    var a=D.actions[stage.id],sp=D.subprocess[stage.id];
+    var hasSP=sp&&sp.hasSubprocess===true;
+    doc.setFillColor(255,255,255);doc.setDrawColor(AR,AG,AB);
+    doc.setLineWidth(hasSP?1.8:1);
+    if(hasSP)doc.setLineDash([5,2]);else doc.setLineDash([]);
+    doc.rect(cx-TW/2,cy-TH/2,TW,TH,'FD');doc.setLineDash([]);
+    if(hasSP){
+      doc.setFillColor(AR,AG,AB);doc.rect(cx-TW/2+3,cy-TH/2+3,18,11,'F');
+      doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+      doc.text('[+]',cx-TW/2+12,cy-TH/2+11,{align:'center'});
+    }
+    doc.setTextColor(DR,DG,DB);doc.setFontSize(8);doc.setFont('helvetica',hasSP?'bold':'normal');
+    var lblLines=doc.splitTextToSize(stage.label,TW-12);
+    var lh=10,ly=cy-(lblLines.length-1)*lh/2+2;
+    lblLines.forEach(function(ln,li){doc.text(ln,cx,ly+li*lh,{align:'center'});});
+    // Arrow to next in same lane
+    var nextSI=stageList.findIndex(function(s,idx){return idx>si&&(idx%Math.max(userLabels.length,1))===laneIdx;});
+    if(nextSI>-1){
+      var nCX=MAP_X+(nextSI+0.9)*colW+colW*0.35;
+      doc.setDrawColor(160,148,172);doc.setLineWidth(0.8);
+      doc.line(cx+TW/2+1,cy,nCX-TW/2-8,cy);
+      doc.setFillColor(160,148,172);
+      doc.rect(nCX-TW/2-8,cy-3,6,6,'F');
+    }
+    // Decision diamond
+    if(a&&a.outcomes&&a.outcomes.length>0){
+      var dx=cx+TW/2+28,dw=18,dh=13;
+      doc.setFillColor(225,240,252);doc.setDrawColor(24,95,165);doc.setLineWidth(0.9);
+      doc.rect(dx-dw/2,cy-dh/2,dw,dh,'FD');
+      doc.setTextColor(4,44,83);doc.setFontSize(7);doc.setFont('helvetica','bold');
+      doc.text('?',dx,cy+2.5,{align:'center'});
+      if(a.outcomes.includes('advance')||a.outcomes.includes('approve')){
+        doc.setDrawColor(30,120,70);doc.setLineWidth(1.3);
+        doc.line(dx+dw/2+2,cy,dx+dw/2+22,cy);
+        doc.setTextColor(30,120,70);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+        doc.text('Yes',dx+dw/2+12,cy-5,{align:'center'});
+      }
+      if(a.outcomes.includes('reject')){
+        doc.setDrawColor(170,35,25);doc.setLineWidth(1.3);
+        doc.line(dx,cy+dh/2+2,dx,cy+dh/2+20);
+        doc.setTextColor(170,35,25);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+        doc.text('No',dx+5,cy+dh/2+15);
+      }
+    }
+  });
+  // Integration badges
+  if(integLabels.length>0){
+    var badgeY=MAP_Y+LANE_H*0.18;
+    integLabels.slice(0,6).forEach(function(integ,i){
+      var ix=MAP_X+14+i*168;
+      doc.setFillColor(232,244,255);doc.setDrawColor(100,148,200);doc.setLineWidth(0.6);
+      doc.rect(ix,badgeY-8,156,16,'FD');
+      doc.setTextColor(24,70,130);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+      doc.text(integ,ix+78,badgeY+4,{align:'center'});
+    });
+  }
+  // Legend
+  var legY=H-MARGIN-FOOTER_H-LEGEND_H-2;
+  doc.setFillColor(248,247,250);doc.setDrawColor(200,195,210);doc.setLineWidth(0.5);
+  doc.rect(MARGIN,legY,W-2*MARGIN,LEGEND_H,'FD');
+  var legItems=[
+    {label:'Start event',fr:[234,243,222],sr:[59,109,17]},
+    {label:'End: hired',fr:[234,243,222],sr:[59,109,17],thick:true},
+    {label:'End: exit',fr:[252,235,235],sr:[163,45,45],thick:true},
+    {label:'Task',fr:[255,255,255],sr:[AR,AG,AB]},
+    {label:'Decision',fr:[225,240,252],sr:[24,95,165]},
+    {label:'Approved path',fr:[30,120,70],sr:[30,120,70],arrow:true},
+    {label:'Rejected path',fr:[170,35,25],sr:[170,35,25],arrow:true},
+    {label:'[+] Sub-process',fr:[255,255,255],sr:[AR,AG,AB],dashed:true},
+  ];
+  var legStep=(W-2*MARGIN)/legItems.length;
+  legItems.forEach(function(item,i){
+    var lx=MARGIN+i*legStep+legStep/2,ly=legY+LEGEND_H/2-2;
+    doc.setFillColor.apply(doc,item.fr);doc.setDrawColor.apply(doc,item.sr);
+    doc.setLineWidth(item.thick?2.2:0.8);
+    if(item.dashed)doc.setLineDash([3,2]);else doc.setLineDash([]);
+    if(item.arrow){
+      doc.setDrawColor.apply(doc,item.sr);doc.setLineWidth(1.5);
+      doc.line(lx-14,ly,lx+6,ly);
+      doc.setFillColor.apply(doc,item.fr);doc.rect(lx+6,ly-3,8,6,'F');
+    } else {
+      doc.rect(lx-14,ly-7,28,14,'FD');
+    }
+    doc.setLineDash([]);
+    doc.setTextColor(80,72,92);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+    doc.text(item.label,lx,legY+LEGEND_H-3,{align:'center'});
+  });
+  // Footer
+  doc.setTextColor(130,120,145);doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text((D.setup.orgName||'Organization')+' · '+(D.setup.trackName||'Hiring process')+' · CONFIDENTIAL',MARGIN+12,H-MARGIN-5);
+  doc.text('Generated '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+' · TA Process Mapping Tool — TASSP Playbook',W-MARGIN-12,H-MARGIN-5,{align:'right'});
+  var fileName=((D.setup.orgName||'TA')+'_'+(D.setup.trackName||'Process')+'_Map.pdf').replace(/\s+/g,'_');
+  doc.save(fileName);
+}
+
+// ── DOCX SOP GENERATOR ───────────────────────────────────────────────────────
+async function generateDOCX() {
+  const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,
+         HeadingLevel,AlignmentType,BorderStyle,WidthType,ShadingType,LevelFormat}=docx;
+  const userLabels=[...D.users.selected.map(u=>{var f=USERS.find(o=>o.id===u);return(D.users.customLabels&&D.users.customLabels[u])||f&&f.label||u;}),...D.users.custom];
+  const stageList=getStageList();
+  const integLabels=[...D.integrations.selected.map(i=>{var f=INTEGS.find(o=>o.id===i);return(D.integrations.customLabels&&D.integrations.customLabels[i])||f&&f.label||i;}),...D.integrations.custom];
+  const spStages=stageList.filter(s=>D.subprocess[s.id]&&D.subprocess[s.id].hasSubprocess===true);
+  const reqOpenLabels=D.reqflow.reqOpenMethod.map(m=>{var f=REQ_OPEN.find(o=>o.id===m);return(D.reqflow.customLabels&&D.reqflow.customLabels[m])||f&&f.label||m;});
+  const BH=AC.replace('#','');
+  const b={style:BorderStyle.SINGLE,size:1,color:'CCCCCC'};
+  const borders={top:b,bottom:b,left:b,right:b};
+  function h1(text){return new Paragraph({heading:HeadingLevel.HEADING_1,spacing:{before:320,after:100},children:[new TextRun({text,bold:true,size:32,color:BH,font:'Arial'})]});}
+  function h2(text){return new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:220,after:80},children:[new TextRun({text,bold:true,size:26,font:'Arial'})]});}
+  function body(text,opts){return new Paragraph({spacing:{before:60,after:60},children:[new TextRun(Object.assign({text,size:20,font:'Arial'},opts||{}))]});}
+  function bullet(text){return new Paragraph({numbering:{reference:'bullets',level:0},spacing:{before:40,after:40},children:[new TextRun({text,size:20,font:'Arial'})]});}
+  function spacer(){return new Paragraph({children:[new TextRun('')]});}
+  function hdrRow(cells,ws){return new TableRow({tableHeader:true,children:cells.map((t,i)=>new TableCell({borders,width:{size:ws[i],type:WidthType.DXA},shading:{fill:BH,type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},children:[new Paragraph({children:[new TextRun({text:t,bold:true,size:18,color:'FFFFFF',font:'Arial'})]})]}))}); }
+  function dataRow(cells,ws,shade){return new TableRow({children:cells.map((t,i)=>new TableCell({borders,width:{size:ws[i],type:WidthType.DXA},shading:{fill:shade?'F5F5F5':'FFFFFF',type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},children:[new Paragraph({children:[new TextRun({text:String(t),size:18,font:'Arial'})]})]}))}); }
+  const doc2=new Document({
+    styles:{default:{document:{run:{font:'Arial',size:20}}}},
+    numbering:{config:[{reference:'bullets',levels:[{level:0,format:LevelFormat.BULLET,text:'•',alignment:AlignmentType.LEFT,style:{paragraph:{indent:{left:720,hanging:360}}}}]}]},
+    sections:[{properties:{page:{size:{width:12240,height:15840},margin:{top:1440,right:1440,bottom:1440,left:1440}}},
+      children:[
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:720,after:120},children:[new TextRun({text:'TALENT ACQUISITION',font:'Arial',size:18,bold:true,color:BH})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:160},children:[new TextRun({text:'Standard Operating Procedure',font:'Arial',size:48,bold:true})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:80},children:[new TextRun({text:D.setup.orgName||'Organization',font:'Arial',size:32,color:BH})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:480},children:[new TextRun({text:(D.setup.trackName||'Hiring process')+' · '+(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label||'ATS'),font:'Arial',size:22,color:'777777'})]}),
+        spacer(),spacer(),
+        h1('1. Purpose and scope'),
+        body('This SOP defines the end-to-end talent acquisition process for '+(D.setup.trackName||'this hiring track')+' at '+(D.setup.orgName||'this organization')+'. It establishes roles, responsibilities, system touchpoints, and the workflow sequence governing how candidates move from requisition creation through to onboarding handoff.'),
+        spacer(),
+        h1('2. Requisition opening'),
+        body('How requisitions are opened: '+(reqOpenLabels.join(', ')||'Not specified')),
+        spacer(),
+        h1('3. System users and swimlane responsibilities'),
+        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2800,6560],rows:[
+          hdrRow(['Role','Primary responsibility'],[2800,6560]),
+          ...userLabels.map((u,i)=>{
+            var a=Object.values(D.actions).find(function(av){return av.decisionOwners&&av.decisionOwners.includes(u);});
+            var desc=a?'Decision owner at: '+Object.values(D.actions).filter(function(av){return av.decisionOwners&&av.decisionOwners.includes(u);}).map(function(av){return av.label;}).join(', '):'Participant in hiring process';
+            return dataRow([u,desc],[2800,6560],i%2===1);
+          })
+        ]}),
+        spacer(),
+        h1('4. Candidate pipeline stages'),
+        body('The following stages exist in the '+(D.setup.trackName||'')+' candidate pipeline:'),
+        ...stageList.map(s=>{
+          var a=D.actions[s.id],sp=D.subprocess[s.id];
+          var lines=[bullet(s.label+(a&&a.decisionOwners&&a.decisionOwners.length?' — Decision owner: '+a.decisionOwners.join(', '):'')+(a&&a.outcomes&&a.outcomes.length?' — Outcomes: '+a.outcomes.join(' / '):''))];
+          if(sp&&sp.hasSubprocess&&sp.rounds&&sp.rounds.length){
+            sp.rounds.forEach(function(r,ri){
+              lines.push(new Paragraph({numbering:{reference:'bullets',level:0},spacing:{before:20,after:20},indent:{left:1080},children:[new TextRun({text:'Round '+(ri+1)+': '+r.name+(r.condition?' (Only if: '+r.condition+')':''),size:18,color:'555555',font:'Arial'})]}));
+            });
+          }
+          return lines;
+        }).flat(),
+        spacer(),
+        h1('5. Integrations'),
+        integLabels.length?new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[3000,6360],rows:[
+          hdrRow(['Integration','Function'],[3000,6360]),
+          ...integLabels.map(function(integ,i){return dataRow([integ,'Connected to '+(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label||'ATS')],[3000,6360],i%2===1);})
+        ]}):body('No integrations defined.'),
+        spacer(),
+        h1('6. Document information'),
+        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2400,6960],rows:[
+          dataRow(['Document owner',(D.setup.orgName||'Organization')+' — TA Operations'],[2400,6960]),
+          dataRow(['Process track',D.setup.trackName||'Not specified'],[2400,6960],true),
+          dataRow(['ATS platform',(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label)||'Not specified'],[2400,6960]),
+          dataRow(['Generated',new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})],[2400,6960],true),
+          dataRow(['Generated by','TA Process Mapping Tool — TASSP Playbook'],[2400,6960]),
+        ]}),
+        spacer(),
+        body('Generated from structured process data captured via the TA Process Mapping Tool at TASSP Playbook.',{italics:true,color:'888888'}),
+      ]
+    }]
+  });
+  const blob=await Packer.toBlob(doc2);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=((D.setup.orgName||'TA')+'_'+(D.setup.trackName||'Process')+'_SOP.docx').replace(/\s+/g,'_');
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function hexToRgbArr(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];}
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+// ── PDF GENERATOR ────────────────────────────────────────────────────────────
+async function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [2592, 1728] });
+  const W=2592,H=1728,MARGIN=32,LABEL_W=116,TITLE_H=78,LEGEND_H=36,FOOTER_H=22,PHASE_H=26;
+  const MAP_X=MARGIN+LABEL_W, MAP_Y=MARGIN+TITLE_H+8;
+  const MAP_TOP=H-MARGIN-LEGEND_H-FOOTER_H-PHASE_H-10;
+  const MAP_H=MAP_TOP-PHASE_H-MAP_Y, MAP_W=W-MARGIN-MAP_X;
+  const userLabels=[...D.users.selected.map(u=>{var f=USERS.find(o=>o.id===u);return(D.users.customLabels&&D.users.customLabels[u])||f&&f.label||u;}),...D.users.custom];
+  const stageList=getStageList();
+  const integLabels=[...D.integrations.selected.map(i=>{var f=INTEGS.find(o=>o.id===i);return(D.integrations.customLabels&&D.integrations.customLabels[i])||f&&f.label||i;}),...D.integrations.custom];
+  const LANE_COUNT=Math.max(userLabels.length,1), LANE_H=MAP_H/LANE_COUNT;
+  const ac=hexToRgbArr(AC), AR=ac[0],AG=ac[1],AB=ac[2];
+  const DR=Math.round(AR*0.52),DG=Math.round(AG*0.52),DB=Math.round(AB*0.52);
+  const LR=Math.min(255,232+Math.round((255-AR)*0.28));
+  const LG=Math.min(255,232+Math.round((255-AG)*0.28));
+  const LB=Math.min(255,232+Math.round((255-AB)*0.28));
+  const PHASES=[
+    {label:'Req opening',f0:0.000,f1:0.135},{label:'Req approval',f0:0.135,f1:0.265},
+    {label:'Sourcing & posting',f0:0.265,f1:0.375},{label:'Screening',f0:0.375,f1:0.495},
+    {label:'Interview',f0:0.495,f1:0.735},{label:'Offer',f0:0.735,f1:0.865},
+    {label:'Pre-hire & handoff',f0:0.865,f1:1.000},
+  ];
+  function px(f){return MAP_X+f*MAP_W;}
+  function laneCY(i){return MAP_Y+MAP_H-(i+0.5)*LANE_H;}
+  function laneBot(i){return MAP_Y+MAP_H-(i+1)*LANE_H;}
+  function fillPoly(pts){
+    if(!pts.length)return;
+    doc.moveTo(pts[0][0],pts[0][1]);
+    for(var i=1;i<pts.length;i++)doc.lineTo(pts[i][0],pts[i][1]);
+    doc.closePath();doc.fillStroke();
+  }
+  // White background
+  doc.setFillColor(255,255,255);doc.rect(0,0,W,H,'F');
+  // Title bar
+  doc.setFillColor(AR,AG,AB);doc.rect(0,MARGIN,W,TITLE_H,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(24);doc.setFont('helvetica','bold');
+  doc.text(D.setup.orgName||'Organization',MARGIN+14,MARGIN+30);
+  doc.setFontSize(13);doc.setFont('helvetica','normal');
+  doc.text((D.setup.trackName||'Hiring process')+' · '+(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label||'ATS')+' · BPMN Notation',MARGIN+14,MARGIN+52);
+  doc.setFontSize(10);doc.text('Print: 36" × 24" · 300 DPI · '+new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'}),W-MARGIN-14,MARGIN+44,{align:'right'});
+  // Phase headers
+  PHASES.forEach(function(ph,idx){
+    var x0=px(ph.f0),x1=px(ph.f1);
+    var lt=idx%2===1;
+    doc.setFillColor(Math.min(255,AR+(lt?22:0)),Math.min(255,AG+(lt?14:0)),Math.min(255,AB+(lt?22:0)));
+    doc.rect(x0,MAP_TOP,x1-x0,PHASE_H,'F');
+    doc.setDrawColor(255,255,255);doc.setLineWidth(0.7);doc.line(x0,MAP_TOP,x0,MAP_TOP+PHASE_H);
+    doc.setTextColor(255,255,255);doc.setFontSize(8.5);doc.setFont('helvetica','bold');
+    doc.text(ph.label,(x0+x1)/2,MAP_TOP+17,{align:'center'});
+  });
+  // Label column
+  doc.setFillColor(AR,AG,AB);doc.rect(MARGIN,MAP_TOP,LABEL_W,PHASE_H,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text('Role / Swimlane',MARGIN+LABEL_W/2,MAP_TOP+17,{align:'center'});
+  doc.setFillColor(LR,LG,LB);doc.rect(MARGIN,MAP_Y,LABEL_W,MAP_H,'F');
+  // Lanes
+  userLabels.forEach(function(name,i){
+    var yb=laneBot(i);
+    doc.setFillColor(i%2===0?255:250,i%2===0?255:249,i%2===0?255:252);
+    doc.rect(MAP_X,yb,MAP_W,LANE_H,'F');
+    doc.setFillColor(i%2===0?LR:Math.max(LR-8,220),i%2===0?LG:Math.max(LG-8,218),i%2===0?LB:Math.max(LB-6,225));
+    doc.rect(MARGIN,yb,LABEL_W,LANE_H,'F');
+    doc.setTextColor(DR,DG,DB);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    var nlines=doc.splitTextToSize(name,LABEL_W-14);
+    var lh=11,ty=yb+LANE_H/2-(nlines.length-1)*lh/2+3;
+    nlines.forEach(function(ln,li){doc.text(ln,MARGIN+LABEL_W/2,ty+li*lh,{align:'center'});});
+    doc.setDrawColor(200,195,208);doc.setLineWidth(0.4);doc.line(MARGIN,yb,W-MARGIN,yb);
+  });
+  // Phase dividers
+  doc.setLineDash([4,4]);
+  PHASES.forEach(function(ph){doc.setDrawColor(210,205,218);doc.setLineWidth(0.4);doc.line(px(ph.f0),MAP_Y,px(ph.f0),MAP_TOP);});
+  doc.setLineDash([]);
+  // Borders
+  doc.setDrawColor(AR,AG,AB);doc.setLineWidth(1.2);doc.line(MAP_X,MAP_Y,MAP_X,MAP_TOP+PHASE_H);
+  doc.setLineWidth(2);doc.rect(MARGIN,MAP_Y,W-2*MARGIN,MAP_H+PHASE_H,'S');
+  // Stage nodes
+  var colW=MAP_W/Math.max(stageList.length+1,9);
+  var TW=Math.min(colW*0.82,120),TH=30;
+  stageList.forEach(function(stage,si){
+    var laneIdx=si%Math.max(userLabels.length,1);
+    var cx=MAP_X+(si+0.9)*colW+colW*0.35,cy=laneCY(laneIdx);
+    var a=D.actions[stage.id],sp=D.subprocess[stage.id];
+    var hasSP=sp&&sp.hasSubprocess===true;
+    doc.setFillColor(255,255,255);doc.setDrawColor(AR,AG,AB);
+    doc.setLineWidth(hasSP?1.8:1);
+    if(hasSP)doc.setLineDash([5,2]);else doc.setLineDash([]);
+    doc.rect(cx-TW/2,cy-TH/2,TW,TH,'FD');doc.setLineDash([]);
+    if(hasSP){
+      doc.setFillColor(AR,AG,AB);doc.rect(cx-TW/2+3,cy-TH/2+3,18,11,'F');
+      doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+      doc.text('[+]',cx-TW/2+12,cy-TH/2+11,{align:'center'});
+    }
+    doc.setTextColor(DR,DG,DB);doc.setFontSize(8);doc.setFont('helvetica',hasSP?'bold':'normal');
+    var lblLines=doc.splitTextToSize(stage.label,TW-12);
+    var lh=10,ly=cy-(lblLines.length-1)*lh/2+2;
+    lblLines.forEach(function(ln,li){doc.text(ln,cx,ly+li*lh,{align:'center'});});
+    // Arrow to next in same lane
+    var nextSI=stageList.findIndex(function(s,idx){return idx>si&&(idx%Math.max(userLabels.length,1))===laneIdx;});
+    if(nextSI>-1){
+      var nCX=MAP_X+(nextSI+0.9)*colW+colW*0.35;
+      doc.setDrawColor(160,148,172);doc.setLineWidth(0.8);
+      doc.line(cx+TW/2+1,cy,nCX-TW/2-8,cy);
+      doc.setFillColor(160,148,172);
+      doc.rect(nCX-TW/2-8,cy-3,6,6,'F');
+    }
+    // Decision diamond
+    if(a&&a.outcomes&&a.outcomes.length>0){
+      var dx=cx+TW/2+28,dw=18,dh=13;
+      doc.setFillColor(225,240,252);doc.setDrawColor(24,95,165);doc.setLineWidth(0.9);
+      doc.rect(dx-dw/2,cy-dh/2,dw,dh,'FD');
+      doc.setTextColor(4,44,83);doc.setFontSize(7);doc.setFont('helvetica','bold');
+      doc.text('?',dx,cy+2.5,{align:'center'});
+      if(a.outcomes.includes('advance')||a.outcomes.includes('approve')){
+        doc.setDrawColor(30,120,70);doc.setLineWidth(1.3);
+        doc.line(dx+dw/2+2,cy,dx+dw/2+22,cy);
+        doc.setTextColor(30,120,70);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+        doc.text('Yes',dx+dw/2+12,cy-5,{align:'center'});
+      }
+      if(a.outcomes.includes('reject')){
+        doc.setDrawColor(170,35,25);doc.setLineWidth(1.3);
+        doc.line(dx,cy+dh/2+2,dx,cy+dh/2+20);
+        doc.setTextColor(170,35,25);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+        doc.text('No',dx+5,cy+dh/2+15);
+      }
+    }
+  });
+  // Integration badges
+  if(integLabels.length>0){
+    var badgeY=MAP_Y+LANE_H*0.18;
+    integLabels.slice(0,6).forEach(function(integ,i){
+      var ix=MAP_X+14+i*168;
+      doc.setFillColor(232,244,255);doc.setDrawColor(100,148,200);doc.setLineWidth(0.6);
+      doc.rect(ix,badgeY-8,156,16,'FD');
+      doc.setTextColor(24,70,130);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+      doc.text(integ,ix+78,badgeY+4,{align:'center'});
+    });
+  }
+  // Legend
+  var legY=H-MARGIN-FOOTER_H-LEGEND_H-2;
+  doc.setFillColor(248,247,250);doc.setDrawColor(200,195,210);doc.setLineWidth(0.5);
+  doc.rect(MARGIN,legY,W-2*MARGIN,LEGEND_H,'FD');
+  var legItems=[
+    {label:'Start event',fr:[234,243,222],sr:[59,109,17]},
+    {label:'End: hired',fr:[234,243,222],sr:[59,109,17],thick:true},
+    {label:'End: exit',fr:[252,235,235],sr:[163,45,45],thick:true},
+    {label:'Task',fr:[255,255,255],sr:[AR,AG,AB]},
+    {label:'Decision',fr:[225,240,252],sr:[24,95,165]},
+    {label:'Approved path',fr:[30,120,70],sr:[30,120,70],arrow:true},
+    {label:'Rejected path',fr:[170,35,25],sr:[170,35,25],arrow:true},
+    {label:'[+] Sub-process',fr:[255,255,255],sr:[AR,AG,AB],dashed:true},
+  ];
+  var legStep=(W-2*MARGIN)/legItems.length;
+  legItems.forEach(function(item,i){
+    var lx=MARGIN+i*legStep+legStep/2,ly=legY+LEGEND_H/2-2;
+    doc.setFillColor.apply(doc,item.fr);doc.setDrawColor.apply(doc,item.sr);
+    doc.setLineWidth(item.thick?2.2:0.8);
+    if(item.dashed)doc.setLineDash([3,2]);else doc.setLineDash([]);
+    if(item.arrow){
+      doc.setDrawColor.apply(doc,item.sr);doc.setLineWidth(1.5);
+      doc.line(lx-14,ly,lx+6,ly);
+      doc.setFillColor.apply(doc,item.fr);doc.rect(lx+6,ly-3,8,6,'F');
+    } else {
+      doc.rect(lx-14,ly-7,28,14,'FD');
+    }
+    doc.setLineDash([]);
+    doc.setTextColor(80,72,92);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+    doc.text(item.label,lx,legY+LEGEND_H-3,{align:'center'});
+  });
+  // Footer
+  doc.setTextColor(130,120,145);doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text((D.setup.orgName||'Organization')+' · '+(D.setup.trackName||'Hiring process')+' · CONFIDENTIAL',MARGIN+12,H-MARGIN-5);
+  doc.text('Generated '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+' · TA Process Mapping Tool — TASSP Playbook',W-MARGIN-12,H-MARGIN-5,{align:'right'});
+  var fileName=((D.setup.orgName||'TA')+'_'+(D.setup.trackName||'Process')+'_Map.pdf').replace(/\s+/g,'_');
+  doc.save(fileName);
+}
+
+// ── DOCX SOP GENERATOR ───────────────────────────────────────────────────────
+async function generateDOCX() {
+  const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,
+         HeadingLevel,AlignmentType,BorderStyle,WidthType,ShadingType,LevelFormat}=docx;
+  const userLabels=[...D.users.selected.map(u=>{var f=USERS.find(o=>o.id===u);return(D.users.customLabels&&D.users.customLabels[u])||f&&f.label||u;}),...D.users.custom];
+  const stageList=getStageList();
+  const integLabels=[...D.integrations.selected.map(i=>{var f=INTEGS.find(o=>o.id===i);return(D.integrations.customLabels&&D.integrations.customLabels[i])||f&&f.label||i;}),...D.integrations.custom];
+  const spStages=stageList.filter(s=>D.subprocess[s.id]&&D.subprocess[s.id].hasSubprocess===true);
+  const reqOpenLabels=D.reqflow.reqOpenMethod.map(m=>{var f=REQ_OPEN.find(o=>o.id===m);return(D.reqflow.customLabels&&D.reqflow.customLabels[m])||f&&f.label||m;});
+  const BH=AC.replace('#','');
+  const b={style:BorderStyle.SINGLE,size:1,color:'CCCCCC'};
+  const borders={top:b,bottom:b,left:b,right:b};
+  function h1(text){return new Paragraph({heading:HeadingLevel.HEADING_1,spacing:{before:320,after:100},children:[new TextRun({text,bold:true,size:32,color:BH,font:'Arial'})]});}
+  function h2(text){return new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:220,after:80},children:[new TextRun({text,bold:true,size:26,font:'Arial'})]});}
+  function body(text,opts){return new Paragraph({spacing:{before:60,after:60},children:[new TextRun(Object.assign({text,size:20,font:'Arial'},opts||{}))]});}
+  function bullet(text){return new Paragraph({numbering:{reference:'bullets',level:0},spacing:{before:40,after:40},children:[new TextRun({text,size:20,font:'Arial'})]});}
+  function spacer(){return new Paragraph({children:[new TextRun('')]});}
+  function hdrRow(cells,ws){return new TableRow({tableHeader:true,children:cells.map((t,i)=>new TableCell({borders,width:{size:ws[i],type:WidthType.DXA},shading:{fill:BH,type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},children:[new Paragraph({children:[new TextRun({text:t,bold:true,size:18,color:'FFFFFF',font:'Arial'})]})]}))}); }
+  function dataRow(cells,ws,shade){return new TableRow({children:cells.map((t,i)=>new TableCell({borders,width:{size:ws[i],type:WidthType.DXA},shading:{fill:shade?'F5F5F5':'FFFFFF',type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},children:[new Paragraph({children:[new TextRun({text:String(t),size:18,font:'Arial'})]})]}))}); }
+  const doc2=new Document({
+    styles:{default:{document:{run:{font:'Arial',size:20}}}},
+    numbering:{config:[{reference:'bullets',levels:[{level:0,format:LevelFormat.BULLET,text:'•',alignment:AlignmentType.LEFT,style:{paragraph:{indent:{left:720,hanging:360}}}}]}]},
+    sections:[{properties:{page:{size:{width:12240,height:15840},margin:{top:1440,right:1440,bottom:1440,left:1440}}},
+      children:[
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:720,after:120},children:[new TextRun({text:'TALENT ACQUISITION',font:'Arial',size:18,bold:true,color:BH})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:160},children:[new TextRun({text:'Standard Operating Procedure',font:'Arial',size:48,bold:true})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:80},children:[new TextRun({text:D.setup.orgName||'Organization',font:'Arial',size:32,color:BH})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:480},children:[new TextRun({text:(D.setup.trackName||'Hiring process')+' · '+(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label||'ATS'),font:'Arial',size:22,color:'777777'})]}),
+        spacer(),spacer(),
+        h1('1. Purpose and scope'),
+        body('This SOP defines the end-to-end talent acquisition process for '+(D.setup.trackName||'this hiring track')+' at '+(D.setup.orgName||'this organization')+'. It establishes roles, responsibilities, system touchpoints, and the workflow sequence governing how candidates move from requisition creation through to onboarding handoff.'),
+        spacer(),
+        h1('2. Requisition opening'),
+        body('How requisitions are opened: '+(reqOpenLabels.join(', ')||'Not specified')),
+        spacer(),
+        h1('3. System users and swimlane responsibilities'),
+        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2800,6560],rows:[
+          hdrRow(['Role','Primary responsibility'],[2800,6560]),
+          ...userLabels.map((u,i)=>{
+            var a=Object.values(D.actions).find(function(av){return av.decisionOwners&&av.decisionOwners.includes(u);});
+            var desc=a?'Decision owner at: '+Object.values(D.actions).filter(function(av){return av.decisionOwners&&av.decisionOwners.includes(u);}).map(function(av){return av.label;}).join(', '):'Participant in hiring process';
+            return dataRow([u,desc],[2800,6560],i%2===1);
+          })
+        ]}),
+        spacer(),
+        h1('4. Candidate pipeline stages'),
+        body('The following stages exist in the '+(D.setup.trackName||'')+' candidate pipeline:'),
+        ...stageList.map(s=>{
+          var a=D.actions[s.id],sp=D.subprocess[s.id];
+          var lines=[bullet(s.label+(a&&a.decisionOwners&&a.decisionOwners.length?' — Decision owner: '+a.decisionOwners.join(', '):'')+(a&&a.outcomes&&a.outcomes.length?' — Outcomes: '+a.outcomes.join(' / '):''))];
+          if(sp&&sp.hasSubprocess&&sp.rounds&&sp.rounds.length){
+            sp.rounds.forEach(function(r,ri){
+              lines.push(new Paragraph({numbering:{reference:'bullets',level:0},spacing:{before:20,after:20},indent:{left:1080},children:[new TextRun({text:'Round '+(ri+1)+': '+r.name+(r.condition?' (Only if: '+r.condition+')':''),size:18,color:'555555',font:'Arial'})]}));
+            });
+          }
+          return lines;
+        }).flat(),
+        spacer(),
+        h1('5. Integrations'),
+        integLabels.length?new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[3000,6360],rows:[
+          hdrRow(['Integration','Function'],[3000,6360]),
+          ...integLabels.map(function(integ,i){return dataRow([integ,'Connected to '+(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label||'ATS')],[3000,6360],i%2===1);})
+        ]}):body('No integrations defined.'),
+        spacer(),
+        h1('6. Document information'),
+        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2400,6960],rows:[
+          dataRow(['Document owner',(D.setup.orgName||'Organization')+' — TA Operations'],[2400,6960]),
+          dataRow(['Process track',D.setup.trackName||'Not specified'],[2400,6960],true),
+          dataRow(['ATS platform',(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label)||'Not specified'],[2400,6960]),
+          dataRow(['Generated',new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})],[2400,6960],true),
+          dataRow(['Generated by','TA Process Mapping Tool — TASSP Playbook'],[2400,6960]),
+        ]}),
+        spacer(),
+        body('Generated from structured process data captured via the TA Process Mapping Tool at TASSP Playbook.',{italics:true,color:'888888'}),
+      ]
+    }]
+  });
+  const blob=await Packer.toBlob(doc2);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=((D.setup.orgName||'TA')+'_'+(D.setup.trackName||'Process')+'_SOP.docx').replace(/\s+/g,'_');
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function hexToRgbArr(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];}
+
+</script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.js">
+// ── PDF GENERATOR ────────────────────────────────────────────────────────────
+async function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [2592, 1728] });
+  const W=2592,H=1728,MARGIN=32,LABEL_W=116,TITLE_H=78,LEGEND_H=36,FOOTER_H=22,PHASE_H=26;
+  const MAP_X=MARGIN+LABEL_W, MAP_Y=MARGIN+TITLE_H+8;
+  const MAP_TOP=H-MARGIN-LEGEND_H-FOOTER_H-PHASE_H-10;
+  const MAP_H=MAP_TOP-PHASE_H-MAP_Y, MAP_W=W-MARGIN-MAP_X;
+  const userLabels=[...D.users.selected.map(u=>{var f=USERS.find(o=>o.id===u);return(D.users.customLabels&&D.users.customLabels[u])||f&&f.label||u;}),...D.users.custom];
+  const stageList=getStageList();
+  const integLabels=[...D.integrations.selected.map(i=>{var f=INTEGS.find(o=>o.id===i);return(D.integrations.customLabels&&D.integrations.customLabels[i])||f&&f.label||i;}),...D.integrations.custom];
+  const LANE_COUNT=Math.max(userLabels.length,1), LANE_H=MAP_H/LANE_COUNT;
+  const ac=hexToRgbArr(AC), AR=ac[0],AG=ac[1],AB=ac[2];
+  const DR=Math.round(AR*0.52),DG=Math.round(AG*0.52),DB=Math.round(AB*0.52);
+  const LR=Math.min(255,232+Math.round((255-AR)*0.28));
+  const LG=Math.min(255,232+Math.round((255-AG)*0.28));
+  const LB=Math.min(255,232+Math.round((255-AB)*0.28));
+  const PHASES=[
+    {label:'Req opening',f0:0.000,f1:0.135},{label:'Req approval',f0:0.135,f1:0.265},
+    {label:'Sourcing & posting',f0:0.265,f1:0.375},{label:'Screening',f0:0.375,f1:0.495},
+    {label:'Interview',f0:0.495,f1:0.735},{label:'Offer',f0:0.735,f1:0.865},
+    {label:'Pre-hire & handoff',f0:0.865,f1:1.000},
+  ];
+  function px(f){return MAP_X+f*MAP_W;}
+  function laneCY(i){return MAP_Y+MAP_H-(i+0.5)*LANE_H;}
+  function laneBot(i){return MAP_Y+MAP_H-(i+1)*LANE_H;}
+  function fillPoly(pts){
+    if(!pts.length)return;
+    doc.moveTo(pts[0][0],pts[0][1]);
+    for(var i=1;i<pts.length;i++)doc.lineTo(pts[i][0],pts[i][1]);
+    doc.closePath();doc.fillStroke();
+  }
+  // White background
+  doc.setFillColor(255,255,255);doc.rect(0,0,W,H,'F');
+  // Title bar
+  doc.setFillColor(AR,AG,AB);doc.rect(0,MARGIN,W,TITLE_H,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(24);doc.setFont('helvetica','bold');
+  doc.text(D.setup.orgName||'Organization',MARGIN+14,MARGIN+30);
+  doc.setFontSize(13);doc.setFont('helvetica','normal');
+  doc.text((D.setup.trackName||'Hiring process')+' · '+(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label||'ATS')+' · BPMN Notation',MARGIN+14,MARGIN+52);
+  doc.setFontSize(10);doc.text('Print: 36" × 24" · 300 DPI · '+new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'}),W-MARGIN-14,MARGIN+44,{align:'right'});
+  // Phase headers
+  PHASES.forEach(function(ph,idx){
+    var x0=px(ph.f0),x1=px(ph.f1);
+    var lt=idx%2===1;
+    doc.setFillColor(Math.min(255,AR+(lt?22:0)),Math.min(255,AG+(lt?14:0)),Math.min(255,AB+(lt?22:0)));
+    doc.rect(x0,MAP_TOP,x1-x0,PHASE_H,'F');
+    doc.setDrawColor(255,255,255);doc.setLineWidth(0.7);doc.line(x0,MAP_TOP,x0,MAP_TOP+PHASE_H);
+    doc.setTextColor(255,255,255);doc.setFontSize(8.5);doc.setFont('helvetica','bold');
+    doc.text(ph.label,(x0+x1)/2,MAP_TOP+17,{align:'center'});
+  });
+  // Label column
+  doc.setFillColor(AR,AG,AB);doc.rect(MARGIN,MAP_TOP,LABEL_W,PHASE_H,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text('Role / Swimlane',MARGIN+LABEL_W/2,MAP_TOP+17,{align:'center'});
+  doc.setFillColor(LR,LG,LB);doc.rect(MARGIN,MAP_Y,LABEL_W,MAP_H,'F');
+  // Lanes
+  userLabels.forEach(function(name,i){
+    var yb=laneBot(i);
+    doc.setFillColor(i%2===0?255:250,i%2===0?255:249,i%2===0?255:252);
+    doc.rect(MAP_X,yb,MAP_W,LANE_H,'F');
+    doc.setFillColor(i%2===0?LR:Math.max(LR-8,220),i%2===0?LG:Math.max(LG-8,218),i%2===0?LB:Math.max(LB-6,225));
+    doc.rect(MARGIN,yb,LABEL_W,LANE_H,'F');
+    doc.setTextColor(DR,DG,DB);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    var nlines=doc.splitTextToSize(name,LABEL_W-14);
+    var lh=11,ty=yb+LANE_H/2-(nlines.length-1)*lh/2+3;
+    nlines.forEach(function(ln,li){doc.text(ln,MARGIN+LABEL_W/2,ty+li*lh,{align:'center'});});
+    doc.setDrawColor(200,195,208);doc.setLineWidth(0.4);doc.line(MARGIN,yb,W-MARGIN,yb);
+  });
+  // Phase dividers
+  doc.setLineDash([4,4]);
+  PHASES.forEach(function(ph){doc.setDrawColor(210,205,218);doc.setLineWidth(0.4);doc.line(px(ph.f0),MAP_Y,px(ph.f0),MAP_TOP);});
+  doc.setLineDash([]);
+  // Borders
+  doc.setDrawColor(AR,AG,AB);doc.setLineWidth(1.2);doc.line(MAP_X,MAP_Y,MAP_X,MAP_TOP+PHASE_H);
+  doc.setLineWidth(2);doc.rect(MARGIN,MAP_Y,W-2*MARGIN,MAP_H+PHASE_H,'S');
+  // Stage nodes
+  var colW=MAP_W/Math.max(stageList.length+1,9);
+  var TW=Math.min(colW*0.82,120),TH=30;
+  stageList.forEach(function(stage,si){
+    var laneIdx=si%Math.max(userLabels.length,1);
+    var cx=MAP_X+(si+0.9)*colW+colW*0.35,cy=laneCY(laneIdx);
+    var a=D.actions[stage.id],sp=D.subprocess[stage.id];
+    var hasSP=sp&&sp.hasSubprocess===true;
+    doc.setFillColor(255,255,255);doc.setDrawColor(AR,AG,AB);
+    doc.setLineWidth(hasSP?1.8:1);
+    if(hasSP)doc.setLineDash([5,2]);else doc.setLineDash([]);
+    doc.rect(cx-TW/2,cy-TH/2,TW,TH,'FD');doc.setLineDash([]);
+    if(hasSP){
+      doc.setFillColor(AR,AG,AB);doc.rect(cx-TW/2+3,cy-TH/2+3,18,11,'F');
+      doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+      doc.text('[+]',cx-TW/2+12,cy-TH/2+11,{align:'center'});
+    }
+    doc.setTextColor(DR,DG,DB);doc.setFontSize(8);doc.setFont('helvetica',hasSP?'bold':'normal');
+    var lblLines=doc.splitTextToSize(stage.label,TW-12);
+    var lh=10,ly=cy-(lblLines.length-1)*lh/2+2;
+    lblLines.forEach(function(ln,li){doc.text(ln,cx,ly+li*lh,{align:'center'});});
+    // Arrow to next in same lane
+    var nextSI=stageList.findIndex(function(s,idx){return idx>si&&(idx%Math.max(userLabels.length,1))===laneIdx;});
+    if(nextSI>-1){
+      var nCX=MAP_X+(nextSI+0.9)*colW+colW*0.35;
+      doc.setDrawColor(160,148,172);doc.setLineWidth(0.8);
+      doc.line(cx+TW/2+1,cy,nCX-TW/2-8,cy);
+      doc.setFillColor(160,148,172);
+      doc.rect(nCX-TW/2-8,cy-3,6,6,'F');
+    }
+    // Decision diamond
+    if(a&&a.outcomes&&a.outcomes.length>0){
+      var dx=cx+TW/2+28,dw=18,dh=13;
+      doc.setFillColor(225,240,252);doc.setDrawColor(24,95,165);doc.setLineWidth(0.9);
+      doc.rect(dx-dw/2,cy-dh/2,dw,dh,'FD');
+      doc.setTextColor(4,44,83);doc.setFontSize(7);doc.setFont('helvetica','bold');
+      doc.text('?',dx,cy+2.5,{align:'center'});
+      if(a.outcomes.includes('advance')||a.outcomes.includes('approve')){
+        doc.setDrawColor(30,120,70);doc.setLineWidth(1.3);
+        doc.line(dx+dw/2+2,cy,dx+dw/2+22,cy);
+        doc.setTextColor(30,120,70);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+        doc.text('Yes',dx+dw/2+12,cy-5,{align:'center'});
+      }
+      if(a.outcomes.includes('reject')){
+        doc.setDrawColor(170,35,25);doc.setLineWidth(1.3);
+        doc.line(dx,cy+dh/2+2,dx,cy+dh/2+20);
+        doc.setTextColor(170,35,25);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+        doc.text('No',dx+5,cy+dh/2+15);
+      }
+    }
+  });
+  // Integration badges
+  if(integLabels.length>0){
+    var badgeY=MAP_Y+LANE_H*0.18;
+    integLabels.slice(0,6).forEach(function(integ,i){
+      var ix=MAP_X+14+i*168;
+      doc.setFillColor(232,244,255);doc.setDrawColor(100,148,200);doc.setLineWidth(0.6);
+      doc.rect(ix,badgeY-8,156,16,'FD');
+      doc.setTextColor(24,70,130);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+      doc.text(integ,ix+78,badgeY+4,{align:'center'});
+    });
+  }
+  // Legend
+  var legY=H-MARGIN-FOOTER_H-LEGEND_H-2;
+  doc.setFillColor(248,247,250);doc.setDrawColor(200,195,210);doc.setLineWidth(0.5);
+  doc.rect(MARGIN,legY,W-2*MARGIN,LEGEND_H,'FD');
+  var legItems=[
+    {label:'Start event',fr:[234,243,222],sr:[59,109,17]},
+    {label:'End: hired',fr:[234,243,222],sr:[59,109,17],thick:true},
+    {label:'End: exit',fr:[252,235,235],sr:[163,45,45],thick:true},
+    {label:'Task',fr:[255,255,255],sr:[AR,AG,AB]},
+    {label:'Decision',fr:[225,240,252],sr:[24,95,165]},
+    {label:'Approved path',fr:[30,120,70],sr:[30,120,70],arrow:true},
+    {label:'Rejected path',fr:[170,35,25],sr:[170,35,25],arrow:true},
+    {label:'[+] Sub-process',fr:[255,255,255],sr:[AR,AG,AB],dashed:true},
+  ];
+  var legStep=(W-2*MARGIN)/legItems.length;
+  legItems.forEach(function(item,i){
+    var lx=MARGIN+i*legStep+legStep/2,ly=legY+LEGEND_H/2-2;
+    doc.setFillColor.apply(doc,item.fr);doc.setDrawColor.apply(doc,item.sr);
+    doc.setLineWidth(item.thick?2.2:0.8);
+    if(item.dashed)doc.setLineDash([3,2]);else doc.setLineDash([]);
+    if(item.arrow){
+      doc.setDrawColor.apply(doc,item.sr);doc.setLineWidth(1.5);
+      doc.line(lx-14,ly,lx+6,ly);
+      doc.setFillColor.apply(doc,item.fr);doc.rect(lx+6,ly-3,8,6,'F');
+    } else {
+      doc.rect(lx-14,ly-7,28,14,'FD');
+    }
+    doc.setLineDash([]);
+    doc.setTextColor(80,72,92);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+    doc.text(item.label,lx,legY+LEGEND_H-3,{align:'center'});
+  });
+  // Footer
+  doc.setTextColor(130,120,145);doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text((D.setup.orgName||'Organization')+' · '+(D.setup.trackName||'Hiring process')+' · CONFIDENTIAL',MARGIN+12,H-MARGIN-5);
+  doc.text('Generated '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+' · TA Process Mapping Tool — TASSP Playbook',W-MARGIN-12,H-MARGIN-5,{align:'right'});
+  var fileName=((D.setup.orgName||'TA')+'_'+(D.setup.trackName||'Process')+'_Map.pdf').replace(/\s+/g,'_');
+  doc.save(fileName);
+}
+
+// ── DOCX SOP GENERATOR ───────────────────────────────────────────────────────
+async function generateDOCX() {
+  const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,
+         HeadingLevel,AlignmentType,BorderStyle,WidthType,ShadingType,LevelFormat}=docx;
+  const userLabels=[...D.users.selected.map(u=>{var f=USERS.find(o=>o.id===u);return(D.users.customLabels&&D.users.customLabels[u])||f&&f.label||u;}),...D.users.custom];
+  const stageList=getStageList();
+  const integLabels=[...D.integrations.selected.map(i=>{var f=INTEGS.find(o=>o.id===i);return(D.integrations.customLabels&&D.integrations.customLabels[i])||f&&f.label||i;}),...D.integrations.custom];
+  const spStages=stageList.filter(s=>D.subprocess[s.id]&&D.subprocess[s.id].hasSubprocess===true);
+  const reqOpenLabels=D.reqflow.reqOpenMethod.map(m=>{var f=REQ_OPEN.find(o=>o.id===m);return(D.reqflow.customLabels&&D.reqflow.customLabels[m])||f&&f.label||m;});
+  const BH=AC.replace('#','');
+  const b={style:BorderStyle.SINGLE,size:1,color:'CCCCCC'};
+  const borders={top:b,bottom:b,left:b,right:b};
+  function h1(text){return new Paragraph({heading:HeadingLevel.HEADING_1,spacing:{before:320,after:100},children:[new TextRun({text,bold:true,size:32,color:BH,font:'Arial'})]});}
+  function h2(text){return new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:220,after:80},children:[new TextRun({text,bold:true,size:26,font:'Arial'})]});}
+  function body(text,opts){return new Paragraph({spacing:{before:60,after:60},children:[new TextRun(Object.assign({text,size:20,font:'Arial'},opts||{}))]});}
+  function bullet(text){return new Paragraph({numbering:{reference:'bullets',level:0},spacing:{before:40,after:40},children:[new TextRun({text,size:20,font:'Arial'})]});}
+  function spacer(){return new Paragraph({children:[new TextRun('')]});}
+  function hdrRow(cells,ws){return new TableRow({tableHeader:true,children:cells.map((t,i)=>new TableCell({borders,width:{size:ws[i],type:WidthType.DXA},shading:{fill:BH,type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},children:[new Paragraph({children:[new TextRun({text:t,bold:true,size:18,color:'FFFFFF',font:'Arial'})]})]}))}); }
+  function dataRow(cells,ws,shade){return new TableRow({children:cells.map((t,i)=>new TableCell({borders,width:{size:ws[i],type:WidthType.DXA},shading:{fill:shade?'F5F5F5':'FFFFFF',type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},children:[new Paragraph({children:[new TextRun({text:String(t),size:18,font:'Arial'})]})]}))}); }
+  const doc2=new Document({
+    styles:{default:{document:{run:{font:'Arial',size:20}}}},
+    numbering:{config:[{reference:'bullets',levels:[{level:0,format:LevelFormat.BULLET,text:'•',alignment:AlignmentType.LEFT,style:{paragraph:{indent:{left:720,hanging:360}}}}]}]},
+    sections:[{properties:{page:{size:{width:12240,height:15840},margin:{top:1440,right:1440,bottom:1440,left:1440}}},
+      children:[
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:720,after:120},children:[new TextRun({text:'TALENT ACQUISITION',font:'Arial',size:18,bold:true,color:BH})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:160},children:[new TextRun({text:'Standard Operating Procedure',font:'Arial',size:48,bold:true})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:80},children:[new TextRun({text:D.setup.orgName||'Organization',font:'Arial',size:32,color:BH})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:480},children:[new TextRun({text:(D.setup.trackName||'Hiring process')+' · '+(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label||'ATS'),font:'Arial',size:22,color:'777777'})]}),
+        spacer(),spacer(),
+        h1('1. Purpose and scope'),
+        body('This SOP defines the end-to-end talent acquisition process for '+(D.setup.trackName||'this hiring track')+' at '+(D.setup.orgName||'this organization')+'. It establishes roles, responsibilities, system touchpoints, and the workflow sequence governing how candidates move from requisition creation through to onboarding handoff.'),
+        spacer(),
+        h1('2. Requisition opening'),
+        body('How requisitions are opened: '+(reqOpenLabels.join(', ')||'Not specified')),
+        spacer(),
+        h1('3. System users and swimlane responsibilities'),
+        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2800,6560],rows:[
+          hdrRow(['Role','Primary responsibility'],[2800,6560]),
+          ...userLabels.map((u,i)=>{
+            var a=Object.values(D.actions).find(function(av){return av.decisionOwners&&av.decisionOwners.includes(u);});
+            var desc=a?'Decision owner at: '+Object.values(D.actions).filter(function(av){return av.decisionOwners&&av.decisionOwners.includes(u);}).map(function(av){return av.label;}).join(', '):'Participant in hiring process';
+            return dataRow([u,desc],[2800,6560],i%2===1);
+          })
+        ]}),
+        spacer(),
+        h1('4. Candidate pipeline stages'),
+        body('The following stages exist in the '+(D.setup.trackName||'')+' candidate pipeline:'),
+        ...stageList.map(s=>{
+          var a=D.actions[s.id],sp=D.subprocess[s.id];
+          var lines=[bullet(s.label+(a&&a.decisionOwners&&a.decisionOwners.length?' — Decision owner: '+a.decisionOwners.join(', '):'')+(a&&a.outcomes&&a.outcomes.length?' — Outcomes: '+a.outcomes.join(' / '):''))];
+          if(sp&&sp.hasSubprocess&&sp.rounds&&sp.rounds.length){
+            sp.rounds.forEach(function(r,ri){
+              lines.push(new Paragraph({numbering:{reference:'bullets',level:0},spacing:{before:20,after:20},indent:{left:1080},children:[new TextRun({text:'Round '+(ri+1)+': '+r.name+(r.condition?' (Only if: '+r.condition+')':''),size:18,color:'555555',font:'Arial'})]}));
+            });
+          }
+          return lines;
+        }).flat(),
+        spacer(),
+        h1('5. Integrations'),
+        integLabels.length?new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[3000,6360],rows:[
+          hdrRow(['Integration','Function'],[3000,6360]),
+          ...integLabels.map(function(integ,i){return dataRow([integ,'Connected to '+(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label||'ATS')],[3000,6360],i%2===1);})
+        ]}):body('No integrations defined.'),
+        spacer(),
+        h1('6. Document information'),
+        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2400,6960],rows:[
+          dataRow(['Document owner',(D.setup.orgName||'Organization')+' — TA Operations'],[2400,6960]),
+          dataRow(['Process track',D.setup.trackName||'Not specified'],[2400,6960],true),
+          dataRow(['ATS platform',(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label)||'Not specified'],[2400,6960]),
+          dataRow(['Generated',new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})],[2400,6960],true),
+          dataRow(['Generated by','TA Process Mapping Tool — TASSP Playbook'],[2400,6960]),
+        ]}),
+        spacer(),
+        body('Generated from structured process data captured via the TA Process Mapping Tool at TASSP Playbook.',{italics:true,color:'888888'}),
+      ]
+    }]
+  });
+  const blob=await Packer.toBlob(doc2);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=((D.setup.orgName||'TA')+'_'+(D.setup.trackName||'Process')+'_SOP.docx').replace(/\s+/g,'_');
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function hexToRgbArr(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];}
+
+</script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -137,15 +932,6 @@
   .copy-btn { padding: 8px 14px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 12px; cursor: pointer; color: var(--text2); font-family: var(--font); transition: all .12s; white-space: nowrap; }
   .copy-btn:hover { border-color: var(--ac); color: var(--ac); }
 
-  /* ── EDITABLE OPTION LABELS ── */
-  .opt-edit-btn { background: none; border: none; cursor: pointer; padding: 2px 4px; color: var(--text3); font-size: 11px; line-height: 1; border-radius: 3px; margin-left: 4px; opacity: 0; transition: opacity .12s, color .12s; flex-shrink: 0; }
-  .opt.sel .opt-edit-btn { opacity: 1; }
-  .opt.sel:hover .opt-edit-btn { color: var(--ac); }
-  .opt-edit-btn:hover { color: var(--ac) !important; }
-  .opt-label-wrap { display: flex; align-items: center; gap: 2px; flex: 1; }
-  .opt-inline-input { font-size: 14px; font-family: var(--font); border: none; border-bottom: 1.5px solid var(--ac); background: transparent; color: var(--text); padding: 0 2px; width: 100%; outline: none; }
-  .opt-custom-badge { font-size: 10px; padding: 1px 5px; background: var(--ac-bg); border: 0.5px solid var(--ac); border-radius: 3px; color: var(--ac); margin-left: 5px; white-space: nowrap; }
-
   /* ── CALLOUT ── */
   .callout { border-radius: var(--radius); padding: 14px 16px; margin-bottom: 18px; border-left: 3px solid; }
   .callout.info { background: #f0f7ff; border-color: #185FA5; }
@@ -154,6 +940,13 @@
     .callout.info { background: #0d1f35; }
     .callout.info p { color: #85B7EB; }
   }
+  /* ── EDITABLE OPTION LABELS ── */
+  .opt-edit-btn { background:none;border:none;cursor:pointer;padding:2px 5px;color:var(--text3);font-size:12px;border-radius:3px;margin-left:4px;opacity:0;transition:opacity .12s,color .12s;flex-shrink:0; }
+  .opt.sel .opt-edit-btn { opacity:1; }
+  .opt.sel:hover .opt-edit-btn, .opt-edit-btn:hover { color:var(--ac)!important; }
+  .opt-label-wrap { display:flex;align-items:center;gap:2px;flex:1; }
+  .opt-inline-input { font-size:14px;font-family:var(--font);border:none;border-bottom:1.5px solid var(--ac);background:transparent;color:var(--text);padding:0 2px;width:100%;outline:none; }
+  .opt-custom-badge { font-size:10px;padding:1px 5px;background:var(--ac-bg);border:0.5px solid var(--ac);border-radius:3px;color:var(--ac);margin-left:5px;white-space:nowrap; }
 </style>
 </head>
 <body>
@@ -170,6 +963,13 @@
   .snav-links a:hover{color:#f0ede8;background:rgba(255,255,255,0.06);}
   .snav-links a.back{color:#9e9b94;font-size:13px;}
   #shell{padding-top:0;}
+  /* ── EDITABLE OPTION LABELS ── */
+  .opt-edit-btn { background:none;border:none;cursor:pointer;padding:2px 5px;color:var(--text3);font-size:12px;border-radius:3px;margin-left:4px;opacity:0;transition:opacity .12s,color .12s;flex-shrink:0; }
+  .opt.sel .opt-edit-btn { opacity:1; }
+  .opt.sel:hover .opt-edit-btn, .opt-edit-btn:hover { color:var(--ac)!important; }
+  .opt-label-wrap { display:flex;align-items:center;gap:2px;flex:1; }
+  .opt-inline-input { font-size:14px;font-family:var(--font);border:none;border-bottom:1.5px solid var(--ac);background:transparent;color:var(--text);padding:0 2px;width:100%;outline:none; }
+  .opt-custom-badge { font-size:10px;padding:1px 5px;background:var(--ac-bg);border:0.5px solid var(--ac);border-radius:3px;color:var(--ac);margin-left:5px;white-space:nowrap; }
 </style>
 <div id="site-nav">
   <a class="snav-brand" href="index.html"><span class="snav-dot"></span>TASSP Playbook</a>
@@ -213,11 +1013,11 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 let SESSION_ID = null;
 let RESUME_TOKEN = null;
 let SAVE_TIMEOUT = null;
-let SAVE_STATUS = 'idle'; // idle | saving | saved | error
-let HAS_INTERACTION = false;  // autosave only starts after first answer
-let LAST_SAVED_AT = null;     // timestamp of last successful save
-let AUTOSAVE_INTERVAL = null; // 30-second interval handle
-let TIMESTAMP_INTERVAL = null; // updates the "last saved X ago" display
+let SAVE_STATUS = 'idle';
+let HAS_INTERACTION = false;
+let LAST_SAVED_AT = null;
+let AUTOSAVE_INTERVAL = null;
+let TIMESTAMP_INTERVAL = null;
 
 // Generate or load resume token from URL
 function getOrCreateToken() {
@@ -366,13 +1166,11 @@ function setSaveStatus(status) {
   if (status === 'saved') LAST_SAVED_AT = new Date();
   const ind = document.getElementById('save-indicator');
   const dot = document.getElementById('save-dot');
-  const lbl = document.getElementById('save-label');
   if (!ind) return;
   ind.style.display = 'flex';
   dot.className = 'save-dot' + (status === 'saving' ? ' saving' : status === 'error' ? ' error' : '');
   updateSaveLabel();
 }
-
 function updateSaveLabel() {
   const lbl = document.getElementById('save-label');
   if (!lbl) return;
@@ -380,38 +1178,27 @@ function updateSaveLabel() {
   if (SAVE_STATUS === 'error')  { lbl.textContent = 'Save error'; return; }
   if (!LAST_SAVED_AT)           { lbl.textContent = 'Not saved yet'; return; }
   const secs = Math.floor((new Date() - LAST_SAVED_AT) / 1000);
-  if (secs < 5)   lbl.textContent = 'Saved just now';
-  else if (secs < 60)  lbl.textContent = `Saved ${secs}s ago`;
-  else if (secs < 3600) lbl.textContent = `Saved ${Math.floor(secs/60)}m ago`;
-  else lbl.textContent = 'Saved';
+  if (secs < 5)    lbl.textContent = 'Saved just now';
+  else if (secs < 60)   lbl.textContent = 'Saved ' + secs + 's ago';
+  else lbl.textContent = 'Saved ' + Math.floor(secs/60) + 'm ago';
 }
-
 function startTimestampInterval() {
   if (TIMESTAMP_INTERVAL) return;
   TIMESTAMP_INTERVAL = setInterval(updateSaveLabel, 5000);
 }
-
 function markInteraction() {
   if (HAS_INTERACTION) return;
   HAS_INTERACTION = true;
   startAutosave();
   startTimestampInterval();
 }
-
 function startAutosave() {
   if (AUTOSAVE_INTERVAL) return;
-  AUTOSAVE_INTERVAL = setInterval(async () => {
+  AUTOSAVE_INTERVAL = setInterval(async function() {
     if (!SESSION_ID || !RESUME_TOKEN || !HAS_INTERACTION) return;
-    const currentSec = activeSecs[cs];
-    if (currentSec && currentSec !== 'review' && D[currentSec]) {
-      await saveSection(currentSec);
-    }
-  }, 30000); // every 30 seconds
-}
-
-function stopAutosave() {
-  if (AUTOSAVE_INTERVAL) { clearInterval(AUTOSAVE_INTERVAL); AUTOSAVE_INTERVAL = null; }
-  if (TIMESTAMP_INTERVAL) { clearInterval(TIMESTAMP_INTERVAL); TIMESTAMP_INTERVAL = null; }
+    const sec = activeSecs[cs];
+    if (sec && sec !== 'review' && D[sec]) await saveSection(sec);
+  }, 30000);
 }
 
 function showToast(msg, dur = 2800) {
@@ -513,14 +1300,7 @@ const ATS_P=[{id:'workday',label:'Workday'},{id:'icims',label:'iCIMS'},{id:'gree
 const ATS_ST={workday:['Applied','Recruiter screen','HM review','Interview','Offer','Pre-hire','Hired'],icims:['Initial Review','Screen','Interview','Offer','Hire'],greenhouse:['Application review','Screen','Interview','Offer','Reference check','Hired'],lever:['New applicant','Screen','Interview','Offer','Reference','Hired'],default:['Applied','Recruiter review','Phone screen','HM review','Interview','Offer','Background','Hired']};
 const STAGES=[{id:'applied',label:'Applied'},{id:'rec_review',label:'Recruiter review'},{id:'phone_screen',label:'Phone / video screen'},{id:'hm_review',label:'HM review'},{id:'interview',label:'Interview'},{id:'offer',label:'Offer extended'},{id:'bgc',label:'Background check'},{id:'hired',label:'Hired'},{id:'rejected',label:'Declined / rejected'}];
 const INTEGS=[{id:'scheduling',label:'Interview scheduling'},{id:'bgc',label:'Background check'},{id:'video',label:'Video interview'},{id:'assess',label:'Pre-hire assessment'},{id:'hcm',label:'HCM / HRIS system'},{id:'docusign',label:'E-signature'},{id:'job_boards',label:'Job board integrations'},{id:'wotc',label:'WOTC screening'}];
-const REQ_OPEN=[
-  {id:'hm_intake',   label:'Hiring manager submits intake / request form (recruiter creates req in ATS)'},
-  {id:'hm_direct',   label:'Hiring manager creates the req directly in the ATS'},
-  {id:'recruiter',   label:'Recruiter creates the req directly in the ATS (no HM intake)'},
-  {id:'hris_push',   label:'HRIS / HCM system automatically pushes req to ATS'},
-  {id:'ta_ops',      label:'TA Ops team creates all reqs centrally'},
-  {id:'hybrid',      label:'Hybrid — varies by role type or department'},
-];
+const REQ_OPEN=[{id:'hm_intake',label:'Hiring manager submits intake / request form (recruiter creates req in ATS)'},{id:'hm_direct',label:'Hiring manager creates the req directly in the ATS'},{id:'recruiter',label:'Recruiter creates the req directly in the ATS (no HM intake)'},{id:'hris_push',label:'HRIS / HCM system automatically pushes req to ATS'},{id:'ta_ops',label:'TA Ops team creates all reqs centrally'},{id:'hybrid',label:'Hybrid — varies by role type or department'}];
 const ITYPES=[{id:'phone',label:'Phone screen'},{id:'video',label:'Video / virtual'},{id:'onsite',label:'On-site / in-person'},{id:'panel',label:'Panel'},{id:'exec',label:'Executive'},{id:'technical',label:'Technical / skills test'}];
 const FORMATS=[{id:'virtual',label:'Virtual'},{id:'inperson',label:'In-person'},{id:'hybrid',label:'Hybrid'}];
 const SCHED=[{id:'selfschedule',label:'Candidate self-schedules'},{id:'coordinator',label:'Coordinator schedules'},{id:'automated',label:'Automated (scheduling tool)'},{id:'recruiter',label:'Recruiter schedules manually'}];
@@ -530,7 +1310,7 @@ let D={
   org:{type:[]},users:{selected:[],custom:[],customLabels:{}},
   terms:{req:'Requisition',candidate:'Candidate',disposition:'Disposition',screen:'Phone screen',offer:'Offer',hm:'Hiring manager'},
   ats:{platform:'',selectedPlatform:false,wantsPrepopulate:null,stages:[]},
-  reqflow:{reqOpenMethod:[],reqOpenNote:'',hasApproval:null,approvers:[],customApprovers:[],customLabels:{}},
+  reqflow:{reqOpenMethod:[],customLabels:{},reqOpenNote:'',hasApproval:null,approvers:[],customApprovers:[]},
   stages:{selected:[],custom:[]},subprocess:{},actions:{},
   integrations:{selected:[],custom:[],customLabels:{}},branching:{rules:[]},sla:{values:{}},
   compliance:{selected:[],custom:[]},approvals:{req:false,offer:false,supComp:false,audit:false},
@@ -540,24 +1320,22 @@ let D={
 function setMode(m){
   mode=m;D.setup.mode=m;
   activeSecs=m==='quick'?[...QSECS]:[...ASECS];
-  // Update nav mode buttons if present
-  const bq=document.getElementById('btn-quick');
-  const bf=document.getElementById('btn-full');
+  var bq=document.getElementById('btn-quick');
+  var bf=document.getElementById('btn-full');
   if(bq)bq.classList.toggle('active',m==='quick');
   if(bf)bf.classList.toggle('active',m==='full');
-  // Update setup card mode options if visible
-  const mq=document.getElementById('mode-quick');
-  const mf=document.getElementById('mode-full');
+  var mq=document.getElementById('mode-quick');
+  var mf=document.getElementById('mode-full');
   if(mq){
     mq.style.border='.5px solid '+(m==='quick'?AC:'var(--border)');
     mq.style.background=m==='quick'?AC+'18':'var(--bg)';
-    const nq=mq.querySelector('.mode-opt-name');
+    var nq=mq.querySelector('.mode-opt-name');
     if(nq)nq.style.color=m==='quick'?AC:'var(--text)';
   }
   if(mf){
     mf.style.border='.5px solid '+(m==='full'?AC:'var(--border)');
     mf.style.background=m==='full'?AC+'18':'var(--bg)';
-    const nf=mf.querySelector('.mode-opt-name');
+    var nf=mf.querySelector('.mode-opt-name');
     if(nf)nf.style.color=m==='full'?AC:'var(--text)';
   }
   rNav();rProg();
@@ -584,10 +1362,10 @@ function render(){
 // Advance section + trigger save
 function ns(){
   if(cs<activeSecs.length-1){
-    markInteraction(); // start autosave on first section advance
+    markInteraction();
     const prevSec=activeSecs[cs];
     cs++;
-    saveSection(prevSec);
+    saveSection(prevSec); // save the section we just left
     render();
     document.getElementById('shell').scrollIntoView({behavior:'smooth',block:'start'});
   }
@@ -608,86 +1386,87 @@ function ol(opts,sel,multi,fn){
     <div><div class="ol">${o.label}</div>${o.desc?`<div class="od">${o.desc}</div>`:''}</div>
   </div>`).join('')}</div>`;
 }
-
-// Returns display label — custom override or default
-function getLabel(section, id, defaultLabel) {
-  return (D[section]?.customLabels?.[id]) || defaultLabel;
-}
-
-// Saves a custom label and re-renders the given section
-function saveLabel(section, id, newLabel, reRenderFn) {
-  if (!D[section].customLabels) D[section].customLabels = {};
-  const trimmed = newLabel.trim();
-  if (trimmed && trimmed !== '') {
-    D[section].customLabels[id] = trimmed;
-  } else {
-    delete D[section].customLabels[id]; // reset to default if cleared
-  }
-  if (reRenderFn) reRenderFn();
-}
-
-// Editable option list — same as ol() but selected items get a pencil edit icon
-// section: key in D (e.g. 'users'), editFn: name of the rerender function string
+// ── EDITABLE OPTION LIST ─────────────────────────────────────────────────────
 function olEditable(opts, sel, multi, toggleFn, section, reRenderFnName) {
   var html = '<div class="opts">';
-  opts.forEach(function(o) {
+  for (var oi = 0; oi < opts.length; oi++) {
+    var o = opts[oi];
     var isSel = sel.includes(o.id);
-    var customLbl = (D[section] && D[section].customLabels && D[section].customLabels[o.id]) || '';
+    var customLbls = D[section] && D[section].customLabels;
+    var customLbl = customLbls && customLbls[o.id] ? customLbls[o.id] : '';
     var displayLbl = customLbl || o.label;
-    var safeLbl = o.label.replace(/'/g, '\x27');
     var checkHtml = multi
       ? '<span class="chk"><span class="chkm">&#10003;</span></span>'
       : '<span class="rad"><span class="radd"></span></span>';
     var badgeHtml = customLbl ? '<span class="opt-custom-badge">edited</span>' : '';
-    var editBtn = isSel
-      ? '<button class="opt-edit-btn" title="Rename this option" onclick="event.stopPropagation();startEditLabel('' + section + '','' + o.id + '','' + safeLbl + '','' + reRenderFnName + '',this)">&#9998;</button>'
+    var editBtnHtml = isSel
+      ? '<button class="opt-edit-btn" title="Rename" data-section="' + section + '" data-id="' + o.id + '" data-default="' + o.label.replace(/"/g,'&quot;') + '" data-rerender="' + reRenderFnName + '" onclick="event.stopPropagation();handleEditBtn(this)">&#9998;</button>'
       : '';
     var descHtml = o.desc ? '<div class="od">' + o.desc + '</div>' : '';
-    var clickHandler = 'if(event.target.closest('.opt-edit-btn')||event.target.closest('.opt-inline-input'))return;' + toggleFn + '('' + o.id + '')';
-    html += '<div class="opt ' + (isSel ? 'sel' : '') + '" onclick="' + clickHandler + '">';
+    html += '<div class="opt ' + (isSel ? 'sel' : '') + '" data-toggle="' + toggleFn + '" data-optid="' + o.id + '" onclick="handleOptClick(event,this)">';
     html += checkHtml;
-    html += '<div class="opt-label-wrap">';
-    html += '<span class="ol opt-label-display" id="lbl-' + section + '-' + o.id + '">' + displayLbl + badgeHtml + '</span>';
-    html += editBtn;
-    html += '</div>';
-    html += descHtml;
-    html += '</div>';
-  });
+    html += '<div class="opt-label-wrap"><span class="ol opt-label-display">' + displayLbl + badgeHtml + '</span>' + editBtnHtml + '</div>';
+    html += descHtml + '</div>';
+  }
   html += '</div>';
   return html;
 }
-
-// Called when pencil is clicked — swaps label span for inline input
-window.startEditLabel = function(section, id, defaultLabel, reRenderFnName, btn) {
-  const wrap = btn.closest('.opt-label-wrap');
-  const span = wrap.querySelector('.opt-label-display');
-  const currentVal = D[section]?.customLabels?.[id] || defaultLabel;
-
-  // Replace span with input
-  const input = document.createElement('input');
+function handleOptClick(event, el) {
+  if (event.target.closest('.opt-edit-btn') || event.target.closest('.opt-inline-input')) return;
+  var fn = el.getAttribute('data-toggle');
+  var id = el.getAttribute('data-optid');
+  if (fn && window[fn]) window[fn](id);
+}
+function handleEditBtn(btn) {
+  var section = btn.getAttribute('data-section');
+  var id = btn.getAttribute('data-id');
+  var defaultLabel = btn.getAttribute('data-default');
+  var reRenderFnName = btn.getAttribute('data-rerender');
+  startEditLabel(section, id, defaultLabel, reRenderFnName, btn);
+}
+function startEditLabel(section, id, defaultLabel, reRenderFnName, btn) {
+  var wrap = btn.closest('.opt-label-wrap');
+  var span = wrap.querySelector('.opt-label-display');
+  var customLbls = D[section] && D[section].customLabels;
+  var currentVal = (customLbls && customLbls[id]) ? customLbls[id] : defaultLabel;
+  var input = document.createElement('input');
   input.type = 'text';
   input.className = 'opt-inline-input';
   input.value = currentVal;
   input.style.width = Math.max(currentVal.length * 9, 120) + 'px';
-  input.onclick = e => e.stopPropagation();
-
-  const commitEdit = () => {
-    saveLabel(section, id, input.value,
-      reRenderFnName ? window[reRenderFnName] : null
-    );
+  input.onclick = function(e) { e.stopPropagation(); };
+  var commitEdit = function() {
+    if (!D[section].customLabels) D[section].customLabels = {};
+    var trimmed = input.value.trim();
+    if (trimmed && trimmed !== defaultLabel) D[section].customLabels[id] = trimmed;
+    else delete D[section].customLabels[id];
+    if (reRenderFnName && window[reRenderFnName]) window[reRenderFnName]();
   };
-
   input.onblur = commitEdit;
-  input.onkeydown = e => {
+  input.onkeydown = function(e) {
     if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
     if (e.key === 'Escape') { input.value = currentVal; input.blur(); }
   };
-
   span.replaceWith(input);
   btn.style.display = 'none';
   input.focus();
   input.select();
+}
+// Outcome label editing (uses prompt for simplicity - no nesting issues)
+window.editOutcomeLabel = function(sid, outcomeKey, defaultLabel) {
+  var current = (D.actions[sid] && D.actions[sid].outcomeLabels && D.actions[sid].outcomeLabels[outcomeKey]) || defaultLabel;
+  var newLabel = window.prompt('Rename "' + defaultLabel + '" to:', current);
+  if (newLabel === null) return;
+  if (!D.actions[sid].outcomeLabels) D.actions[sid].outcomeLabels = {};
+  var trimmed = newLabel.trim();
+  if (trimmed && trimmed !== defaultLabel) D.actions[sid].outcomeLabels[outcomeKey] = trimmed;
+  else delete D.actions[sid].outcomeLabels[outcomeKey];
+  rActions();
 };
+function getLabel(section, id, defaultLabel) {
+  return (D[section] && D[section].customLabels && D[section].customLabels[id]) || defaultLabel;
+}
+// ─────────────────────────────────────────────────────────────────────────────
 function ca(inputId,addFn,tags){
   return`<div class="addc"><input type="text" id="${inputId}" placeholder="Add your own…" onkeydown="if(event.key==='Enter')${addFn}()"><button onclick="${addFn}()">Add</button></div>
   <div class="tags">${tags.map(t=>`<span class="tag">${t}<span class="tx" onclick="rmTag('${t.replace(/'/g,"\\'")}')">×</span></span>`).join('')}</div>`;
@@ -773,7 +1552,7 @@ function rSetup(){
   <input class="mini" type="text" id="inp-track" placeholder="Or type your own — e.g. Union, Campus recruiting, Contract-to-perm…" value="${D.setup.trackName}" oninput="D.setup.trackName=this.value;syncHdr();checkSetupReady()">
   <div style="height:16px;"></div>
   <div style="font-size:13px;font-weight:500;margin-bottom:4px;">Brand accent color</div>
-  <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5;">This color will appear throughout your process map and SOP — in the header, swimlane labels, stage nodes, and phase bars. Use your company&#39;s brand color, or the brand of the client you&#39;re building this map for.</div>
+  <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5;">This color appears throughout your map and SOP. Use your company brand color, or the brand of the client you are building this map for.</div>
   <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:20px;">
     <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><input type="color" id="color-wheel" value="${AC}" oninput="onWC(this.value)" style="width:52px;height:52px;border:.5px solid var(--border);border-radius:var(--radius);cursor:pointer;padding:3px;background:var(--bg);"><label style="font-size:10px;color:var(--text3);">Wheel</label></div>
     <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:160px;">
@@ -783,12 +1562,10 @@ function rSetup(){
     <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><div id="pswatch" style="width:52px;height:52px;border-radius:var(--radius);border:.5px solid var(--border);background:${AC};transition:background .1s;"></div><div style="font-size:10px;color:var(--text3);">Preview</div></div>
   </div>
   <div style="display:flex;gap:10px;margin-bottom:20px;">
-    <div id="mode-quick" style="flex:1;padding:13px 15px;border:.5px solid ${mode==='quick'?AC:'var(--border)'};border-radius:var(--radius);cursor:pointer;background:${mode==='quick'?AC+'18':'var(--bg)'};" onclick="setMode('quick')">
-      <div class="mode-opt-name" style="font-size:13px;font-weight:500;color:${mode==='quick'?AC:'var(--text)'};">Quick mode <span style="font-size:11px;font-weight:400;opacity:.7;">~15 min</span></div>
+    <div id="mode-quick" onclick="setMode('quick')" style="flex:1;padding:13px 15px;border:.5px solid ${mode==='quick'?AC:'var(--border)'};border-radius:var(--radius);cursor:pointer;background:${mode==='quick'?AC+'12':'var(--bg)'};" onclick="setMode('quick')"><div class="mode-opt-name" style="font-size:13px;font-weight:500;color:${mode==='quick'?AC:'var(--text)'};">Quick mode <span style="font-size:11px;font-weight:400;opacity:.7;">~15 min</span></div>
       <div style="font-size:12px;color:var(--text2);margin-top:3px;">Essential structure — users, ATS, stages, actions, integrations</div>
     </div>
-    <div id="mode-full" style="flex:1;padding:13px 15px;border:.5px solid ${mode==='full'?AC:'var(--border)'};border-radius:var(--radius);cursor:pointer;background:${mode==='full'?AC+'18':'var(--bg)'};" onclick="setMode('full')">
-      <div class="mode-opt-name" style="font-size:13px;font-weight:500;color:${mode==='full'?AC:'var(--text)'};">Full mode <span style="font-size:11px;font-weight:400;opacity:.7;">~45 min</span></div>
+    <div id="mode-full" onclick="setMode('full')" style="flex:1;padding:13px 15px;border:.5px solid ${mode==='full'?AC:'var(--border)'};border-radius:var(--radius);cursor:pointer;background:${mode==='full'?AC+'12':'var(--bg)'};" onclick="setMode('full')"><div class="mode-opt-name" style="font-size:13px;font-weight:500;color:${mode==='full'?AC:'var(--text)'};">Full mode <span style="font-size:11px;font-weight:400;opacity:.7;">~45 min</span></div>
       <div style="font-size:12px;color:var(--text2);margin-top:3px;">Adds SLAs, compliance, approvals, onboarding handoff, terminology</div>
     </div>
   </div>
@@ -802,7 +1579,7 @@ function rSetup(){
   });
 }
 
-window.selTrack=function(t){markInteraction();
+window.selTrack=function(t){
   D.setup.trackName=t;
   document.querySelectorAll('.track-opt').forEach(el=>{
     const isSel=el.textContent.trim()===t;
@@ -830,7 +1607,7 @@ window.onHI=function(v){if(v&&!v.startsWith('#')){v='#'+v.replace('#','');const 
 window.onRI=function(){const r=parseInt(document.getElementById('inp-r')?.value)||0;const g=parseInt(document.getElementById('inp-g')?.value)||0;const b=parseInt(document.getElementById('inp-b')?.value)||0;const hex='#'+[r,g,b].map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('');onHI(hex);};
 
 function rUsers(){
-  qc(`${sl('System users')}${qt('Who uses your ATS or recruiting platform?')}${qh('Each person you select becomes a swimlane in your process map. In many ATS platforms — including iCIMS, Workday, and Greenhouse — these roles also correspond to your <strong>login groups or permission groups</strong>, which control what each user can see and do inside the system. Select everyone who plays a role in your hiring workflow.')}
+  qc(`${sl('System users')}${qt('Who uses your ATS or recruiting platform?')}${qh('Each person you select becomes a swimlane in your process map. In many ATS platforms — including iCIMS, Workday, and Greenhouse — these roles also correspond to your login groups or permission groups, which control what each user can see and do inside the system.')}
   ${olEditable(USERS,D.users.selected,true,'tUser','users','rUsers')}${ca('inp-user','aUser',D.users.custom)}
   ${emailSavePanel()}
   ${fnav('ns','Continue',D.users.selected.length===0&&D.users.custom.length===0)}`);
@@ -850,7 +1627,7 @@ function rAts(){
     el.innerHTML=`<div class="qcard">${sl('ATS & technology')}${qt('Which ATS are you using?')}${qh("We'll offer to pre-populate common stages.")}${ol(ATS_P,D.ats.platform?[D.ats.platform]:[],false,'sATS')}${fnav('atsN1','Continue',!D.ats.platform)}</div>`;
   }else{
     const stages=ATS_ST[D.ats.platform]||ATS_ST.default;
-    el.innerHTML=`<div class="qcard">${sl('ATS & technology')}${qt('Pre-populate default stages / bins?')}${qh('These are the default <strong>bins or stages</strong> used by your selected ATS platform. In iCIMS these are called Bins — the top-level folders candidates move through. Use them as a starting point or define your own. You\'ll add statuses within each stage in the next step.')}
+    el.innerHTML=`<div class="qcard">${sl('ATS & technology')}${qt('Pre-populate default stages / bins?')}${qh('These are the default bins or stages used by your selected ATS. In iCIMS these are called Bins — top-level folders candidates move through. Use them as a starting point or define your own. You can add statuses within each stage in the next step.')}
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;">${stages.map(s=>`<span style="padding:4px 10px;border-radius:20px;font-size:11px;background:${AC}12;border:.5px solid ${AC}50;color:${AC}">${s}</span>`).join('<span style="color:var(--text3);font-size:12px;">→</span>')}</div>
     <div class="opts">
       <div class="opt ${D.ats.wantsPrepopulate===true?'sel':''}" onclick="accPre(true)"><span class="rad"><span class="radd"></span></span><div class="ol">Yes — use these as a starting point</div></div>
@@ -866,7 +1643,7 @@ window.accPre=function(v){D.ats.wantsPrepopulate=v;if(v)D.ats.stages=[...(ATS_ST
 
 function rStages(){
   const base=D.ats.wantsPrepopulate&&D.ats.stages.length?D.ats.stages.map((s,i)=>({id:'ats_'+i,label:s})):STAGES;
-  qc(`${sl('Stages & statuses')}${qt('What stages (bins) and statuses exist in your candidate pipeline?')}${qh('In most ATS platforms, <strong>stages or bins</strong> are the top-level folders (e.g. Interview, Offer), and <strong>statuses</strong> are the specific disposition values within each stage (e.g. Phone Screen Scheduled, Offer Extended, Hired). Select your top-level stages here — you\'ll define statuses and sub-steps within each stage in the next section.')}
+  qc(`${sl('Stages & statuses')}${qt('What stages (bins) and statuses exist in your pipeline?')}${qh('Stages or bins are the top-level folders (e.g. Interview, Offer). Statuses are the disposition values within each stage (e.g. Phone Screen Scheduled, Offer Extended). Select your top-level stages here — define statuses and sub-steps in the next section.')}
   ${ol(base,D.stages.selected,true,'tStage')}${ca('inp-stage','aStage',D.stages.custom)}
   ${emailSavePanel()}
   ${fnav('ns','Continue',D.stages.selected.length===0&&D.stages.custom.length===0)}`);
@@ -899,7 +1676,7 @@ function rSubprocess(){
       </div>`:''}
     </div>`;
   }).join('');
-  qc(`${sl('Sub-processes & statuses')}${qt('Do any stages have multiple steps, rounds, or statuses within them?')}${qh('Expand any stage to define the internal sequence of actions and statuses. For example, the <strong>Interview</strong> stage might have statuses like "Phone Screen Scheduled", "Phone Screen Complete", "On-site Interview", and "Interview Complete" — each representing a discrete step within that bin. These become sub-process nodes on your map with pass/fail gates between them.')}
+  qc(`${sl('Sub-processes & statuses')}${qt('Do any stages have multiple steps, rounds, or statuses within them?')}${qh('Expand any stage to define the internal sequence of actions and statuses. For example, the Interview stage might have statuses like Phone Screen Scheduled, On-site Interview, and Interview Complete — each a discrete step within that bin.')}
   ${cards}${emailSavePanel()}${fnav('ns','Continue',false)}`);
 }
 
@@ -950,18 +1727,7 @@ function rActions(){
       </div>
       ${a.open?`<div style="padding:14px;border-top:.5px solid var(--border);display:flex;flex-direction:column;gap:12px;">
         <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;"><div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Decision owner</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${roles.map(r=>`<span style="padding:5px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${a.decisionOwners.includes(r)?`background:${AC}12;border-color:${AC};color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="togAR('${s.id}','decisionOwners','${r.replace(/'/g,"\\'")}')">${r}</span>`).join('')}</div></div>
-        <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;"><div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Outcomes</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${(function(){
-  var ops=[{k:'advance',label:'Advance'},{k:'approve',label:'Approve'},{k:'reject',label:'Reject'},{k:'hold',label:'Hold'}];
-  var html='';
-  ops.forEach(function(o){
-    var isSel=a.outcomes.includes(o.k);
-    var customLbl=(D.actions[s.id]&&D.actions[s.id].outcomeLabels&&D.actions[s.id].outcomeLabels[o.k])||o.label;
-    var bg=isSel?'background:'+AC+';color:#fff;border-color:'+AC:'background:var(--bg);border-color:var(--border);color:var(--text)';
-    var editBtn=isSel?'<span style="font-size:10px;opacity:.8;cursor:pointer;" onclick="event.stopPropagation();editOutcomeLabel(''+s.id+'',''+o.k+'',''+o.label+'')" title="Rename">&#9998;</span>':'';
-    html+='<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;'+bg+'" onclick="togOut(''+s.id+'',''+o.k+'')">'+customLbl+editBtn+'</span>';
-  });
-  return html;
-})()}</div></div>
+        <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;"><div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Outcomes</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${(function(){var ops=[{k:'advance',label:'Advance'},{k:'approve',label:'Approve'},{k:'reject',label:'Reject'},{k:'hold',label:'Hold'}];var h='';ops.forEach(function(o){var isSel=a.outcomes.includes(o.k);var lbl=(D.actions[s.id]&&D.actions[s.id].outcomeLabels&&D.actions[s.id].outcomeLabels[o.k])||o.label;var bg=isSel?'background:'+AC+';color:#fff;border-color:'+AC:'background:var(--bg);border-color:var(--border);color:var(--text)';var eb=isSel?'<span style="font-size:11px;cursor:pointer;margin-left:4px;" onclick="event.stopPropagation();editOutcomeLabel(''+s.id+'',''+o.k+'',''+o.label+'')" title="Rename">&#9998;</span>':'';h+='<span style="display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;'+bg+'" onclick="togOut(''+s.id+'',''+o.k+'')">'+lbl+eb+'</span>';});return h;})()}</div></div>
       </div>`:''}
     </div>`;
   }).join('');
@@ -970,17 +1736,6 @@ function rActions(){
 window.toggleAct=function(sid){markInteraction();D.actions[sid].open=!D.actions[sid].open;rActions();};
 window.togAR=function(sid,field,role){const a=D.actions[sid];if(!Array.isArray(a[field]))a[field]=[];msel(a[field],role);rActions();};
 window.togOut=function(sid,o){markInteraction();msel(D.actions[sid].outcomes,o);rActions();};
-
-window.editOutcomeLabel = function(sid, outcomeKey, defaultLabel) {
-  const newLabel = window.prompt('Rename "' + defaultLabel + '" outcome to:',
-    D.actions[sid]?.outcomeLabels?.[outcomeKey] || defaultLabel);
-  if (newLabel === null) return;
-  if (!D.actions[sid].outcomeLabels) D.actions[sid].outcomeLabels = {};
-  const trimmed = newLabel.trim();
-  if (trimmed) D.actions[sid].outcomeLabels[outcomeKey] = trimmed;
-  else delete D.actions[sid].outcomeLabels[outcomeKey];
-  rActions();
-};
 
 function rIntegrations(){
   qc(`${sl('Integrations')}${qt('What tools are connected to your ATS?')}${qh('These become integration touchpoints on your swimlane map.')}${olEditable(INTEGS,D.integrations.selected,true,'tInteg','integrations','rIntegrations')}${ca('inp-integ','aInteg',D.integrations.custom)}${emailSavePanel()}${fnav('ns','Continue',false)}`);
@@ -1076,606 +1831,25 @@ function sumSec(title,sIdx,rows,chipHtml){
 }
 
 window.generateOutput = async function() {
-  // Save session
   if(SESSION_ID && RESUME_TOKEN) {
     await sb.from('sessions').update({ status: 'completed' }).eq('resume_token', RESUME_TOKEN);
   }
   for(const sec of activeSecs) { if(D[sec]) await saveSection(sec); }
-  HAS_INTERACTION = false; // prevent beforeunload after successful generate
-
-  // Show generating state
+  HAS_INTERACTION = false;
   const btn = document.querySelector('button[onclick="generateOutput()"]');
-  if(btn) { btn.textContent = 'Generating your outputs…'; btn.disabled = true; }
+  if(btn){ btn.textContent = 'Generating your outputs…'; btn.disabled = true; }
   showToast('Building your process map and SOP…', 4000);
-
   try {
-    await Promise.all([generatePDF(), generateDOCX()]);
-    if(btn) { btn.textContent = 'Generated — check your downloads ✓'; btn.style.background = '#27ae60'; }
+    await generatePDF();
+    await generateDOCX();
+    if(btn){ btn.textContent = 'Generated — check your downloads ✓'; btn.style.background = '#27ae60'; }
     showToast('Both files downloaded successfully', 3500);
   } catch(e) {
     console.error('Generation error:', e);
-    if(btn) { btn.textContent = 'Generate BPMN map & SOP →'; btn.disabled = false; }
-    showToast('Error generating files — see console for details', 4000);
+    if(btn){ btn.textContent = 'Generate BPMN map & SOP →'; btn.disabled = false; }
+    showToast('Error generating — see console', 4000);
   }
 };
-
-// ── PDF MAP GENERATOR ──────────────────────────────────────────────────────────
-async function generatePDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [2592, 1728] });
-
-  const W = 2592, H = 1728, MARGIN = 32;
-  const LABEL_W = 116, TITLE_H = 78, LEGEND_H = 36, FOOTER_H = 22, PHASE_H = 26;
-  const MAP_X = MARGIN + LABEL_W;
-  const MAP_Y = MARGIN + TITLE_H + 8;
-  const MAP_TOP = H - MARGIN - LEGEND_H - FOOTER_H - PHASE_H - 10;
-  const MAP_H = MAP_TOP - PHASE_H - MAP_Y;
-  const MAP_W = W - MARGIN - MAP_X;
-
-  const userLabels = [...D.users.selected.map(u => USERS.find(o=>o.id===u)?.label||u), ...D.users.custom];
-  const stageList = getStageList();
-  const integLabels = [...D.integrations.selected.map(i => INTEGS.find(o=>o.id===i)?.label||i), ...D.integrations.custom];
-  const LANE_COUNT = Math.max(userLabels.length, 1);
-  const LANE_H = MAP_H / LANE_COUNT;
-
-  const [AR, AG, AB] = hexToRgbArr(AC);
-  // Darkened brand color for text on light backgrounds
-  const DR = Math.round(AR * 0.52), DG = Math.round(AG * 0.52), DB = Math.round(AB * 0.52);
-  // Light brand tint for label column
-  const LR = Math.min(255, 232 + Math.round((255-AR)*0.28));
-  const LG = Math.min(255, 232 + Math.round((255-AG)*0.28));
-  const LB = Math.min(255, 232 + Math.round((255-AB)*0.28));
-
-  const PHASES = [
-    { label: 'Req opening',        f0: 0.000, f1: 0.135 },
-    { label: 'Req approval',       f0: 0.135, f1: 0.265 },
-    { label: 'Sourcing & posting', f0: 0.265, f1: 0.375 },
-    { label: 'Screening',          f0: 0.375, f1: 0.495 },
-    { label: 'Interview',          f0: 0.495, f1: 0.735 },
-    { label: 'Offer',              f0: 0.735, f1: 0.865 },
-    { label: 'Pre-hire & handoff', f0: 0.865, f1: 1.000 },
-  ];
-
-  function px(f) { return MAP_X + f * MAP_W; }
-  function laneCY(i) { return MAP_Y + MAP_H - (i + 0.5) * LANE_H; }
-  function laneBot(i) { return MAP_Y + MAP_H - (i + 1) * LANE_H; }
-  // ── SAFE SHAPE HELPERS (jsPDF 2.x confirmed API only) ──
-  function fillTriangle(x1,y1,x2,y2,x3,y3) {
-    // Draw filled triangle using three lines + fill rect approximation
-    // jsPDF 2.x: use setFillColor then a thin rect as fallback for arrowheads
-    const minX = Math.min(x1,x2,x3), maxX = Math.max(x1,x2,x3);
-    const minY = Math.min(y1,y2,y3), maxY = Math.max(y1,y2,y3);
-    doc.rect(minX, minY, maxX-minX||1, maxY-minY||1, 'F');
-  }
-  function rrect(x,y,w,h,style) {
-    doc.rect(x, y, w, h, style || 'FD');
-  }
-  function diamond(cx,cy,dw,dh,style) {
-    // Approximate diamond as a rotated square using rect
-    // Draw as overlapping rects for a diamond silhouette
-    const s = style || 'FD';
-    // horizontal bar
-    doc.rect(cx-dw, cy-dh*0.45, dw*2, dh*0.9, s);
-  }
-  function paraShape(x,y,w,h,sk,style) {
-    doc.rect(x, y, w, h, style || 'FD');
-  }
-  function pentShape(x,y,w,h,tip,style) {
-    doc.rect(x, y, w-tip/2, h, style || 'FD');
-  }
-  function oval(cx,cy,rx,ry,style) {
-    doc.circle ? doc.circle(cx, cy, (rx+ry)/2, style||'FD') : doc.rect(cx-rx, cy-ry, rx*2, ry*2, style||'FD');
-  }
-
-  // WHITE BACKGROUND
-  doc.setFillColor(255, 255, 255);
-  doc.rect(0, 0, W, H, 'F');
-
-  // TITLE BAR
-  doc.setFillColor(AR, AG, AB);
-  doc.rect(0, MARGIN, W, TITLE_H, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24); doc.setFont('helvetica', 'bold');
-  doc.text(D.setup.orgName || 'Organization', MARGIN + 14, MARGIN + 30);
-  doc.setFontSize(13); doc.setFont('helvetica', 'normal');
-  doc.text(
-    (D.setup.trackName || 'Hiring process') + '  ·  ' +
-    (ATS_P.find(p=>p.id===D.ats.platform)?.label || 'ATS') + '  ·  BPMN Notation',
-    MARGIN + 14, MARGIN + 52
-  );
-  doc.setFontSize(10);
-  doc.text(
-    'Print: 36" × 24"  ·  300 DPI  ·  ' +
-    new Date().toLocaleDateString('en-US', {month:'long', year:'numeric'}),
-    W - MARGIN - 14, MARGIN + 44, { align: 'right' }
-  );
-
-  // PHASE HEADERS
-  PHASES.forEach((ph, idx) => {
-    const x0 = px(ph.f0), x1 = px(ph.f1);
-    const lighter = idx % 2 === 1;
-    doc.setFillColor(
-      Math.min(255, AR + (lighter ? 22 : 0)),
-      Math.min(255, AG + (lighter ? 14 : 0)),
-      Math.min(255, AB + (lighter ? 22 : 0))
-    );
-    doc.rect(x0, MAP_TOP, x1-x0, PHASE_H, 'F');
-    doc.setDrawColor(255, 255, 255);
-    doc.setLineWidth(0.7);
-    doc.line(x0, MAP_TOP, x0, MAP_TOP + PHASE_H);
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8.5); doc.setFont('helvetica', 'bold');
-    doc.text(ph.label, (x0+x1)/2, MAP_TOP + 17, { align: 'center' });
-  });
-
-  // LABEL COLUMN HEADER
-  doc.setFillColor(AR, AG, AB);
-  doc.rect(MARGIN, MAP_TOP, LABEL_W, PHASE_H, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-  doc.text('Role / Swimlane', MARGIN + LABEL_W/2, MAP_TOP + 17, { align: 'center' });
-
-  // LABEL COLUMN BACKGROUND
-  doc.setFillColor(LR, LG, LB);
-  doc.rect(MARGIN, MAP_Y, LABEL_W, MAP_H, 'F');
-
-  // LANES
-  userLabels.forEach((name, i) => {
-    const yb = laneBot(i);
-    // White / very light gray alternating rows
-    doc.setFillColor(i % 2 === 0 ? 255 : 250, i % 2 === 0 ? 255 : 249, i % 2 === 0 ? 255 : 252);
-    doc.rect(MAP_X, yb, MAP_W, LANE_H, 'F');
-    // Label cell — tinted
-    doc.setFillColor(i % 2 === 0 ? LR : Math.max(LR-8,220), i % 2 === 0 ? LG : Math.max(LG-8,218), i % 2 === 0 ? LB : Math.max(LB-6,225));
-    doc.rect(MARGIN, yb, LABEL_W, LANE_H, 'F');
-    // Name
-    doc.setTextColor(DR, DG, DB);
-    doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-    const nameLines = doc.splitTextToSize(name, LABEL_W - 14);
-    const lh = 11;
-    const ty = yb + LANE_H/2 - (nameLines.length-1)*lh/2 + 3;
-    nameLines.forEach((ln, li) => doc.text(ln, MARGIN + LABEL_W/2, ty + li*lh, { align: 'center' }));
-    // Divider
-    doc.setDrawColor(200, 195, 208);
-    doc.setLineWidth(0.4);
-    doc.line(MARGIN, yb, W-MARGIN, yb);
-  });
-
-  // PHASE COLUMN DIVIDERS
-  doc.setLineDash([4, 4]);
-  PHASES.forEach(ph => {
-    doc.setDrawColor(210, 205, 218);
-    doc.setLineWidth(0.4);
-    doc.line(px(ph.f0), MAP_Y, px(ph.f0), MAP_TOP);
-  });
-  doc.setLineDash([]);
-
-  // BORDERS
-  doc.setDrawColor(AR, AG, AB);
-  doc.setLineWidth(1.2);
-  doc.line(MAP_X, MAP_Y, MAP_X, MAP_TOP + PHASE_H);
-  doc.setLineWidth(2);
-  doc.rect(MARGIN, MAP_Y, W-2*MARGIN, MAP_H + PHASE_H, 'S');
-
-  // STAGE NODES
-  const colW = MAP_W / Math.max(stageList.length + 1, 9);
-  const TW = Math.min(colW * 0.82, 120), TH = 30;
-
-  stageList.forEach((stage, si) => {
-    const laneIdx = si % Math.max(userLabels.length, 1);
-    const cx = MAP_X + (si + 0.9) * colW + colW * 0.35;
-    const cy = laneCY(laneIdx);
-    const a = D.actions[stage.id];
-    const sp = D.subprocess[stage.id];
-    const hasSP = sp?.hasSubprocess === true;
-
-    // Task rectangle — white fill, brand color stroke
-    doc.setFillColor(255, 255, 255);
-    doc.setDrawColor(AR, AG, AB);
-    doc.setLineWidth(hasSP ? 1.8 : 1);
-    if (hasSP) doc.setLineDash([5, 2]); else doc.setLineDash([]);
-    rrect(cx - TW/2, cy - TH/2, TW, TH, 'FD');
-    doc.setLineDash([]);
-
-    // [+] sub-process badge
-    if (hasSP) {
-      doc.setFillColor(AR, AG, AB);
-      rrect(cx - TW/2 + 3, cy - TH/2 + 3, 18, 11, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(6.5); doc.setFont('helvetica', 'bold');
-      doc.text('[+]', cx - TW/2 + 12, cy - TH/2 + 11, { align: 'center' });
-    }
-
-    // Label
-    doc.setTextColor(DR, DG, DB);
-    doc.setFontSize(8); doc.setFont('helvetica', hasSP ? 'bold' : 'normal');
-    const lblLines = doc.splitTextToSize(stage.label, TW - 12);
-    const lh = 10;
-    const ly = cy - (lblLines.length - 1) * lh / 2 + 2;
-    lblLines.forEach((ln, li) => doc.text(ln, cx, ly + li*lh, { align: 'center' }));
-
-    // Forward arrow to next node in same lane
-    const nextSI = stageList.findIndex((s, idx) => idx > si && (idx % Math.max(userLabels.length,1)) === laneIdx);
-    if (nextSI > -1) {
-      const nCX = MAP_X + (nextSI + 0.9) * colW + colW * 0.35;
-      doc.setDrawColor(160, 148, 172);
-      doc.setLineWidth(0.8);
-      doc.line(cx + TW/2 + 1, cy, nCX - TW/2 - 8, cy);
-      doc.setFillColor(160, 148, 172);
-      fillTriangle(nCX-TW/2-8, cy-3.5, nCX-TW/2-8, cy+3.5, nCX-TW/2-2, cy);
-    }
-
-    // Decision diamond
-    if (a && a.outcomes.length > 0) {
-      const dx = cx + TW/2 + 28, dw = 18, dh = 13;
-      doc.setFillColor(225, 240, 252);
-      doc.setDrawColor(24, 95, 165);
-      doc.setLineWidth(0.9);
-      diamond(dx, cy, dw, dh, 'FD');
-      doc.setTextColor(4, 44, 83);
-      doc.setFontSize(7); doc.setFont('helvetica', 'bold');
-      doc.text('?', dx, cy + 2.5, { align: 'center' });
-
-      // Yes path
-      if (a.outcomes.includes('advance') || a.outcomes.includes('approve')) {
-        doc.setDrawColor(30, 120, 70);
-        doc.setLineWidth(1.3);
-        doc.line(dx + dw + 2, cy, dx + dw + 24, cy);
-        doc.setFillColor(30, 120, 70);
-        fillTriangle(dx+dw+18, cy-3.5, dx+dw+18, cy+3.5, dx+dw+24, cy);
-        doc.setTextColor(30, 120, 70);
-        doc.setFontSize(7.5); doc.setFont('helvetica', 'bold');
-        doc.text('Yes', dx + dw + 13, cy - 5, { align: 'center' });
-      }
-
-      // No path (downward)
-      if (a.outcomes.includes('reject')) {
-        doc.setDrawColor(170, 35, 25);
-        doc.setLineWidth(1.3);
-        doc.line(dx, cy + dh + 2, dx, cy + dh + 22);
-        doc.setFillColor(170, 35, 25);
-        fillTriangle(dx-3.5, cy+dh+16, dx+3.5, cy+dh+16, dx, cy+dh+22);
-        doc.setTextColor(170, 35, 25);
-        doc.setFontSize(7.5); doc.setFont('helvetica', 'bold');
-        doc.text('No', dx + 6, cy + dh + 17);
-      }
-    }
-  });
-
-  // INTEGRATION BADGES
-  if (integLabels.length > 0) {
-    const badgeY = MAP_Y + LANE_H * 0.18;
-    integLabels.slice(0, 6).forEach((integ, i) => {
-      const ix = MAP_X + 14 + i * 168;
-      doc.setFillColor(232, 244, 255);
-      doc.setDrawColor(100, 148, 200);
-      doc.setLineWidth(0.6);
-      rrect(ix, badgeY - 8, 156, 16, 'FD');
-      doc.setTextColor(24, 70, 130);
-      doc.setFontSize(7.5); doc.setFont('helvetica', 'normal');
-      doc.text(integ, ix + 78, badgeY + 4, { align: 'center' });
-    });
-  }
-
-  // LEGEND STRIP
-  const legY = H - MARGIN - FOOTER_H - LEGEND_H - 2;
-  doc.setFillColor(248, 247, 250);
-  doc.setDrawColor(200, 195, 210);
-  doc.setLineWidth(0.5);
-  doc.rect(MARGIN, legY, W - 2*MARGIN, LEGEND_H, 'FD');
-
-  const legItems = [
-    { label: 'Start event',       fillRGB: [234,243,222], strokeRGB: [59,109,17],  shape: 'oval' },
-    { label: 'End: hired',        fillRGB: [234,243,222], strokeRGB: [59,109,17],  shape: 'oval', thick: true },
-    { label: 'End: exit',         fillRGB: [252,235,235], strokeRGB: [163,45,45],  shape: 'oval', thick: true },
-    { label: 'Task',              fillRGB: [255,255,255], strokeRGB: [AR,AG,AB],   shape: 'rect' },
-    { label: 'Decision gateway',  fillRGB: [225,240,252], strokeRGB: [24,95,165],  shape: 'diamond' },
-    { label: 'Data in / out',     fillRGB: [250,238,218], strokeRGB: [133,79,11],  shape: 'para' },
-    { label: 'Cross-lane handoff',fillRGB: [238,237,254], strokeRGB: [83,74,183],  shape: 'pent' },
-    { label: 'Approved path',     fillRGB: [30,120,70],   strokeRGB: [30,120,70],  shape: 'arrow' },
-    { label: 'Rejected path',     fillRGB: [170,35,25],   strokeRGB: [170,35,25],  shape: 'arrow' },
-    { label: '[+] Sub-process',   fillRGB: [255,255,255], strokeRGB: [AR,AG,AB],   shape: 'rect', dashed: true },
-  ];
-
-  const legStep = (W - 2*MARGIN) / legItems.length;
-  legItems.forEach((item, i) => {
-    const lx = MARGIN + i * legStep + legStep/2;
-    const ly = legY + LEGEND_H/2 - 2;
-    doc.setFillColor(...item.fillRGB);
-    doc.setDrawColor(...item.strokeRGB);
-    doc.setLineWidth(item.thick ? 2.2 : 0.8);
-    if (item.dashed) doc.setLineDash([3,2]); else doc.setLineDash([]);
-
-    switch(item.shape) {
-      case 'oval':
-        oval(lx, ly, 14, 8, 'FD'); break;
-      case 'rect':
-        rrect(lx-14, ly-7, 28, 14, 'FD'); break;
-      case 'diamond':
-        diamond(lx, ly, 12, 8, 'FD'); break;
-      case 'para':
-        paraShape(lx-14, ly-7, 28, 14, 7, 'FD'); break;
-      case 'pent':
-        pentShape(lx-14, ly-7, 28, 14, 8, 'FD'); break;
-      case 'arrow':
-        doc.setDrawColor(...item.strokeRGB); doc.setLineWidth(1.5);
-        doc.line(lx-14, ly, lx+6, ly);
-        doc.setFillColor(...item.fillRGB);
-        fillTriangle(lx+6, ly-3.5, lx+6, ly+3.5, lx+14, ly); break;
-    }
-    doc.setLineDash([]);
-    doc.setTextColor(80, 72, 92);
-    doc.setFontSize(7.5); doc.setFont('helvetica', 'normal');
-    doc.text(item.label, lx, legY + LEGEND_H - 3, { align: 'center' });
-  });
-
-  // FOOTER
-  doc.setTextColor(130, 120, 145);
-  doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-  doc.text(
-    (D.setup.orgName||'Organization') + '  ·  ' + (D.setup.trackName||'Hiring process') +
-    '  ·  CONFIDENTIAL  ·  One map = one process track',
-    MARGIN + 12, H - MARGIN + 6
-  );
-  doc.text(
-    'Generated ' + new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) +
-    '  ·  TA Process Mapping Tool — TASSP Playbook',
-    W - MARGIN - 12, H - MARGIN + 6, { align: 'right' }
-  );
-
-  // DOWNLOAD
-  const fileName = ((D.setup.orgName||'TA')+'_'+(D.setup.trackName||'Process')+'_Map.pdf').replace(/\s+/g,'_');
-  doc.save(fileName);
-}
-
-// ── DOCX SOP GENERATOR ────────────────────────────────────────────────────────
-async function generateDOCX() {
-  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-          HeadingLevel, AlignmentType, BorderStyle, WidthType, ShadingType,
-          LevelFormat } = docx;
-
-  const userLabels = [...D.users.selected.map(u => USERS.find(o=>o.id===u)?.label||u), ...D.users.custom];
-  const stageList = getStageList();
-  const integLabels = [...D.integrations.selected.map(i => INTEGS.find(o=>o.id===i)?.label||i), ...D.integrations.custom];
-  const spStages = stageList.filter(s => D.subprocess[s.id]?.hasSubprocess === true);
-  const reqOpenLabels = D.reqflow.reqOpenMethod.map(m => REQ_OPEN.find(o=>o.id===m)?.label||m);
-
-  const BRAND_HEX = AC.replace('#','');
-  const border = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' };
-  const borders = { top: border, bottom: border, left: border, right: border };
-  const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
-  const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
-
-  function h1(text) {
-    return new Paragraph({
-      heading: HeadingLevel.HEADING_1,
-      spacing: { before: 320, after: 100 },
-      border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: BRAND_HEX, space: 4 } },
-      children: [new TextRun({ text, bold: true, size: 32, color: BRAND_HEX, font: 'Arial' })]
-    });
-  }
-  function h2(text) {
-    return new Paragraph({
-      heading: HeadingLevel.HEADING_2,
-      spacing: { before: 220, after: 80 },
-      children: [new TextRun({ text, bold: true, size: 26, color: '333333', font: 'Arial' })]
-    });
-  }
-  function body(text, opts = {}) {
-    return new Paragraph({
-      spacing: { before: 60, after: 60 },
-      children: [new TextRun({ text, size: 20, color: '222222', font: 'Arial', ...opts })]
-    });
-  }
-  function bullet(text) {
-    return new Paragraph({
-      numbering: { reference: 'bullets', level: 0 },
-      spacing: { before: 40, after: 40 },
-      children: [new TextRun({ text, size: 20, color: '222222', font: 'Arial' })]
-    });
-  }
-  function spacer() { return new Paragraph({ spacing: { before: 0, after: 0 }, children: [new TextRun('')] }); }
-
-  function hdrRow(cells, widths) {
-    return new TableRow({ tableHeader: true, children: cells.map((t, i) =>
-      new TableCell({ borders, width: { size: widths[i], type: WidthType.DXA },
-        shading: { fill: BRAND_HEX, type: ShadingType.CLEAR },
-        margins: { top: 80, bottom: 80, left: 120, right: 120 },
-        children: [new Paragraph({ children: [new TextRun({ text: t, bold: true, size: 18, color: 'FFFFFF', font: 'Arial' })] })]
-      })
-    )});
-  }
-  function dataRow(cells, widths, shade = false) {
-    return new TableRow({ children: cells.map((t, i) =>
-      new TableCell({ borders, width: { size: widths[i], type: WidthType.DXA },
-        shading: { fill: shade ? 'F5F5F5' : 'FFFFFF', type: ShadingType.CLEAR },
-        margins: { top: 80, bottom: 80, left: 120, right: 120 },
-        children: [new Paragraph({ children: [new TextRun({ text: String(t), size: 18, color: '333333', font: 'Arial' })] })]
-      })
-    )});
-  }
-
-  const doc2 = new Document({
-    styles: {
-      default: { document: { run: { font: 'Arial', size: 20 } } },
-      paragraphStyles: [
-        { id: 'Heading1', name: 'Heading 1', basedOn: 'Normal', next: 'Normal',
-          run: { size: 32, bold: true, font: 'Arial', color: BRAND_HEX },
-          paragraph: { spacing: { before: 320, after: 100 }, outlineLevel: 0 } },
-        { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal',
-          run: { size: 26, bold: true, font: 'Arial' },
-          paragraph: { spacing: { before: 220, after: 80 }, outlineLevel: 1 } },
-      ]
-    },
-    numbering: { config: [
-      { reference: 'bullets', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•',
-          alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 720, hanging: 360 } } } }] },
-    ]},
-    sections: [{ properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },
-      children: [
-        // Cover
-        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 720, after: 120 },
-          children: [new TextRun({ text: 'TALENT ACQUISITION', font: 'Arial', size: 18, bold: true, color: BRAND_HEX })] }),
-        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 0, after: 160 },
-          children: [new TextRun({ text: 'Standard Operating Procedure', font: 'Arial', size: 48, bold: true })] }),
-        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 0, after: 80 },
-          children: [new TextRun({ text: D.setup.orgName || 'Organization', font: 'Arial', size: 32, color: BRAND_HEX })] }),
-        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 0, after: 480 },
-          children: [new TextRun({ text: (D.setup.trackName || 'Hiring process') + '  ·  ' + (ATS_P.find(p=>p.id===D.ats.platform)?.label || 'ATS'), font: 'Arial', size: 22, color: '777777' })] }),
-        spacer(), spacer(),
-
-        // Section 1
-        h1('1. Purpose and scope'),
-        body('This Standard Operating Procedure defines the end-to-end talent acquisition process for ' + (D.setup.trackName || 'this hiring track') + ' at ' + (D.setup.orgName || 'this organization') + '. It establishes roles, responsibilities, system touchpoints, and the workflow sequence governing how candidates move from requisition creation through to onboarding handoff.'),
-        spacer(),
-        body('This document applies to all ' + (D.setup.trackName || '') + ' requisitions processed through ' + (ATS_P.find(p=>p.id===D.ats.platform)?.label || 'the ATS') + ' and is intended for use by all system users identified in Section 3.'),
-        spacer(),
-
-        // Section 2
-        h1('2. Key terminology'),
-        new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [2200, 7160], rows: [
-          hdrRow(['Term', 'Definition used in this organization'], [2200, 7160]),
-          dataRow(['Job opening', D.terms.req || 'Requisition'], [2200, 7160]),
-          dataRow(['Applicant', D.terms.candidate || 'Candidate'], [2200, 7160], true),
-          dataRow(['Rejection term', D.terms.disposition || 'Disposition'], [2200, 7160]),
-          dataRow(['First interaction', D.terms.screen || 'Phone screen'], [2200, 7160], true),
-          dataRow(['Offer stage', D.terms.offer || 'Offer'], [2200, 7160]),
-          dataRow(['Department manager', D.terms.hm || 'Hiring manager'], [2200, 7160], true),
-        ]}),
-        spacer(),
-
-        // Section 3
-        h1('3. System users and swimlane responsibilities'),
-        new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [2800, 6560], rows: [
-          hdrRow(['Role', 'Primary responsibility'], [2800, 6560]),
-          ...userLabels.map((u, i) => {
-            const a = Object.values(D.actions).find(a => a.decisionOwners?.includes(u));
-            const desc = a ? 'Decision owner at: ' + Object.entries(D.actions).filter(([,v]) => v.decisionOwners?.includes(u)).map(([,v]) => v.label).join(', ') : 'System user — participates in hiring process';
-            return dataRow([u, desc], [2800, 6560], i % 2 === 1);
-          })
-        ]}),
-        spacer(),
-
-        // Section 4
-        h1('4. Requisition opening'),
-        body('How requisitions are opened: ' + (reqOpenLabels.join(', ') || 'Not specified')),
-        D.reqflow.reqOpenNote ? body(D.reqflow.reqOpenNote, { italics: true, color: '555555' }) : spacer(),
-        D.reqflow.hasApproval ? h2('4.1 Requisition approval chain') : spacer(),
-        D.reqflow.hasApproval ? body('Requisitions require approval before posting. Approval chain: ' + [...D.reqflow.approvers, ...D.reqflow.customApprovers].join(' → ')) : spacer(),
-        spacer(),
-
-        // Section 5
-        h1('5. Candidate pipeline stages'),
-        body('The following stages exist in the ' + (D.setup.trackName || '') + ' candidate pipeline:'),
-        ...stageList.map(s => {
-          const a = D.actions[s.id];
-          const sp = D.subprocess[s.id];
-          const lines = [bullet(s.label + (a?.decisionOwners?.length ? ' — Decision owner: ' + a.decisionOwners.join(', ') : '') + (a?.outcomes?.length ? ' — Outcomes: ' + a.outcomes.join(' / ') : ''))];
-          if(sp?.hasSubprocess && sp.rounds.length) {
-            sp.rounds.forEach((r, ri) => {
-              lines.push(new Paragraph({
-                numbering: { reference: 'bullets', level: 0 },
-                spacing: { before: 20, after: 20 },
-                indent: { left: 1080 },
-                children: [new TextRun({ text: 'Round ' + (ri+1) + ': ' + r.name + (r.types?.length ? ' · ' + r.types.join('/') : '') + (r.formats?.length ? ' · ' + r.formats.join('/') : '') + (r.conductors?.length ? ' · Conducted by: ' + r.conductors.join(', ') : '') + (r.condition ? ' · Only if: ' + r.condition : ''), size: 18, color: '555555', font: 'Arial' })]
-              }));
-            });
-          }
-          return lines;
-        }).flat(),
-        spacer(),
-
-        // Section 6
-        h1('6. Integrations and system touchpoints'),
-        integLabels.length ? new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
-          hdrRow(['Integration', 'Function'], [3000, 6360]),
-          ...integLabels.map((integ, i) => dataRow([integ, 'Connected to ' + (ATS_P.find(p=>p.id===D.ats.platform)?.label || 'ATS') + ' — used during the hiring process'], [3000, 6360], i % 2 === 1))
-        ]}) : body('No integrations defined.'),
-        spacer(),
-
-        // Section 7 — RACI
-        h1('7. RACI — responsibility assignment matrix'),
-        body('R = Responsible, A = Accountable, C = Consulted, I = Informed'),
-        spacer(),
-        new Table({
-          width: { size: 9360, type: WidthType.DXA },
-          columnWidths: [2400, ...userLabels.slice(0,5).map(() => Math.floor(6960 / Math.min(userLabels.length, 5)))],
-          rows: [
-            hdrRow(['Activity', ...userLabels.slice(0,5)], [2400, ...userLabels.slice(0,5).map(() => Math.floor(6960/Math.min(userLabels.length,5)))]),
-            ...stageList.map((s, si) => {
-              const a = D.actions[s.id];
-              const cells = userLabels.slice(0,5).map(u => {
-                if(a?.decisionOwners?.includes(u)) return 'A/R';
-                if(a?.rejectOwner?.includes(u)) return 'R';
-                return 'I';
-              });
-              return dataRow([s.label, ...cells], [2400, ...userLabels.slice(0,5).map(() => Math.floor(6960/Math.min(userLabels.length,5)))], si % 2 === 1);
-            })
-          ]
-        }),
-        spacer(),
-
-        // Section 8 — Sub-processes
-        ...(spStages.length ? [
-          h1('8. Sub-process documentation'),
-          body('The following stages contain expanded sub-processes with multiple steps or rounds:'),
-          spacer(),
-          ...spStages.flatMap(s => {
-            const sp = D.subprocess[s.id];
-            return [
-              h2('8.' + (spStages.indexOf(s)+1) + ' ' + s.label),
-              body('This stage contains ' + sp.rounds.length + ' round' + (sp.rounds.length !== 1 ? 's' : '') + ' with pass/fail gates between each.'),
-              spacer(),
-              new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [1400, 1400, 1600, 1800, 1600, 1560], rows: [
-                hdrRow(['Round', 'Type', 'Format', 'Conducted by', 'Scheduling', 'Condition'], [1400,1400,1600,1800,1600,1560]),
-                ...sp.rounds.map((r, ri) => dataRow([
-                  'Round ' + (ri+1) + ': ' + r.name,
-                  r.types?.map(t => ITYPES.find(x=>x.id===t)?.label||t).join('/') || '—',
-                  r.formats?.map(f => FORMATS.find(x=>x.id===f)?.label||f).join('/') || '—',
-                  r.conductors?.join(', ') || '—',
-                  r.schedMethod?.map(m => SCHED.find(x=>x.id===m)?.label||m).join('/') || '—',
-                  r.condition || 'All candidates',
-                ], [1400,1400,1600,1800,1600,1560], ri % 2 === 1))
-              ]}),
-              spacer(),
-            ];
-          }),
-        ] : []),
-
-        // Section 9 — Document info
-        h1((spStages.length ? '9' : '8') + '. Document information'),
-        new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [2400, 6960], rows: [
-          dataRow(['Document owner', (D.setup.orgName || 'Organization') + ' — TA Operations'], [2400, 6960]),
-          dataRow(['Process track', D.setup.trackName || 'Not specified'], [2400, 6960], true),
-          dataRow(['ATS platform', ATS_P.find(p=>p.id===D.ats.platform)?.label || 'Not specified'], [2400, 6960]),
-          dataRow(['Generated', new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'})], [2400, 6960], true),
-          dataRow(['Generated by', 'TA Process Mapping Tool — TASSP Playbook'], [2400, 6960]),
-          dataRow(['Status', 'Draft — pending stakeholder review'], [2400, 6960], true),
-        ]}),
-        spacer(),
-        body('This document was generated from structured process data captured via the TA Process Mapping Tool at TASSP Playbook. Review with all stakeholders before finalizing.', { italics: true, color: '888888' }),
-      ]
-    }]
-  });
-
-  const blob = await Packer.toBlob(doc2);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = ((D.setup.orgName || 'TA') + '_' + (D.setup.trackName || 'Process') + '_SOP.docx').replace(/\s+/g, '_');
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// ── HELPERS ───────────────────────────────────────────────────────────────────
-function hexToRgbArr(hex) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  return [r, g, b];
-}
 
 function rReqFlow(){
   qc(`${sl('Requisition flow')}${qt('How are job requisitions opened?')}${qh('This determines the first action on your map.')}
@@ -1683,17 +1857,20 @@ function rReqFlow(){
   <div style="margin-top:14px;"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">Notes (optional)</label><input class="mini" type="text" placeholder="e.g. HM submits Google Form, recruiter converts to ATS req" value="${D.reqflow.reqOpenNote||''}" oninput="D.reqflow.reqOpenNote=this.value"></div>
   ${emailSavePanel()}${fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0)}`);
 }
-const RS={setup:rSetup,org:rOrg,users:rUsers,terms:rTerms,ats:rAts,reqflow:rReqFlow,//
-stages:rStages,subprocess:rSubprocess,actions:rActions,integrations:rIntegrations,branching:rBranching,sla:rSla,compliance:rCompliance,approvals:rApprovals,onboarding:rOnboarding};
-window.tReqO=function(v){markInteraction();msel(D.reqflow.reqOpenMethod,v);RS.reqflow();};
+const RS={setup:rSetup,org:rOrg,users:rUsers,terms:rTerms,ats:rAts,reqflow:()=>{
+  // Simplified reqflow inline
+  qc(`${sl('Requisition flow')}${qt('How are job requisitions opened?')}${qh('This determines the first action on your map.')}
+  ${olEditable(REQ_OPEN,D.reqflow.reqOpenMethod,true,'tReqO','reqflow','rReqFlow')}
+  <div style="margin-top:14px;"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">Notes (optional)</label><input class="mini" type="text" placeholder="e.g. HM submits Google Form, recruiter converts to ATS req" value="${D.reqflow.reqOpenNote||''}" oninput="D.reqflow.reqOpenNote=this.value"></div>
+  ${emailSavePanel()}${fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0)}`);
+},stages:rStages,subprocess:rSubprocess,actions:rActions,integrations:rIntegrations,branching:rBranching,sla:rSla,compliance:rCompliance,approvals:rApprovals,onboarding:rOnboarding};
+window.tReqO=function(v){markInteraction();msel(D.reqflow.reqOpenMethod,v);rReqFlow();};
 
-// ── BEFOREUNLOAD — warn if session has unsaved progress ──────────────────────
+// ── BEFOREUNLOAD ─────────────────────────────────────────────────────────────
 window.addEventListener('beforeunload', function(e) {
   if (!HAS_INTERACTION || SAVE_STATUS === 'saved') return;
-  const msg = 'You have unsaved progress. Are you sure you want to leave?';
-  e.preventDefault();
-  e.returnValue = msg;
-  return msg;
+  var msg = 'You have unsaved progress. Are you sure you want to leave?';
+  e.preventDefault(); e.returnValue = msg; return msg;
 });
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
@@ -1701,13 +1878,273 @@ window.addEventListener('beforeunload', function(e) {
   applyAC(AC);
   await initSession();
   if(!document.getElementById('main').querySelector('.resume-card')) render();
-  // Start timestamp updater if we already have a saved session
-  if (SESSION_ID) {
-    LAST_SAVED_AT = new Date();
-    startTimestampInterval();
-    setSaveStatus('saved');
-  }
+  if (SESSION_ID) { LAST_SAVED_AT = new Date(); startTimestampInterval(); setSaveStatus('saved'); }
 })();
+
+// ── PDF GENERATOR ────────────────────────────────────────────────────────────
+async function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [2592, 1728] });
+  const W=2592,H=1728,MARGIN=32,LABEL_W=116,TITLE_H=78,LEGEND_H=36,FOOTER_H=22,PHASE_H=26;
+  const MAP_X=MARGIN+LABEL_W, MAP_Y=MARGIN+TITLE_H+8;
+  const MAP_TOP=H-MARGIN-LEGEND_H-FOOTER_H-PHASE_H-10;
+  const MAP_H=MAP_TOP-PHASE_H-MAP_Y, MAP_W=W-MARGIN-MAP_X;
+  const userLabels=[...D.users.selected.map(u=>{var f=USERS.find(o=>o.id===u);return(D.users.customLabels&&D.users.customLabels[u])||f&&f.label||u;}),...D.users.custom];
+  const stageList=getStageList();
+  const integLabels=[...D.integrations.selected.map(i=>{var f=INTEGS.find(o=>o.id===i);return(D.integrations.customLabels&&D.integrations.customLabels[i])||f&&f.label||i;}),...D.integrations.custom];
+  const LANE_COUNT=Math.max(userLabels.length,1), LANE_H=MAP_H/LANE_COUNT;
+  const ac=hexToRgbArr(AC), AR=ac[0],AG=ac[1],AB=ac[2];
+  const DR=Math.round(AR*0.52),DG=Math.round(AG*0.52),DB=Math.round(AB*0.52);
+  const LR=Math.min(255,232+Math.round((255-AR)*0.28));
+  const LG=Math.min(255,232+Math.round((255-AG)*0.28));
+  const LB=Math.min(255,232+Math.round((255-AB)*0.28));
+  const PHASES=[
+    {label:'Req opening',f0:0.000,f1:0.135},{label:'Req approval',f0:0.135,f1:0.265},
+    {label:'Sourcing & posting',f0:0.265,f1:0.375},{label:'Screening',f0:0.375,f1:0.495},
+    {label:'Interview',f0:0.495,f1:0.735},{label:'Offer',f0:0.735,f1:0.865},
+    {label:'Pre-hire & handoff',f0:0.865,f1:1.000},
+  ];
+  function px(f){return MAP_X+f*MAP_W;}
+  function laneCY(i){return MAP_Y+MAP_H-(i+0.5)*LANE_H;}
+  function laneBot(i){return MAP_Y+MAP_H-(i+1)*LANE_H;}
+  function fillPoly(pts){
+    if(!pts.length)return;
+    doc.moveTo(pts[0][0],pts[0][1]);
+    for(var i=1;i<pts.length;i++)doc.lineTo(pts[i][0],pts[i][1]);
+    doc.closePath();doc.fillStroke();
+  }
+  // White background
+  doc.setFillColor(255,255,255);doc.rect(0,0,W,H,'F');
+  // Title bar
+  doc.setFillColor(AR,AG,AB);doc.rect(0,MARGIN,W,TITLE_H,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(24);doc.setFont('helvetica','bold');
+  doc.text(D.setup.orgName||'Organization',MARGIN+14,MARGIN+30);
+  doc.setFontSize(13);doc.setFont('helvetica','normal');
+  doc.text((D.setup.trackName||'Hiring process')+' · '+(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label||'ATS')+' · BPMN Notation',MARGIN+14,MARGIN+52);
+  doc.setFontSize(10);doc.text('Print: 36" × 24" · 300 DPI · '+new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'}),W-MARGIN-14,MARGIN+44,{align:'right'});
+  // Phase headers
+  PHASES.forEach(function(ph,idx){
+    var x0=px(ph.f0),x1=px(ph.f1);
+    var lt=idx%2===1;
+    doc.setFillColor(Math.min(255,AR+(lt?22:0)),Math.min(255,AG+(lt?14:0)),Math.min(255,AB+(lt?22:0)));
+    doc.rect(x0,MAP_TOP,x1-x0,PHASE_H,'F');
+    doc.setDrawColor(255,255,255);doc.setLineWidth(0.7);doc.line(x0,MAP_TOP,x0,MAP_TOP+PHASE_H);
+    doc.setTextColor(255,255,255);doc.setFontSize(8.5);doc.setFont('helvetica','bold');
+    doc.text(ph.label,(x0+x1)/2,MAP_TOP+17,{align:'center'});
+  });
+  // Label column
+  doc.setFillColor(AR,AG,AB);doc.rect(MARGIN,MAP_TOP,LABEL_W,PHASE_H,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text('Role / Swimlane',MARGIN+LABEL_W/2,MAP_TOP+17,{align:'center'});
+  doc.setFillColor(LR,LG,LB);doc.rect(MARGIN,MAP_Y,LABEL_W,MAP_H,'F');
+  // Lanes
+  userLabels.forEach(function(name,i){
+    var yb=laneBot(i);
+    doc.setFillColor(i%2===0?255:250,i%2===0?255:249,i%2===0?255:252);
+    doc.rect(MAP_X,yb,MAP_W,LANE_H,'F');
+    doc.setFillColor(i%2===0?LR:Math.max(LR-8,220),i%2===0?LG:Math.max(LG-8,218),i%2===0?LB:Math.max(LB-6,225));
+    doc.rect(MARGIN,yb,LABEL_W,LANE_H,'F');
+    doc.setTextColor(DR,DG,DB);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    var nlines=doc.splitTextToSize(name,LABEL_W-14);
+    var lh=11,ty=yb+LANE_H/2-(nlines.length-1)*lh/2+3;
+    nlines.forEach(function(ln,li){doc.text(ln,MARGIN+LABEL_W/2,ty+li*lh,{align:'center'});});
+    doc.setDrawColor(200,195,208);doc.setLineWidth(0.4);doc.line(MARGIN,yb,W-MARGIN,yb);
+  });
+  // Phase dividers
+  doc.setLineDash([4,4]);
+  PHASES.forEach(function(ph){doc.setDrawColor(210,205,218);doc.setLineWidth(0.4);doc.line(px(ph.f0),MAP_Y,px(ph.f0),MAP_TOP);});
+  doc.setLineDash([]);
+  // Borders
+  doc.setDrawColor(AR,AG,AB);doc.setLineWidth(1.2);doc.line(MAP_X,MAP_Y,MAP_X,MAP_TOP+PHASE_H);
+  doc.setLineWidth(2);doc.rect(MARGIN,MAP_Y,W-2*MARGIN,MAP_H+PHASE_H,'S');
+  // Stage nodes
+  var colW=MAP_W/Math.max(stageList.length+1,9);
+  var TW=Math.min(colW*0.82,120),TH=30;
+  stageList.forEach(function(stage,si){
+    var laneIdx=si%Math.max(userLabels.length,1);
+    var cx=MAP_X+(si+0.9)*colW+colW*0.35,cy=laneCY(laneIdx);
+    var a=D.actions[stage.id],sp=D.subprocess[stage.id];
+    var hasSP=sp&&sp.hasSubprocess===true;
+    doc.setFillColor(255,255,255);doc.setDrawColor(AR,AG,AB);
+    doc.setLineWidth(hasSP?1.8:1);
+    if(hasSP)doc.setLineDash([5,2]);else doc.setLineDash([]);
+    doc.rect(cx-TW/2,cy-TH/2,TW,TH,'FD');doc.setLineDash([]);
+    if(hasSP){
+      doc.setFillColor(AR,AG,AB);doc.rect(cx-TW/2+3,cy-TH/2+3,18,11,'F');
+      doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+      doc.text('[+]',cx-TW/2+12,cy-TH/2+11,{align:'center'});
+    }
+    doc.setTextColor(DR,DG,DB);doc.setFontSize(8);doc.setFont('helvetica',hasSP?'bold':'normal');
+    var lblLines=doc.splitTextToSize(stage.label,TW-12);
+    var lh=10,ly=cy-(lblLines.length-1)*lh/2+2;
+    lblLines.forEach(function(ln,li){doc.text(ln,cx,ly+li*lh,{align:'center'});});
+    // Arrow to next in same lane
+    var nextSI=stageList.findIndex(function(s,idx){return idx>si&&(idx%Math.max(userLabels.length,1))===laneIdx;});
+    if(nextSI>-1){
+      var nCX=MAP_X+(nextSI+0.9)*colW+colW*0.35;
+      doc.setDrawColor(160,148,172);doc.setLineWidth(0.8);
+      doc.line(cx+TW/2+1,cy,nCX-TW/2-8,cy);
+      doc.setFillColor(160,148,172);
+      doc.rect(nCX-TW/2-8,cy-3,6,6,'F');
+    }
+    // Decision diamond
+    if(a&&a.outcomes&&a.outcomes.length>0){
+      var dx=cx+TW/2+28,dw=18,dh=13;
+      doc.setFillColor(225,240,252);doc.setDrawColor(24,95,165);doc.setLineWidth(0.9);
+      doc.rect(dx-dw/2,cy-dh/2,dw,dh,'FD');
+      doc.setTextColor(4,44,83);doc.setFontSize(7);doc.setFont('helvetica','bold');
+      doc.text('?',dx,cy+2.5,{align:'center'});
+      if(a.outcomes.includes('advance')||a.outcomes.includes('approve')){
+        doc.setDrawColor(30,120,70);doc.setLineWidth(1.3);
+        doc.line(dx+dw/2+2,cy,dx+dw/2+22,cy);
+        doc.setTextColor(30,120,70);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+        doc.text('Yes',dx+dw/2+12,cy-5,{align:'center'});
+      }
+      if(a.outcomes.includes('reject')){
+        doc.setDrawColor(170,35,25);doc.setLineWidth(1.3);
+        doc.line(dx,cy+dh/2+2,dx,cy+dh/2+20);
+        doc.setTextColor(170,35,25);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+        doc.text('No',dx+5,cy+dh/2+15);
+      }
+    }
+  });
+  // Integration badges
+  if(integLabels.length>0){
+    var badgeY=MAP_Y+LANE_H*0.18;
+    integLabels.slice(0,6).forEach(function(integ,i){
+      var ix=MAP_X+14+i*168;
+      doc.setFillColor(232,244,255);doc.setDrawColor(100,148,200);doc.setLineWidth(0.6);
+      doc.rect(ix,badgeY-8,156,16,'FD');
+      doc.setTextColor(24,70,130);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+      doc.text(integ,ix+78,badgeY+4,{align:'center'});
+    });
+  }
+  // Legend
+  var legY=H-MARGIN-FOOTER_H-LEGEND_H-2;
+  doc.setFillColor(248,247,250);doc.setDrawColor(200,195,210);doc.setLineWidth(0.5);
+  doc.rect(MARGIN,legY,W-2*MARGIN,LEGEND_H,'FD');
+  var legItems=[
+    {label:'Start event',fr:[234,243,222],sr:[59,109,17]},
+    {label:'End: hired',fr:[234,243,222],sr:[59,109,17],thick:true},
+    {label:'End: exit',fr:[252,235,235],sr:[163,45,45],thick:true},
+    {label:'Task',fr:[255,255,255],sr:[AR,AG,AB]},
+    {label:'Decision',fr:[225,240,252],sr:[24,95,165]},
+    {label:'Approved path',fr:[30,120,70],sr:[30,120,70],arrow:true},
+    {label:'Rejected path',fr:[170,35,25],sr:[170,35,25],arrow:true},
+    {label:'[+] Sub-process',fr:[255,255,255],sr:[AR,AG,AB],dashed:true},
+  ];
+  var legStep=(W-2*MARGIN)/legItems.length;
+  legItems.forEach(function(item,i){
+    var lx=MARGIN+i*legStep+legStep/2,ly=legY+LEGEND_H/2-2;
+    doc.setFillColor.apply(doc,item.fr);doc.setDrawColor.apply(doc,item.sr);
+    doc.setLineWidth(item.thick?2.2:0.8);
+    if(item.dashed)doc.setLineDash([3,2]);else doc.setLineDash([]);
+    if(item.arrow){
+      doc.setDrawColor.apply(doc,item.sr);doc.setLineWidth(1.5);
+      doc.line(lx-14,ly,lx+6,ly);
+      doc.setFillColor.apply(doc,item.fr);doc.rect(lx+6,ly-3,8,6,'F');
+    } else {
+      doc.rect(lx-14,ly-7,28,14,'FD');
+    }
+    doc.setLineDash([]);
+    doc.setTextColor(80,72,92);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+    doc.text(item.label,lx,legY+LEGEND_H-3,{align:'center'});
+  });
+  // Footer
+  doc.setTextColor(130,120,145);doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text((D.setup.orgName||'Organization')+' · '+(D.setup.trackName||'Hiring process')+' · CONFIDENTIAL',MARGIN+12,H-MARGIN-5);
+  doc.text('Generated '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+' · TA Process Mapping Tool — TASSP Playbook',W-MARGIN-12,H-MARGIN-5,{align:'right'});
+  var fileName=((D.setup.orgName||'TA')+'_'+(D.setup.trackName||'Process')+'_Map.pdf').replace(/\s+/g,'_');
+  doc.save(fileName);
+}
+
+// ── DOCX SOP GENERATOR ───────────────────────────────────────────────────────
+async function generateDOCX() {
+  const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,
+         HeadingLevel,AlignmentType,BorderStyle,WidthType,ShadingType,LevelFormat}=docx;
+  const userLabels=[...D.users.selected.map(u=>{var f=USERS.find(o=>o.id===u);return(D.users.customLabels&&D.users.customLabels[u])||f&&f.label||u;}),...D.users.custom];
+  const stageList=getStageList();
+  const integLabels=[...D.integrations.selected.map(i=>{var f=INTEGS.find(o=>o.id===i);return(D.integrations.customLabels&&D.integrations.customLabels[i])||f&&f.label||i;}),...D.integrations.custom];
+  const spStages=stageList.filter(s=>D.subprocess[s.id]&&D.subprocess[s.id].hasSubprocess===true);
+  const reqOpenLabels=D.reqflow.reqOpenMethod.map(m=>{var f=REQ_OPEN.find(o=>o.id===m);return(D.reqflow.customLabels&&D.reqflow.customLabels[m])||f&&f.label||m;});
+  const BH=AC.replace('#','');
+  const b={style:BorderStyle.SINGLE,size:1,color:'CCCCCC'};
+  const borders={top:b,bottom:b,left:b,right:b};
+  function h1(text){return new Paragraph({heading:HeadingLevel.HEADING_1,spacing:{before:320,after:100},children:[new TextRun({text,bold:true,size:32,color:BH,font:'Arial'})]});}
+  function h2(text){return new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:220,after:80},children:[new TextRun({text,bold:true,size:26,font:'Arial'})]});}
+  function body(text,opts){return new Paragraph({spacing:{before:60,after:60},children:[new TextRun(Object.assign({text,size:20,font:'Arial'},opts||{}))]});}
+  function bullet(text){return new Paragraph({numbering:{reference:'bullets',level:0},spacing:{before:40,after:40},children:[new TextRun({text,size:20,font:'Arial'})]});}
+  function spacer(){return new Paragraph({children:[new TextRun('')]});}
+  function hdrRow(cells,ws){return new TableRow({tableHeader:true,children:cells.map((t,i)=>new TableCell({borders,width:{size:ws[i],type:WidthType.DXA},shading:{fill:BH,type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},children:[new Paragraph({children:[new TextRun({text:t,bold:true,size:18,color:'FFFFFF',font:'Arial'})]})]}))}); }
+  function dataRow(cells,ws,shade){return new TableRow({children:cells.map((t,i)=>new TableCell({borders,width:{size:ws[i],type:WidthType.DXA},shading:{fill:shade?'F5F5F5':'FFFFFF',type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:120},children:[new Paragraph({children:[new TextRun({text:String(t),size:18,font:'Arial'})]})]}))}); }
+  const doc2=new Document({
+    styles:{default:{document:{run:{font:'Arial',size:20}}}},
+    numbering:{config:[{reference:'bullets',levels:[{level:0,format:LevelFormat.BULLET,text:'•',alignment:AlignmentType.LEFT,style:{paragraph:{indent:{left:720,hanging:360}}}}]}]},
+    sections:[{properties:{page:{size:{width:12240,height:15840},margin:{top:1440,right:1440,bottom:1440,left:1440}}},
+      children:[
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:720,after:120},children:[new TextRun({text:'TALENT ACQUISITION',font:'Arial',size:18,bold:true,color:BH})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:160},children:[new TextRun({text:'Standard Operating Procedure',font:'Arial',size:48,bold:true})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:80},children:[new TextRun({text:D.setup.orgName||'Organization',font:'Arial',size:32,color:BH})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:480},children:[new TextRun({text:(D.setup.trackName||'Hiring process')+' · '+(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label||'ATS'),font:'Arial',size:22,color:'777777'})]}),
+        spacer(),spacer(),
+        h1('1. Purpose and scope'),
+        body('This SOP defines the end-to-end talent acquisition process for '+(D.setup.trackName||'this hiring track')+' at '+(D.setup.orgName||'this organization')+'. It establishes roles, responsibilities, system touchpoints, and the workflow sequence governing how candidates move from requisition creation through to onboarding handoff.'),
+        spacer(),
+        h1('2. Requisition opening'),
+        body('How requisitions are opened: '+(reqOpenLabels.join(', ')||'Not specified')),
+        spacer(),
+        h1('3. System users and swimlane responsibilities'),
+        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2800,6560],rows:[
+          hdrRow(['Role','Primary responsibility'],[2800,6560]),
+          ...userLabels.map((u,i)=>{
+            var a=Object.values(D.actions).find(function(av){return av.decisionOwners&&av.decisionOwners.includes(u);});
+            var desc=a?'Decision owner at: '+Object.values(D.actions).filter(function(av){return av.decisionOwners&&av.decisionOwners.includes(u);}).map(function(av){return av.label;}).join(', '):'Participant in hiring process';
+            return dataRow([u,desc],[2800,6560],i%2===1);
+          })
+        ]}),
+        spacer(),
+        h1('4. Candidate pipeline stages'),
+        body('The following stages exist in the '+(D.setup.trackName||'')+' candidate pipeline:'),
+        ...stageList.map(s=>{
+          var a=D.actions[s.id],sp=D.subprocess[s.id];
+          var lines=[bullet(s.label+(a&&a.decisionOwners&&a.decisionOwners.length?' — Decision owner: '+a.decisionOwners.join(', '):'')+(a&&a.outcomes&&a.outcomes.length?' — Outcomes: '+a.outcomes.join(' / '):''))];
+          if(sp&&sp.hasSubprocess&&sp.rounds&&sp.rounds.length){
+            sp.rounds.forEach(function(r,ri){
+              lines.push(new Paragraph({numbering:{reference:'bullets',level:0},spacing:{before:20,after:20},indent:{left:1080},children:[new TextRun({text:'Round '+(ri+1)+': '+r.name+(r.condition?' (Only if: '+r.condition+')':''),size:18,color:'555555',font:'Arial'})]}));
+            });
+          }
+          return lines;
+        }).flat(),
+        spacer(),
+        h1('5. Integrations'),
+        integLabels.length?new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[3000,6360],rows:[
+          hdrRow(['Integration','Function'],[3000,6360]),
+          ...integLabels.map(function(integ,i){return dataRow([integ,'Connected to '+(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label||'ATS')],[3000,6360],i%2===1);})
+        ]}):body('No integrations defined.'),
+        spacer(),
+        h1('6. Document information'),
+        new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2400,6960],rows:[
+          dataRow(['Document owner',(D.setup.orgName||'Organization')+' — TA Operations'],[2400,6960]),
+          dataRow(['Process track',D.setup.trackName||'Not specified'],[2400,6960],true),
+          dataRow(['ATS platform',(ATS_P.find(p=>p.id===D.ats.platform)&&ATS_P.find(p=>p.id===D.ats.platform).label)||'Not specified'],[2400,6960]),
+          dataRow(['Generated',new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})],[2400,6960],true),
+          dataRow(['Generated by','TA Process Mapping Tool — TASSP Playbook'],[2400,6960]),
+        ]}),
+        spacer(),
+        body('Generated from structured process data captured via the TA Process Mapping Tool at TASSP Playbook.',{italics:true,color:'888888'}),
+      ]
+    }]
+  });
+  const blob=await Packer.toBlob(doc2);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=((D.setup.orgName||'TA')+'_'+(D.setup.trackName||'Process')+'_SOP.docx').replace(/\s+/g,'_');
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function hexToRgbArr(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];}
+
 </script>
 </body>
 </html>
