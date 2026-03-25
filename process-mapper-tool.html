@@ -629,23 +629,32 @@ function saveLabel(section, id, newLabel, reRenderFn) {
 // Editable option list — same as ol() but selected items get a pencil edit icon
 // section: key in D (e.g. 'users'), editFn: name of the rerender function string
 function olEditable(opts, sel, multi, toggleFn, section, reRenderFnName) {
-  return `<div class="opts">${opts.map(o => {
-    const isSel = sel.includes(o.id);
-    const customLbl = D[section]?.customLabels?.[o.id];
-    const displayLbl = customLbl || o.label;
-    const isEditing = false; // edit is triggered via DOM, not state
-    return `<div class="opt ${isSel ? 'sel' : ''}" onclick="if(event.target.closest('.opt-edit-btn')||event.target.closest('.opt-inline-input'))return;${toggleFn}('${o.id}')">
-      ${multi
-        ? `<span class="chk"><span class="chkm">✓</span></span>`
-        : `<span class="rad"><span class="radd"></span></span>`
-      }
-      <div class="opt-label-wrap">
-        <span class="ol opt-label-display" id="lbl-${section}-${o.id}">${displayLbl}${customLbl ? `<span class="opt-custom-badge">edited</span>` : ''}</span>
-        ${isSel ? `<button class="opt-edit-btn" title="Rename this option" onclick="event.stopPropagation();startEditLabel('${section}','${o.id}','${o.label.replace(/'/g,"\'")}','${reRenderFnName}',this)">✏️</button>` : ''}
-      </div>
-      ${o.desc ? `<div class="od">${o.desc}</div>` : ''}
-    </div>`;
-  }).join('')}</div>`;
+  var html = '<div class="opts">';
+  opts.forEach(function(o) {
+    var isSel = sel.includes(o.id);
+    var customLbl = (D[section] && D[section].customLabels && D[section].customLabels[o.id]) || '';
+    var displayLbl = customLbl || o.label;
+    var safeLbl = o.label.replace(/'/g, '\x27');
+    var checkHtml = multi
+      ? '<span class="chk"><span class="chkm">&#10003;</span></span>'
+      : '<span class="rad"><span class="radd"></span></span>';
+    var badgeHtml = customLbl ? '<span class="opt-custom-badge">edited</span>' : '';
+    var editBtn = isSel
+      ? '<button class="opt-edit-btn" title="Rename this option" onclick="event.stopPropagation();startEditLabel('' + section + '','' + o.id + '','' + safeLbl + '','' + reRenderFnName + '',this)">&#9998;</button>'
+      : '';
+    var descHtml = o.desc ? '<div class="od">' + o.desc + '</div>' : '';
+    var clickHandler = 'if(event.target.closest('.opt-edit-btn')||event.target.closest('.opt-inline-input'))return;' + toggleFn + '('' + o.id + '')';
+    html += '<div class="opt ' + (isSel ? 'sel' : '') + '" onclick="' + clickHandler + '">';
+    html += checkHtml;
+    html += '<div class="opt-label-wrap">';
+    html += '<span class="ol opt-label-display" id="lbl-' + section + '-' + o.id + '">' + displayLbl + badgeHtml + '</span>';
+    html += editBtn;
+    html += '</div>';
+    html += descHtml;
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
 }
 
 // Called when pencil is clicked — swaps label span for inline input
@@ -941,13 +950,18 @@ function rActions(){
       </div>
       ${a.open?`<div style="padding:14px;border-top:.5px solid var(--border);display:flex;flex-direction:column;gap:12px;">
         <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;"><div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Decision owner</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${roles.map(r=>`<span style="padding:5px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${a.decisionOwners.includes(r)?`background:${AC}12;border-color:${AC};color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="togAR('${s.id}','decisionOwners','${r.replace(/'/g,"\\'")}')">${r}</span>`).join('')}</div></div>
-        <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;"><div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Outcomes</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${[{k:'advance',label:'Advance'},{k:'approve',label:'Approve'},{k:'reject',label:'Reject'},{k:'hold',label:'Hold'}].map(o=>{
-  const isSel=a.outcomes.includes(o.k);
-  const customLbl=D.actions[s.id]?.outcomeLabels?.[o.k]||o.label;
-  return `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${isSel?`background:${AC};color:#fff;border-color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="togOut('${s.id}','${o.k}')">
-    ${customLbl}
-    ${isSel?`<span style="font-size:10px;opacity:.8;cursor:pointer;" onclick="event.stopPropagation();editOutcomeLabel('${s.id}','${o.k}','${o.label}')" title="Rename">✏️</span>`:''}
-  </span>`;}).join('')}</div></div>
+        <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;"><div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Outcomes</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${(function(){
+  var ops=[{k:'advance',label:'Advance'},{k:'approve',label:'Approve'},{k:'reject',label:'Reject'},{k:'hold',label:'Hold'}];
+  var html='';
+  ops.forEach(function(o){
+    var isSel=a.outcomes.includes(o.k);
+    var customLbl=(D.actions[s.id]&&D.actions[s.id].outcomeLabels&&D.actions[s.id].outcomeLabels[o.k])||o.label;
+    var bg=isSel?'background:'+AC+';color:#fff;border-color:'+AC:'background:var(--bg);border-color:var(--border);color:var(--text)';
+    var editBtn=isSel?'<span style="font-size:10px;opacity:.8;cursor:pointer;" onclick="event.stopPropagation();editOutcomeLabel(''+s.id+'',''+o.k+'',''+o.label+'')" title="Rename">&#9998;</span>':'';
+    html+='<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;'+bg+'" onclick="togOut(''+s.id+'',''+o.k+'')">'+customLbl+editBtn+'</span>';
+  });
+  return html;
+})()}</div></div>
       </div>`:''}
     </div>`;
   }).join('');
@@ -1667,7 +1681,7 @@ function rReqFlow(){
   qc(`${sl('Requisition flow')}${qt('How are job requisitions opened?')}${qh('This determines the first action on your map.')}
   ${olEditable(REQ_OPEN,D.reqflow.reqOpenMethod,true,'tReqO','reqflow','rReqFlow')}
   <div style="margin-top:14px;"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">Notes (optional)</label><input class="mini" type="text" placeholder="e.g. HM submits Google Form, recruiter converts to ATS req" value="${D.reqflow.reqOpenNote||''}" oninput="D.reqflow.reqOpenNote=this.value"></div>
-  ${emailSavePanel()}${fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0)}\`);
+  ${emailSavePanel()}${fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0)}`);
 }
 const RS={setup:rSetup,org:rOrg,users:rUsers,terms:rTerms,ats:rAts,reqflow:rReqFlow,//
 stages:rStages,subprocess:rSubprocess,actions:rActions,integrations:rIntegrations,branching:rBranching,sla:rSla,compliance:rCompliance,approvals:rApprovals,onboarding:rOnboarding};
