@@ -98,9 +98,14 @@ function rReqFlow() {
 document.addEventListener('click', function(e) {
   var pill = e.target.closest('.outcome-pill');
   var editBtn = e.target.closest('.outcome-edit-btn');
+  var addBtn = e.target.closest('.add-status-btn');
   if (editBtn) {
     e.stopPropagation();
     editOutcomeLabel(editBtn.getAttribute('data-sid'), editBtn.getAttribute('data-ok'), editBtn.getAttribute('data-lbl'));
+    return;
+  }
+  if (addBtn) {
+    addCustomStatus(addBtn.getAttribute('data-stage'));
     return;
   }
   if (pill) {
@@ -774,6 +779,20 @@ function applyAC(hex){
 const USERS=[{id:'recruiter',label:'Recruiter'},{id:'coordinator',label:'Recruiting coordinator'},{id:'hm',label:'Hiring manager'},{id:'hr_ops',label:'HR operations'},{id:'hris',label:'HRIS analyst'},{id:'ta_ops',label:'TA operations specialist'},{id:'ta_leader',label:'TA leader / director'},{id:'exec',label:'Executive / CHRO'},{id:'sysadmin',label:'System administrator'},{id:'div_leader',label:'Divisional / field leader'},{id:'legal',label:'Legal / compliance'},{id:'finance',label:'Finance / comp team'}];
 const ATS_P=[{id:'workday',label:'Workday'},{id:'icims',label:'iCIMS'},{id:'greenhouse',label:'Greenhouse'},{id:'lever',label:'Lever'},{id:'smartrecruiters',label:'SmartRecruiters'},{id:'taleo',label:'Oracle Taleo'},{id:'successfactors',label:'SAP SuccessFactors'},{id:'bamboohr',label:'BambooHR'},{id:'jobvite',label:'Jobvite'},{id:'other',label:'Other'}];
 const ATS_ST={workday:['Applied','Recruiter screen','HM review','Interview','Offer','Pre-hire','Hired'],icims:['Initial Review','Screen','Interview','Offer','Hire'],greenhouse:['Application review','Screen','Interview','Offer','Reference check','Hired'],lever:['New applicant','Screen','Interview','Offer','Reference','Hired'],default:['Applied','Recruiter review','Phone screen','HM review','Interview','Offer','Background','Hired']};
+const STATUS_SUGGESTIONS = {
+  'Initial Review': ['New Applicant','Under Review','Recruiter Screen Pending','Reviewed - Advance','Reviewed - Decline'],
+  'Screen':         ['Phone Screen Scheduled','Phone Screen Complete','Video Screen Scheduled','Video Screen Complete','Assessment Sent','Assessment Complete'],
+  'Interview':      ['Interview Scheduled','1st Interview Complete','2nd Interview Scheduled','2nd Interview Complete','Panel Interview Scheduled','Panel Interview Complete','Executive Interview Scheduled','Executive Interview Complete','Debrief Pending','Debrief Complete'],
+  'Offer':          ['Verbal Offer Extended','Offer Letter Pending','Offer Extended','Offer Accepted','Offer Declined','Offer Rescinded'],
+  'Hire':           ['Pre-hire Initiated','BGC Initiated','BGC Clear','BGC Adverse','Drug Screen Pending','Onboarding Initiated','Hired'],
+  'default':        ['In Progress','Pending Review','Complete','On Hold','Cancelled'],
+};
+function getStatusSuggestions(stageLabel) {
+  var key = Object.keys(STATUS_SUGGESTIONS).find(function(k) {
+    return stageLabel && stageLabel.toLowerCase().includes(k.toLowerCase());
+  });
+  return STATUS_SUGGESTIONS[key] || STATUS_SUGGESTIONS['default'];
+}
 const STAGES=[{id:'applied',label:'Applied'},{id:'rec_review',label:'Recruiter review'},{id:'phone_screen',label:'Phone / video screen'},{id:'hm_review',label:'HM review'},{id:'interview',label:'Interview'},{id:'offer',label:'Offer extended'},{id:'bgc',label:'Background check'},{id:'hired',label:'Hired'},{id:'rejected',label:'Declined / rejected'}];
 const INTEGS=[{id:'scheduling',label:'Interview scheduling'},{id:'bgc',label:'Background check'},{id:'video',label:'Video interview'},{id:'assess',label:'Pre-hire assessment'},{id:'hcm',label:'HCM / HRIS system'},{id:'docusign',label:'E-signature'},{id:'job_boards',label:'Job board integrations'},{id:'wotc',label:'WOTC screening'}];
 const REQ_OPEN=[{id:'hm_intake',label:'Hiring manager submits intake form (recruiter creates req in ATS)'},{id:'hm_direct',label:'Hiring manager creates the req directly in the ATS'},{id:'recruiter',label:'Recruiter creates the req in ATS (no HM intake)'},{id:'hris_push',label:'HRIS / HCM system automatically pushes req to ATS'},{id:'ta_ops',label:'TA Ops team creates all reqs centrally'},{id:'hybrid',label:'Hybrid — varies by role type'}];
@@ -787,7 +806,7 @@ let D={
   terms:{req:'Requisition',candidate:'Candidate',disposition:'Disposition',screen:'Phone screen',offer:'Offer',hm:'Hiring manager'},
   ats:{platform:'',selectedPlatform:false,wantsPrepopulate:null,stages:[]},
   reqflow:{reqOpenMethod:[],customLabels:{},reqOpenNote:'',hasApproval:null,approvers:[],customApprovers:[]},
-  stages:{selected:[],custom:[]},subprocess:{},actions:{},
+  stages:{selected:[],custom:[]},statuses:{},subprocess:{},actions:{},
   integrations:{selected:[],custom:[],customLabels:{}},branching:{rules:[]},sla:{values:{}},
   compliance:{selected:[],custom:[]},approvals:{req:false,offer:false,supComp:false,audit:false},
   onboarding:{tasks:[],customTasks:[],notes:''},
@@ -911,8 +930,17 @@ function fnav(nfn,nl,dis){
 
 function getAllRoles(){return[...D.users.selected.map(u=>USERS.find(o=>o.id===u)?.label||u),...D.users.custom];}
 function getStageList(){
-  const base=D.ats.wantsPrepopulate&&D.ats.stages.length?D.ats.stages.map((s,i)=>({id:'ats_'+i,label:s})):STAGES;
-  return[...D.stages.selected.map(s=>base.find(o=>o.id===s)||{id:s,label:s}),...D.stages.custom.map((s,i)=>({id:'cust_'+i,label:s}))];
+  // Stages come from ATS section - either pre-populated bins or STAGES defaults
+  if (D.ats.wantsPrepopulate && D.ats.stages.length) {
+    return D.ats.stages.map(function(s,i){ return {id:'ats_'+i, label:s}; });
+  }
+  // Fallback: use selected from old D.stages if present (backwards compat)
+  if (D.stages.selected && D.stages.selected.length) {
+    var base = STAGES;
+    return [...D.stages.selected.map(s=>base.find(o=>o.id===s)||{id:s,label:s}), ...D.stages.custom.map((s,i)=>({id:'cust_'+i,label:s}))];
+  }
+  // Default to standard stages
+  return STAGES;
 }
 
 // ── SECTION RENDERERS ──────────────────────────────────────────────────────────
@@ -1026,78 +1054,345 @@ window.atsN1=function(){D.ats.selectedPlatform=true;rAts();};
 window.accPre=function(v){D.ats.wantsPrepopulate=v;if(v)D.ats.stages=[...(ATS_ST[D.ats.platform]||ATS_ST.default)];else D.ats.stages=[];rAts();};
 
 function rStages(){
-  const base=D.ats.wantsPrepopulate&&D.ats.stages.length?D.ats.stages.map((s,i)=>({id:'ats_'+i,label:s})):STAGES;
-  qc(`${sl('Stages and statuses')}${qt('What stages (bins) and statuses exist in your pipeline?')}${qh('Stages are the top-level folders like Interview or Offer. Statuses are the disposition values within each stage like Phone Screen Scheduled or Offer Extended. Select your top-level stages here.')}
-  ${ol(base,D.stages.selected,true,'tStage')}${ca('inp-stage','aStage',D.stages.custom)}
-  ${emailSavePanel()}
-  ${fnav('ns','Continue',D.stages.selected.length===0&&D.stages.custom.length===0)}`);
+  // Step 7: Define statuses within each stage
+  // Stages are locked in from ATS section
+  var stages = getStageList();
+  if (!stages.length) {
+    qc(sl('Stages & statuses') + qt('No stages found') + qh('Please go back to the ATS section and define your stages first.') + fnav('ns','Continue',false));
+    return;
+  }
+  // Ensure D.statuses has an entry for each stage
+  stages.forEach(function(s) {
+    if (!D.statuses[s.id]) D.statuses[s.id] = { label: s.label, selected: [], custom: [] };
+  });
+
+  var cards = stages.map(function(s) {
+    var st = D.statuses[s.id];
+    var suggestions = getStatusSuggestions(s.label);
+    var count = st.selected.length + st.custom.length;
+    var isOpen = st.open || false;
+
+    var suggestionPills = suggestions.map(function(sug) {
+      var isSel = st.selected.includes(sug);
+      return '<span class="status-pill' + (isSel ? ' sel' : '') + '" '
+        + 'data-stage="' + s.id + '" data-status="' + sug.replace(/"/g,'&quot;') + '" '
+        + 'onclick="toggleStatus(this)"'
+        + 'style="display:inline-block;padding:5px 12px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;margin:3px;'
+        + (isSel ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
+        + '">' + sug + '</span>';
+    }).join('');
+
+    var customTags = st.custom.map(function(tag) {
+      return '<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--bg2);border:.5px solid var(--border);border-radius:20px;font-size:12px;">'
+        + tag + '<span style="cursor:pointer;color:var(--text3);" data-stage="' + s.id + '" data-tag="' + tag.replace(/"/g,'&quot;') + '" onclick="removeCustomStatus(this)">×</span></span>';
+    }).join('');
+
+    return '<div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;">'
+      + '<div style="padding:12px 16px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;" '
+      + 'data-stage="' + s.id + '" onclick="toggleStageCard(this)">'
+      + '<div style="display:flex;align-items:center;gap:10px;">'
+      + '<span style="width:7px;height:7px;border-radius:50%;background:' + (count > 0 ? '#3B6D11' : 'var(--border2)') + ';flex-shrink:0;"></span>'
+      + '<span style="font-size:14px;font-weight:500;">' + s.label + '</span>'
+      + (count > 0 ? '<span style="padding:2px 8px;border-radius:20px;font-size:11px;background:' + AC + '12;border:.5px solid ' + AC + '40;color:' + AC + '">' + count + ' status' + (count !== 1 ? 'es' : '') + '</span>' : '<span style="font-size:12px;color:var(--text3);">click to define statuses</span>')
+      + '</div>'
+      + '<span style="font-size:11px;color:var(--text3);">' + (isOpen ? '▲' : '▼') + '</span>'
+      + '</div>'
+      + (isOpen ? '<div style="padding:16px;border-top:.5px solid var(--border);">'
+        + '<div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Common statuses for ' + s.label + ' — select all that apply</div>'
+        + '<div style="margin-bottom:14px;">' + suggestionPills + '</div>'
+        + '<div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Add custom status</div>'
+        + '<div style="display:flex;gap:8px;margin-bottom:8px;">'
+        + '<input type="text" class="mini" id="custom-status-' + s.id + '" placeholder="e.g. TA Manager Review, Compliance Hold..." style="flex:1;">'
+        + '<button class="add-status-btn" data-stage="' + s.id + '" style="padding:9px 16px;background:' + AC + ';color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-size:13px;white-space:nowrap;">Add</button>'
+        + '</div>'
+        + (st.custom.length ? '<div style="display:flex;flex-wrap:wrap;gap:6px;">' + customTags + '</div>' : '')
+        + '</div>' : '')
+      + '</div>';
+  }).join('');
+
+  var allCount = stages.reduce(function(sum, s) {
+    return sum + (D.statuses[s.id] ? D.statuses[s.id].selected.length + D.statuses[s.id].custom.length : 0);
+  }, 0);
+
+  qc(sl('Stages & statuses')
+    + qt('Define the statuses within each stage')
+    + qh('Expand each stage to select or add the statuses that candidates move through inside that bin. These become the actionable steps on your process map. You will assign owners and define rounds for each status in the next step.')
+    + cards
+    + emailSavePanel()
+    + fnav('ns', 'Continue', allCount === 0));
 }
-window.tStage=function(v){markInteraction();msel(D.stages.selected,v);rStages();};
-window.aStage=function(){const i=document.getElementById('inp-stage');const v=i.value.trim();if(v&&!D.stages.custom.includes(v)){D.stages.custom.push(v);i.value='';}rStages();};
+
+window.toggleStageCard = function(hdr) {
+  var sid = hdr.getAttribute('data-stage');
+  if (!D.statuses[sid]) return;
+  D.statuses[sid].open = !D.statuses[sid].open;
+  rStages();
+};
+window.toggleStatus = function(el) {
+  markInteraction();
+  var sid = el.getAttribute('data-stage');
+  var status = el.getAttribute('data-status');
+  if (!D.statuses[sid]) return;
+  var idx = D.statuses[sid].selected.indexOf(status);
+  if (idx > -1) D.statuses[sid].selected.splice(idx, 1);
+  else D.statuses[sid].selected.push(status);
+  rStages();
+};
+window.addCustomStatus = function(sid) {
+  var inp = document.getElementById('custom-status-' + sid);
+  if (!inp) return;
+  var val = inp.value.trim();
+  if (val && !D.statuses[sid].custom.includes(val)) {
+    D.statuses[sid].custom.push(val);
+    inp.value = '';
+  }
+  rStages();
+};
+window.removeCustomStatus = function(el) {
+  var sid = el.getAttribute('data-stage');
+  var tag = el.getAttribute('data-tag');
+  if (!D.statuses[sid]) return;
+  var idx = D.statuses[sid].custom.indexOf(tag);
+  if (idx > -1) D.statuses[sid].custom.splice(idx, 1);
+  rStages();
+};
+// Keep tStage for backwards compat
+window.tStage = function(v){ markInteraction(); msel(D.stages.selected,v); rStages(); };
+window.aStage = function(){ var i=document.getElementById('inp-stage'); var v=i&&i.value.trim(); if(v&&!D.stages.custom.includes(v)){D.stages.custom.push(v);if(i)i.value='';} rStages(); };
 
 function rSubprocess(){
-  const stages=getStageList();
-  stages.forEach(s=>{if(!D.subprocess[s.id])D.subprocess[s.id]={label:s.label,hasSubprocess:null,rounds:[],open:false};});
-  const roles=getAllRoles();
-  const cards=stages.map(s=>{
-    const sp=D.subprocess[s.id];
-    return`<div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;">
-      <div style="padding:12px 16px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleSP('${s.id}')">
-        <div style="font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;">
-          <span style="width:7px;height:7px;border-radius:50%;background:${sp.hasSubprocess!==null?'#3B6D11':'var(--border2)'};"></span>
-          ${s.label}
-          ${sp.hasSubprocess===true?`<span style="padding:2px 8px;border-radius:20px;font-size:11px;background:${AC}12;border:.5px solid ${AC}40;color:${AC}">${sp.rounds.length} round${sp.rounds.length!==1?'s':''}</span>`:''}
-        </div>
-        <span style="font-size:11px;color:var(--text3);">${sp.open?'▲':'▼'}</span>
-      </div>
-      ${sp.open?`<div style="padding:16px;border-top:.5px solid var(--border);">
-        <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;">Does "${s.label}" have multiple steps or rounds?</div>
-        <div class="opts" style="margin-bottom:12px;">
-          <div class="opt ${sp.hasSubprocess===true?'sel':''}" onclick="setSPHas('${s.id}',true)"><span class="rad"><span class="radd"></span></span><div><div class="ol">Yes — expand into sub-steps / rounds</div><div class="od">Multiple interview rounds, multi-step offer, phased onboarding, etc.</div></div></div>
-          <div class="opt ${sp.hasSubprocess===false?'sel':''}" onclick="setSPHas('${s.id}',false)"><span class="rad"><span class="radd"></span></span><div class="ol">No — single step</div></div>
-        </div>
-        ${sp.hasSubprocess===true?buildRounds(s.id, roles):''}
-      </div>`:''}
-    </div>`;
+  // Step 8: Assign owners + define rounds per STATUS (not per stage)
+  var stages = getStageList();
+  var roles = getAllRoles();
+
+  // Build flat list of all statuses across all stages
+  var allStatuses = [];
+  stages.forEach(function(s) {
+    var st = D.statuses[s.id];
+    if (!st) return;
+    var statusList = [...(st.selected || []), ...(st.custom || [])];
+    statusList.forEach(function(statusName) {
+      var statusId = s.id + '__' + statusName.replace(/[^a-zA-Z0-9]/g,'_');
+      if (!D.subprocess[statusId]) {
+        D.subprocess[statusId] = {
+          label: statusName,
+          stageLabel: s.label,
+          stageId: s.id,
+          owner: [],
+          outcomes: [],
+          hasRounds: false,
+          rounds: [],
+          open: false
+        };
+      }
+      allStatuses.push({ id: statusId, label: statusName, stageLabel: s.label, stageId: s.id });
+    });
+  });
+
+  if (!allStatuses.length) {
+    qc(sl('Sub-processes & owners') + qt('No statuses defined yet')
+      + qh('Go back to step 7 and define statuses within each stage first.')
+      + fnav('ns','Continue',false));
+    return;
+  }
+
+  // Group statuses by stage for display
+  var stageGroups = {};
+  allStatuses.forEach(function(st) {
+    if (!stageGroups[st.stageId]) stageGroups[st.stageId] = { label: st.stageLabel, statuses: [] };
+    stageGroups[st.stageId].statuses.push(st);
+  });
+
+  var cards = Object.keys(stageGroups).map(function(stageId) {
+    var group = stageGroups[stageId];
+    var statusCards = group.statuses.map(function(st) {
+      var sp = D.subprocess[st.id];
+      var ownerCount = sp.owner ? sp.owner.length : 0;
+      var isOpen = sp.open || false;
+      var isConfigured = ownerCount > 0 || sp.outcomes.length > 0;
+
+      var ownerPills = roles.map(function(r) {
+        var isSel = sp.owner && sp.owner.includes(r);
+        return '<span style="padding:4px 10px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;'
+          + (isSel ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
+          + '" data-sid="' + st.id + '" data-role="' + r.replace(/"/g,'&quot;') + '" onclick="toggleStatusOwner(this)">' + r + '</span>';
+      }).join('');
+
+      var outcomePills = [{k:'advance',l:'Advance'},{k:'approve',l:'Approve'},{k:'reject',l:'Reject / Decline'},{k:'hold',l:'Hold'}].map(function(o) {
+        var isSel = sp.outcomes && sp.outcomes.includes(o.k);
+        return '<span style="padding:4px 10px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;'
+          + (isSel ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
+          + '" data-sid="' + st.id + '" data-outcome="' + o.k + '" onclick="toggleStatusOutcome(this)">' + o.l + '</span>';
+      }).join('');
+
+      return '<div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;">'
+        + '<div style="padding:10px 14px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;" '
+        + 'data-sid="' + st.id + '" onclick="toggleSpCard(this)">'
+        + '<div style="display:flex;align-items:center;gap:8px;">'
+        + '<span style="width:6px;height:6px;border-radius:50%;background:' + (isConfigured ? '#3B6D11' : 'var(--border2)') + ';flex-shrink:0;"></span>'
+        + '<span style="font-size:13px;font-weight:500;">' + st.label + '</span>'
+        + (isConfigured ? '<span style="padding:1px 7px;border-radius:20px;font-size:11px;background:' + AC + '12;border:.5px solid ' + AC + '40;color:' + AC + '">configured</span>' : '')
+        + '</div>'
+        + '<span style="font-size:11px;color:var(--text3);">' + (isOpen ? '▲' : '▼') + '</span>'
+        + '</div>'
+        + (isOpen ? '<div style="padding:14px;border-top:.5px solid var(--border);display:flex;flex-direction:column;gap:12px;">'
+          + '<div style="background:var(--bg2);border-radius:var(--radius);padding:12px;">'
+          + '<div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Who owns this status / action?</div>'
+          + '<div style="display:flex;flex-wrap:wrap;gap:6px;">' + ownerPills + '</div>'
+          + '</div>'
+          + '<div style="background:var(--bg2);border-radius:var(--radius);padding:12px;">'
+          + '<div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Outcomes from this status</div>'
+          + '<div style="display:flex;flex-wrap:wrap;gap:6px;">' + outcomePills + '</div>'
+          + '</div>'
+          + '<div style="background:var(--bg2);border-radius:var(--radius);padding:12px;">'
+          + '<div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Does this status involve multiple rounds or steps?</div>'
+          + '<div style="display:flex;gap:8px;">'
+          + '<span style="padding:6px 14px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;'
+          + (sp.hasRounds ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
+          + '" data-sid="' + st.id + '" data-val="true" onclick="toggleHasRounds(this)">Yes — define rounds</span>'
+          + '<span style="padding:6px 14px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;'
+          + (!sp.hasRounds ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
+          + '" data-sid="' + st.id + '" data-val="false" onclick="toggleHasRounds(this)">No — single step</span>'
+          + '</div>'
+          + (sp.hasRounds ? buildRounds(st.id, roles) : '')
+          + '</div>'
+          + '</div>' : '')
+        + '</div>';
+    }).join('');
+
+    return '<div style="margin-bottom:18px;">'
+      + '<div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:' + AC + ';margin-bottom:8px;padding:0 2px;">' + group.label + '</div>'
+      + statusCards
+      + '</div>';
   }).join('');
-  qc(`${sl('Sub-processes and statuses')}${qt('Do any stages have multiple steps, rounds, or statuses?')}${qh('Expand any stage to define the internal sequence. For example the Interview stage might have statuses like Phone Screen Scheduled, On-site Interview, and Interview Complete.')}
-  ${cards}${emailSavePanel()}${fnav('ns','Continue',false)}`);
+
+  qc(sl('Sub-processes & owners')
+    + qt('Assign owners and define rounds for each status')
+    + qh('For each status, specify who owns the action, what the possible outcomes are, and whether it involves multiple rounds (like interview rounds or multi-step approvals). Expand any status to configure it.')
+    + cards
+    + emailSavePanel()
+    + fnav('ns','Continue',false));
 }
+
+window.toggleSpCard = function(hdr) {
+  var sid = hdr.getAttribute('data-sid');
+  if (D.subprocess[sid]) { D.subprocess[sid].open = !D.subprocess[sid].open; rSubprocess(); }
+};
+window.toggleStatusOwner = function(el) {
+  markInteraction();
+  var sid = el.getAttribute('data-sid');
+  var role = el.getAttribute('data-role');
+  if (!D.subprocess[sid].owner) D.subprocess[sid].owner = [];
+  var idx = D.subprocess[sid].owner.indexOf(role);
+  if (idx > -1) D.subprocess[sid].owner.splice(idx,1); else D.subprocess[sid].owner.push(role);
+  rSubprocess();
+};
+window.toggleStatusOutcome = function(el) {
+  markInteraction();
+  var sid = el.getAttribute('data-sid');
+  var outcome = el.getAttribute('data-outcome');
+  if (!D.subprocess[sid].outcomes) D.subprocess[sid].outcomes = [];
+  var idx = D.subprocess[sid].outcomes.indexOf(outcome);
+  if (idx > -1) D.subprocess[sid].outcomes.splice(idx,1); else D.subprocess[sid].outcomes.push(outcome);
+  rSubprocess();
+};
+window.toggleHasRounds = function(el) {
+  markInteraction();
+  var sid = el.getAttribute('data-sid');
+  var val = el.getAttribute('data-val') === 'true';
+  D.subprocess[sid].hasRounds = val;
+  if (val && (!D.subprocess[sid].rounds || !D.subprocess[sid].rounds.length)) {
+    D.subprocess[sid].rounds = [mkRound(1)];
+  }
+  rSubprocess();
+};
 
 function buildRounds(sid, roles){
-  const sp=D.subprocess[sid];
-  return sp.rounds.map((r,ri)=>`
-    ${ri>0?`<div style="display:flex;align-items:center;gap:8px;margin:4px 0 8px;padding:7px 10px;background:var(--bg2);border-radius:var(--radius);"><div style="width:12px;height:12px;background:#E6F1FB;border:.5px solid #185FA5;transform:rotate(45deg);flex-shrink:0;"></div><span style="font-size:12px;color:var(--text2);">Pass gate — decision diamond between rounds</span></div>`:''}
-    <div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;">
-      <div style="padding:10px 14px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleRound('${sid}',${ri})">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="width:20px;height:20px;border-radius:50%;background:${AC};color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;">${ri+1}</span>
-          <input type="text" value="${r.name}" onclick="event.stopPropagation()" oninput="D.subprocess['${sid}'].rounds[${ri}].name=this.value" style="font-size:13px;font-weight:500;border:none;background:transparent;color:var(--text);padding:0;width:150px;font-family:var(--font);">
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <button style="padding:3px 8px;background:transparent;border:.5px solid var(--border);border-radius:4px;font-size:11px;cursor:pointer;color:var(--text3);" onclick="event.stopPropagation();delRound('${sid}',${ri})">Remove</button>
-          <span style="font-size:12px;color:var(--text3);">${r.open?'▲':'▼'}</span>
-        </div>
-      </div>
-      ${r.open?`<div style="padding:14px;border-top:.5px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div style="grid-column:1/-1;"><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;">Interview type</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${ITYPES.map(t=>`<span style="padding:5px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${r.types?.includes(t.id)?`background:${AC}12;border-color:${AC};color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="toggleRT('${sid}',${ri},'types','${t.id}')">${t.label}</span>`).join('')}</div></div>
-        <div style="grid-column:1/-1;"><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;">Format</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${FORMATS.map(f=>`<span style="padding:5px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${r.formats?.includes(f.id)?`background:${AC}12;border-color:${AC};color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="toggleRT('${sid}',${ri},'formats','${f.id}')">${f.label}</span>`).join('')}</div></div>
-        <div style="grid-column:1/-1;"><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;">Who conducts this round?</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${roles.map(role=>`<span style="padding:5px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${r.conductors?.includes(role)?`background:${AC}12;border-color:${AC};color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="toggleRR('${sid}',${ri},'conductors','${role.replace(/'/g,"\\'")}')">${role}</span>`).join('')}</div></div>
-        <div style="grid-column:1/-1;"><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;">Scheduling method</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${SCHED.map(m=>`<span style="padding:5px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${r.schedMethod?.includes(m.id)?`background:${AC}12;border-color:${AC};color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="toggleRT('${sid}',${ri},'schedMethod','${m.id}')">${m.label}</span>`).join('')}</div></div>
-        <div style="grid-column:1/-1;"><div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;">Conditional trigger (optional)</div><div style="padding:8px 10px;background:#FAEEDA;border:.5px solid #BA7517;border-radius:var(--radius);display:flex;align-items:center;gap:8px;"><span style="font-size:11px;color:#854F0B;white-space:nowrap;font-weight:500;">Only if:</span><input type="text" placeholder="e.g. director-level roles, union position…" value="${r.condition||''}" oninput="D.subprocess['${sid}'].rounds[${ri}].condition=this.value" style="flex:1;font-size:12px;padding:0;border:none;background:transparent;color:#412402;font-family:var(--font);"></div></div>
-      </div>`:''}
-    </div>`).join('') +
-  `<button onclick="addRound('${sid}')" style="width:100%;padding:10px;background:transparent;border:.5px dashed var(--border);border-radius:var(--radius);font-size:13px;cursor:pointer;color:var(--text2);font-family:var(--font);">+ Add another round</button>`;
+  var sp = D.subprocess[sid];
+  if (!sp || !sp.rounds) return '';
+  var html = '';
+  sp.rounds.forEach(function(r, ri) {
+    if (ri > 0) {
+      html += '<div style="display:flex;align-items:center;gap:8px;margin:6px 0;padding:7px 10px;background:var(--bg2);border-radius:var(--radius);">'
+        + '<div style="width:12px;height:12px;background:#E6F1FB;border:.5px solid #185FA5;transform:rotate(45deg);flex-shrink:0;"></div>'
+        + '<span style="font-size:12px;color:var(--text2);">Pass gate — decision diamond before this round</span></div>';
+    }
+    var conductorPills = roles.map(function(role) {
+      var isSel = r.conductors && r.conductors.includes(role);
+      return '<span style="padding:4px 10px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;margin:2px;'
+        + (isSel ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
+        + '" data-sid="' + sid + '" data-ri="' + ri + '" data-role="' + role.replace(/"/g,'&quot;') + '" onclick="toggleRoundConductor(this)">' + role + '</span>';
+    }).join('');
+
+    html += '<div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;">'
+      + '<div style="padding:10px 14px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;" '
+      + 'data-sid="' + sid + '" data-ri="' + ri + '" onclick="toggleRound2(this)">'
+      + '<div style="display:flex;align-items:center;gap:8px;">'
+      + '<span style="width:20px;height:20px;border-radius:50%;background:'+AC+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">'+(ri+1)+'</span>'
+      + '<input type="text" value="' + r.name + '" onclick="event.stopPropagation()" '
+      + 'data-sid="' + sid + '" data-ri="' + ri + '" oninput="updateRoundName(this)" '
+      + 'style="font-size:13px;font-weight:500;border:none;background:transparent;color:var(--text);padding:0;width:160px;font-family:var(--font);">'
+      + '</div>'
+      + '<div style="display:flex;gap:6px;align-items:center;">'
+      + '<button style="padding:3px 8px;background:transparent;border:.5px solid var(--border);border-radius:4px;font-size:11px;cursor:pointer;" '
+      + 'data-sid="' + sid + '" data-ri="' + ri + '" onclick="event.stopPropagation();delRound2(this)">Remove</button>'
+      + '<span style="font-size:11px;color:var(--text3);">' + (r.open ? '▲' : '▼') + '</span>'
+      + '</div></div>'
+      + (r.open ? '<div style="padding:14px;border-top:.5px solid var(--border);">'
+        + '<div style="font-size:11px;font-weight:500;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Who conducts this round?</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">' + conductorPills + '</div>'
+        + '<div style="padding:8px 10px;background:#FAEEDA;border:.5px solid #BA7517;border-radius:var(--radius);display:flex;align-items:center;gap:8px;">'
+        + '<span style="font-size:11px;color:#854F0B;font-weight:500;white-space:nowrap;">Only if:</span>'
+        + '<input type="text" class="mini" placeholder="e.g. director-level only, technical roles..." value="' + (r.condition||'') + '" '
+        + 'data-sid="' + sid + '" data-ri="' + ri + '" oninput="updateRoundCondition(this)" '
+        + 'style="border:none;background:transparent;color:#412402;">'
+        + '</div></div>' : '')
+      + '</div>';
+  });
+  html += '<button data-sid="' + sid + '" onclick="addRound2(this)" style="width:100%;padding:9px;background:transparent;border:.5px dashed var(--border);border-radius:var(--radius);font-size:13px;cursor:pointer;color:var(--text2);font-family:var(--font);margin-top:6px;">+ Add another round</button>';
+  return html;
 }
 
-window.toggleSP=function(sid){D.subprocess[sid].open=!D.subprocess[sid].open;rSubprocess();};
-window.setSPHas=function(sid,v){markInteraction();D.subprocess[sid].hasSubprocess=v;if(v&&D.subprocess[sid].rounds.length===0)D.subprocess[sid].rounds.push(mkRound(1));D.subprocess[sid].open=true;rSubprocess();};
-window.toggleRound=function(sid,ri){D.subprocess[sid].rounds[ri].open=!D.subprocess[sid].rounds[ri].open;rSubprocess();};
-window.toggleRT=function(sid,ri,field,val){const r=D.subprocess[sid].rounds[ri];if(!r[field])r[field]=[];msel(r[field],val);rSubprocess();};
-window.toggleRR=function(sid,ri,field,role){const r=D.subprocess[sid].rounds[ri];if(!r[field])r[field]=[];msel(r[field],role);rSubprocess();};
-window.addRound=function(sid){const sp=D.subprocess[sid];sp.rounds.push(mkRound(sp.rounds.length+1));rSubprocess();};
-window.delRound=function(sid,ri){D.subprocess[sid].rounds.splice(ri,1);rSubprocess();};
-function mkRound(n){return{id:'r'+Date.now()+n,name:`Round ${n}`,types:[],formats:[],conductors:[],schedMethod:[],condition:'',open:true};}
+// Round handlers using data attributes (no inline quote issues)
+window.toggleRound2 = function(hdr) {
+  var sid = hdr.getAttribute('data-sid'), ri = parseInt(hdr.getAttribute('data-ri'));
+  D.subprocess[sid].rounds[ri].open = !D.subprocess[sid].rounds[ri].open; rSubprocess();
+};
+window.delRound2 = function(btn) {
+  var sid = btn.getAttribute('data-sid'), ri = parseInt(btn.getAttribute('data-ri'));
+  D.subprocess[sid].rounds.splice(ri,1); rSubprocess();
+};
+window.addRound2 = function(btn) {
+  var sid = btn.getAttribute('data-sid');
+  D.subprocess[sid].rounds.push(mkRound(D.subprocess[sid].rounds.length+1)); rSubprocess();
+};
+window.updateRoundName = function(inp) {
+  var sid = inp.getAttribute('data-sid'), ri = parseInt(inp.getAttribute('data-ri'));
+  D.subprocess[sid].rounds[ri].name = inp.value;
+};
+window.updateRoundCondition = function(inp) {
+  var sid = inp.getAttribute('data-sid'), ri = parseInt(inp.getAttribute('data-ri'));
+  D.subprocess[sid].rounds[ri].condition = inp.value;
+};
+window.toggleRoundConductor = function(el) {
+  markInteraction();
+  var sid = el.getAttribute('data-sid'), ri = parseInt(el.getAttribute('data-ri')), role = el.getAttribute('data-role');
+  var r = D.subprocess[sid].rounds[ri];
+  if (!r.conductors) r.conductors = [];
+  var idx = r.conductors.indexOf(role);
+  if (idx > -1) r.conductors.splice(idx,1); else r.conductors.push(role);
+  rSubprocess();
+};
+
+// Keep old handlers for backwards compat
+window.toggleSP=function(sid){if(D.subprocess[sid]){D.subprocess[sid].open=!D.subprocess[sid].open;rSubprocess();}};
+window.setSPHas=function(sid,v){markInteraction();if(D.subprocess[sid]){D.subprocess[sid].hasSubprocess=v;if(v&&!D.subprocess[sid].rounds.length)D.subprocess[sid].rounds.push(mkRound(1));D.subprocess[sid].open=true;rSubprocess();}};
+window.toggleRound=function(sid,ri){if(D.subprocess[sid]&&D.subprocess[sid].rounds[ri]){D.subprocess[sid].rounds[ri].open=!D.subprocess[sid].rounds[ri].open;rSubprocess();}};
+window.toggleRT=function(sid,ri,field,val){var r=D.subprocess[sid]&&D.subprocess[sid].rounds[ri];if(r){if(!r[field])r[field]=[];msel(r[field],val);rSubprocess();}};
+window.toggleRR=window.toggleRT;
+window.addRound=function(sid){if(D.subprocess[sid]){D.subprocess[sid].rounds.push(mkRound(D.subprocess[sid].rounds.length+1));rSubprocess();}};
+window.delRound=function(sid,ri){if(D.subprocess[sid]){D.subprocess[sid].rounds.splice(ri,1);rSubprocess();}};
+function mkRound(n){return{id:'r'+Date.now()+n,name:'Round '+n,types:[],formats:[],conductors:[],schedMethod:[],condition:'',open:true};}
 
 function rActions(){
   const stages=getStageList();const roles=getAllRoles();
