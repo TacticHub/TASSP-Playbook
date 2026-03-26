@@ -153,6 +153,9 @@
     .checklist-task { font-size:0.88rem; color:var(--fog); line-height:1.5; }
     .checklist-item.checked .checklist-task { text-decoration:line-through; color:var(--steel); }
     .checklist-note { font-size:0.75rem; color:var(--steel); margin-top:0.25rem; line-height:1.5; font-style:italic; }
+    .checklist-tool-link { display:inline-flex; align-items:center; gap:0.4rem; margin-top:0.5rem; font-size:0.72rem; color:var(--gold); font-family:'DM Mono',monospace; letter-spacing:0.06em; text-decoration:none; border-bottom:1px solid rgba(201,169,110,0.25); padding-bottom:0.05rem; transition:border-color 0.2s, color 0.2s; }
+    .checklist-tool-link:hover { color:var(--gold2); border-color:var(--gold2); }
+    .checklist-tool-link svg { width:10px; height:10px; flex-shrink:0; }
     .checklist-tag { display:inline-block; font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase; padding:0.15rem 0.45rem; border-radius:2px; margin-top:0.3rem; margin-right:0.25rem; }
     .tag-tool { background:rgba(123,111,212,0.15); color:#a99ee0; border:1px solid rgba(123,111,212,0.2); }
     .tag-people { background:rgba(63,170,124,0.15); color:#5dd4a0; border:1px solid rgba(63,170,124,0.2); }
@@ -188,6 +191,26 @@
     .readiness-signals { margin-top:1rem; display:flex; flex-direction:column; gap:0.4rem; }
     .readiness-signal { font-size:0.8rem; color:var(--fog); display:flex; align-items:baseline; gap:0.5rem; }
     .readiness-signal::before { content:'→'; color:var(--gold); font-size:0.7rem; flex-shrink:0; }
+
+    /* ── DOWNLOAD SECTION ── */
+    .download-section { padding:5rem; background:var(--ink2); border-top:1px solid var(--border); }
+    .download-inner { max-width:1100px; margin:0 auto; }
+    .download-header { margin-bottom:2.5rem; }
+    .download-sub { font-size:1rem; color:var(--muted); line-height:1.8; max-width:560px; margin-top:0.75rem; }
+    .download-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.5rem; }
+    .download-card { background:var(--ink3); border:1px solid var(--border); border-radius:6px; padding:2rem; display:flex; flex-direction:column; gap:1.25rem; transition:border-color 0.2s; }
+    .download-card:hover { border-color:rgba(201,169,110,0.35); }
+    .download-card-icon { width:44px; height:44px; border:1px solid var(--border); border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:1.25rem; flex-shrink:0; }
+    .download-card-meta { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--steel); }
+    .download-card-title { font-family:'Cormorant Garamond',serif; font-size:1.25rem; font-weight:600; color:var(--paper); line-height:1.25; }
+    .download-card-desc { font-size:0.88rem; color:var(--muted); line-height:1.7; flex:1; }
+    .download-card-tags { display:flex; gap:0.5rem; flex-wrap:wrap; }
+    .download-tag { font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase; padding:0.25rem 0.6rem; border-radius:3px; background:rgba(201,169,110,0.08); color:var(--gold); border:1px solid rgba(201,169,110,0.15); }
+    .download-btn { display:inline-flex; align-items:center; gap:0.5rem; padding:0.7rem 1.4rem; background:var(--gold); color:var(--ink); font-family:'Outfit',sans-serif; font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; border-radius:3px; transition:background 0.2s, transform 0.15s; align-self:flex-start; }
+    .download-btn:hover { background:var(--gold2); transform:translateY(-1px); }
+    .download-btn-ghost { background:transparent; color:var(--fog); border:1px solid var(--border); }
+    .download-btn-ghost:hover { background:transparent; border-color:rgba(201,169,110,0.4); color:var(--paper); transform:translateY(-1px); }
+    .download-btn svg { width:14px; height:14px; flex-shrink:0; }
 
     /* ── CTA STRIP ── */
     .cta-strip { padding:5rem; background:var(--ink3); border-top:1px solid var(--border); text-align:center; position:relative; overflow:hidden; }
@@ -232,6 +255,7 @@
     <a href="index.html">Home</a>
     <a href="library.html">Strategy Library</a>
     <a href="onboarding.html" class="active">Admin Onboarding</a>
+    <a href="#downloads">Checklists</a>
   </div>
   <div style="display:flex;align-items:center;gap:1rem;">
     <a class="nav-cta" href="index.html#signup">Get Updates</a>
@@ -635,6 +659,18 @@
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
+                    <div class="checklist-task">Map your end-to-end TA process — from req open to hire — in a structured swimlane format</div>
+                    <div class="checklist-note">Who does what, at what stage, and who owns each handoff. One session per hiring track (hourly, salaried, executive, etc.). The output becomes your SOP baseline for the rest of onboarding.</div>
+                    <a class="checklist-tool-link" href="process-mapper.html" target="_blank">
+                      <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 5h8M6 2l3 3-3 3"/></svg>
+                      Recommended tool: TA Process Mapper — generates a print-ready BPMN map + SOP
+                    </a>
+                    <span class="checklist-tag tag-process">Process Map</span><span class="checklist-tag tag-tool">Process Mapper</span>
+                  </div>
+                </div>
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
                     <div class="checklist-task">Identify all integrations: HRIS, background check, scheduling, assessments, job boards</div>
                     <div class="checklist-note">Document what's connected, what the data flow is, and who owns each integration on both sides</div>
                     <span class="checklist-tag tag-tool">Integrations</span><span class="checklist-tag tag-tool">Examples: Workday, ADP, Sterling, Checkr, GoodTime, HireVue</span>
@@ -959,6 +995,96 @@
       </div>
     </div><!-- /phase-90 -->
 
+  </div>
+</section>
+
+<!-- DOWNLOAD CHECKLISTS -->
+<section class="download-section" id="downloads">
+  <div class="download-inner">
+    <div class="download-header">
+      <div class="section-eyebrow">Printable Checklists</div>
+      <h2 class="section-title">Take the Framework Offline</h2>
+      <p class="download-sub">Two versions of the 30/60/90 checklist — one for the supervisor running the onboarding, one for the admin living it. Print them, share them, work through them together.</p>
+    </div>
+    <div class="download-grid">
+
+      <!-- Process Mapper -->
+      <div class="download-card" style="border-color:rgba(201,169,110,0.25);">
+        <div class="download-card-icon">🗺️</div>
+        <div>
+          <div class="download-card-meta">Interactive Tool · Phase 1 · Admin Track</div>
+          <div class="download-card-title">TA Process Mapper</div>
+        </div>
+        <div class="download-card-desc">A guided interview that builds your end-to-end TA process map from scratch. Answer structured questions about your hiring workflow — the tool generates a print-ready BPMN swimlane diagram and a written SOP. No process design experience required. One session per hiring track.</div>
+        <div class="download-card-tags">
+          <span class="download-tag">BPMN Map</span>
+          <span class="download-tag">SOP Output</span>
+          <span class="download-tag">~15–45 min</span>
+        </div>
+        <a href="process-mapper.html" class="download-btn" style="background:transparent;color:var(--gold);border:1px solid rgba(201,169,110,0.4);" onmouseover="this.style.background='rgba(201,169,110,0.08)'" onmouseout="this.style.background='transparent'">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+          Launch Process Mapper
+        </a>
+      </div>
+
+      <!-- Supervisor checklist -->
+      <div class="download-card">
+        <div class="download-card-icon">🧭</div>
+        <div>
+          <div class="download-card-meta">Checklist · Supervisor Track</div>
+          <div class="download-card-title">TASSP Onboarding Checklist — Supervisor of the TASSP</div>
+        </div>
+        <div class="download-card-desc">The facilitation guide for TA Leaders and hiring managers. Covers what to provide, what to observe, and how to evaluate readiness at each 30-day gate — across all four phases.</div>
+        <div class="download-card-tags">
+          <span class="download-tag">Phase 0–3</span>
+          <span class="download-tag">30 / 60 / 90 Day</span>
+          <span class="download-tag">Print-Ready</span>
+        </div>
+        <a href="tassp-onboarding-checklist-supervisor.pdf" download class="download-btn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
+          Download PDF
+        </a>
+      </div>
+
+      <!-- Admin checklist -->
+      <div class="download-card">
+        <div class="download-card-icon">📋</div>
+        <div>
+          <div class="download-card-meta">Checklist · Admin / TASSP Track</div>
+          <div class="download-card-title">TASSP Onboarding Checklist — The Admin / TASSP</div>
+        </div>
+        <div class="download-card-desc">The working document for the person in the seat. Structured by phase and milestone, with write-in fields for notes, owners, and completion dates — designed to be used daily, not filed away.</div>
+        <div class="download-card-tags">
+          <span class="download-tag">Phase 0–3</span>
+          <span class="download-tag">30 / 60 / 90 Day</span>
+          <span class="download-tag">Print-Ready</span>
+        </div>
+        <a href="tassp-onboarding-checklist-admin.pdf" download class="download-btn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
+          Download PDF
+        </a>
+      </div>
+
+      <!-- Word doc bundle -->
+      <div class="download-card">
+        <div class="download-card-icon">📄</div>
+        <div>
+          <div class="download-card-meta">Editable · Both Tracks</div>
+          <div class="download-card-title">Full Checklist Bundle — Word Format</div>
+        </div>
+        <div class="download-card-desc">Both checklists in a single editable Word document. Customize task owners, add org-specific milestones, or adapt the language for your team before you print or share.</div>
+        <div class="download-card-tags">
+          <span class="download-tag">Editable</span>
+          <span class="download-tag">Both Tracks</span>
+          <span class="download-tag">.docx</span>
+        </div>
+        <a href="tassp-onboarding-checklists.docx" download class="download-btn download-btn-ghost">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
+          Download .docx
+        </a>
+      </div>
+
+    </div>
   </div>
 </section>
 
