@@ -193,6 +193,20 @@
     @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 
     /* ── RESPONSIVE ── */
+    /* ── ONBOARDING CALLOUT ── */
+    .onboarding-callout { padding:0 5rem; background:var(--ink); border-top:1px solid var(--border); }
+    .onboarding-callout-inner { max-width:1100px; margin:0 auto; padding:4rem 0; }
+    .onboarding-callout-grid { display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center; }
+    .onboarding-eyebrow { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.28em; text-transform:uppercase; color:var(--gold); margin-bottom:0.6rem; }
+    .onboarding-title { font-family:'Cormorant Garamond',serif; font-size:clamp(1.8rem,3vw,2.6rem); font-weight:700; line-height:1.1; margin-bottom:1rem; }
+    .onboarding-title em { font-style:italic; color:var(--gold); }
+    .onboarding-body { font-size:0.97rem; color:var(--muted); line-height:1.85; margin-bottom:2rem; }
+    .phase-preview { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:4px; overflow:hidden; }
+    .phase-preview-card { background:var(--ink2); padding:1.5rem; }
+    .phase-preview-label { font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:0.6rem; }
+    .phase-preview-title { font-family:'Cormorant Garamond',serif; font-size:1rem; font-weight:600; color:var(--paper); margin-bottom:0.4rem; }
+    .phase-preview-desc { font-size:0.78rem; color:var(--muted); line-height:1.55; }
+
     /* ── HAMBURGER NAV ── */
     .nav-hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:0.5rem; background:none; border:none; }
     .nav-hamburger span { display:block; width:22px; height:1.5px; background:var(--fog); transition:all 0.25s; border-radius:2px; }
@@ -261,6 +275,15 @@
       .signup-form { flex-direction:column; }
       .signup-form input, .signup-form button { width:100%; }
 
+      /* Onboarding callout */
+      .onboarding-callout { padding:0 1.5rem; }
+      .onboarding-callout-inner { padding:3rem 0; }
+      .onboarding-callout-grid { grid-template-columns:1fr; gap:2.5rem; }
+      .phase-preview { grid-template-columns:1fr 1fr; }
+      .phase-preview-card { padding:1.1rem; }
+      .phase-preview-title { font-size:0.92rem; }
+      .phase-preview-desc { font-size:0.74rem; }
+
       /* Footer */
       footer { flex-direction:column; gap:1.5rem; padding:2rem 1.5rem; text-align:center; }
       .footer-nav { flex-wrap:wrap; justify-content:center; gap:1rem; }
@@ -272,6 +295,7 @@
       .stat-number { font-size:2.2rem; }
       .reframe-item { font-size:0.82rem; padding:0.45rem 0.9rem; }
       .pillars { grid-template-columns:1fr; }
+      .phase-preview { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -532,35 +556,35 @@
 </section>
 
 <!-- ONBOARDING CALLOUT -->
-<section style="padding:0 5rem;background:var(--ink);border-top:1px solid var(--border);">
-  <div style="max-width:1100px;margin:0 auto;padding:4rem 0;">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
+<section class="onboarding-callout">
+  <div class="onboarding-callout-inner">
+    <div class="onboarding-callout-grid">
       <div>
-        <div style="font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem;">Featured Framework</div>
-        <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3vw,2.6rem);font-weight:700;line-height:1.1;margin-bottom:1rem;">Your Admin Was Set Up to Figure It Out.<br><em style="font-style:italic;color:var(--gold);">That Ends Here.</em></h2>
-        <p style="font-size:0.97rem;color:var(--muted);line-height:1.85;margin-bottom:2rem;">Most organizations hand a new system admin the keys to the most complex ecosystem in HR and walk away. No context. No roadmap. No strategy. The TASSP Onboarding Framework gives TA leaders and admins a structured 30/60/90 day path — with dual-track checklists, tool-specific examples, and a clear milestone for when the admin graduates to full TASSP positioning.</p>
+        <div class="onboarding-eyebrow">Featured Framework</div>
+        <h2 class="onboarding-title">Your Admin Was Set Up to Figure It Out.<br><em>That Ends Here.</em></h2>
+        <p class="onboarding-body">Most organizations hand a new system admin the keys to the most complex ecosystem in HR and walk away. No context. No roadmap. No strategy. The TASSP Onboarding Framework gives TA leaders and admins a structured 30/60/90 day path — with dual-track checklists, tool-specific examples, and a clear milestone for when the admin graduates to full TASSP positioning.</p>
         <a href="onboarding.html" class="btn-primary">View the Framework →</a>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;">
-        <div style="background:var(--ink2);padding:1.5rem;">
-          <div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:#7b6fd4;margin-bottom:0.6rem;">Phase 0</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:var(--paper);margin-bottom:0.4rem;">Foundation</div>
-          <div style="font-size:0.78rem;color:var(--muted);line-height:1.55;">Stack mapping, access provisioning, and pre-start briefing</div>
+      <div class="phase-preview">
+        <div class="phase-preview-card">
+          <div class="phase-preview-label" style="color:#7b6fd4;">Phase 0</div>
+          <div class="phase-preview-title">Foundation</div>
+          <div class="phase-preview-desc">Stack mapping, access provisioning, and pre-start briefing</div>
         </div>
-        <div style="background:var(--ink2);padding:1.5rem;">
-          <div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:#4e8ecf;margin-bottom:0.6rem;">Days 1–30</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:var(--paper);margin-bottom:0.4rem;">Orientation</div>
-          <div style="font-size:0.78rem;color:var(--muted);line-height:1.55;">System audit, recruiter interviews, sandbox practice</div>
+        <div class="phase-preview-card">
+          <div class="phase-preview-label" style="color:#4e8ecf;">Days 1–30</div>
+          <div class="phase-preview-title">Orientation</div>
+          <div class="phase-preview-desc">System audit, recruiter interviews, sandbox practice</div>
         </div>
-        <div style="background:var(--ink2);padding:1.5rem;">
-          <div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:#3faa7c;margin-bottom:0.6rem;">Days 31–60</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:var(--paper);margin-bottom:0.4rem;">Competence</div>
-          <div style="font-size:0.78rem;color:var(--muted);line-height:1.55;">First optimizations, KPI dashboards, Triad mapping</div>
+        <div class="phase-preview-card">
+          <div class="phase-preview-label" style="color:#3faa7c;">Days 31–60</div>
+          <div class="phase-preview-title">Competence</div>
+          <div class="phase-preview-desc">First optimizations, KPI dashboards, Triad mapping</div>
         </div>
-        <div style="background:var(--ink2);padding:1.5rem;">
-          <div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:#d4834a;margin-bottom:0.6rem;">Days 61–90</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:var(--paper);margin-bottom:0.4rem;">Ownership</div>
-          <div style="font-size:0.78rem;color:var(--muted);line-height:1.55;">Roadmap presentation, leadership visibility, TASSP graduation</div>
+        <div class="phase-preview-card">
+          <div class="phase-preview-label" style="color:#d4834a;">Days 61–90</div>
+          <div class="phase-preview-title">Ownership</div>
+          <div class="phase-preview-desc">Roadmap presentation, leadership visibility, TASSP graduation</div>
         </div>
       </div>
     </div>
