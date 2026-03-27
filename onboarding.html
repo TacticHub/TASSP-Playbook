@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TASSP Admin Onboarding Framework — The TASSP Playbook</title>
-  <meta name="description" content="A 30/60/90 day onboarding framework for Talent Acquisition system administrators. Stop letting talent get lost because your admin was never set up to succeed.">
+  <title>TASSP Career Path & Onboarding Framework — The TASSP Playbook</title>
+  <meta name="description" content="The definitive career path for Talent Acquisition Systems & Strategy Professionals — four tiers from Apprentice to Architect, with a structured onboarding framework to accelerate mastery.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -17,6 +17,10 @@
       --border:rgba(201,169,110,0.15);
       --phase0:#7b6fd4; --phase1:#4e8ecf; --phase2:#3faa7c; --phase3:#d4834a;
       --track-leader:#c9a96e; --track-admin:#4aadc0;
+      --tier-apprentice:#7b6fd4;
+      --tier-practitioner:#4e8ecf;
+      --tier-specialist:#3faa7c;
+      --tier-architect:#c9a96e;
     }
     html { scroll-behavior:smooth; }
     body { background:var(--ink); color:var(--paper); font-family:'Outfit',sans-serif; font-weight:300; line-height:1.65; overflow-x:hidden; }
@@ -44,8 +48,8 @@
     .hero-eyebrow { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.35em; text-transform:uppercase; color:var(--gold); margin-bottom:1.25rem; opacity:0; animation:fadeUp 0.7s ease 0.1s forwards; }
     .hero-title { font-family:'Cormorant Garamond',serif; font-size:clamp(2.5rem,5vw,4.5rem); font-weight:700; line-height:1.05; max-width:860px; opacity:0; animation:fadeUp 0.8s ease 0.25s forwards; }
     .hero-title em { font-style:italic; color:var(--gold); }
-    .hero-sub { margin-top:1.75rem; font-size:1.05rem; color:var(--fog); max-width:620px; line-height:1.8; opacity:0; animation:fadeUp 0.8s ease 0.4s forwards; }
-    .hero-truth { margin-top:2.5rem; padding:1.5rem 2rem; background:rgba(201,169,110,0.04); border:1px solid var(--border); border-left:3px solid var(--gold); max-width:680px; opacity:0; animation:fadeUp 0.8s ease 0.55s forwards; }
+    .hero-sub { margin-top:1.75rem; font-size:1.05rem; color:var(--fog); max-width:640px; line-height:1.8; opacity:0; animation:fadeUp 0.8s ease 0.4s forwards; }
+    .hero-truth { margin-top:2.5rem; padding:1.5rem 2rem; background:rgba(201,169,110,0.04); border:1px solid var(--border); border-left:3px solid var(--gold); max-width:700px; opacity:0; animation:fadeUp 0.8s ease 0.55s forwards; }
     .hero-truth-text { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-style:italic; color:var(--fog); line-height:1.6; }
     .hero-truth-attr { margin-top:0.5rem; font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--steel); }
     .hero-actions { display:flex; gap:1rem; margin-top:2.5rem; flex-wrap:wrap; opacity:0; animation:fadeUp 0.8s ease 0.7s forwards; }
@@ -54,7 +58,87 @@
     .btn-ghost { padding:0.85rem 2rem; background:transparent; color:var(--fog); font-family:'Outfit',sans-serif; font-size:0.82rem; font-weight:400; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; border:1px solid var(--border); border-radius:3px; transition:all 0.2s; display:inline-block; }
     .btn-ghost:hover { border-color:rgba(201,169,110,0.4); color:var(--paper); }
 
-    /* ── TRACK TOGGLE ── */
+    /* ── PYRAMID SECTION ── */
+    .pyramid-section { padding:5rem 5rem; background:var(--ink2); border-top:1px solid var(--border); }
+    .pyramid-inner { max-width:1100px; margin:0 auto; }
+    .pyramid-header { margin-bottom:3.5rem; }
+    .section-eyebrow { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.28em; text-transform:uppercase; color:var(--gold); margin-bottom:0.6rem; }
+    .section-title { font-family:'Cormorant Garamond',serif; font-size:clamp(1.8rem,3vw,2.8rem); font-weight:700; line-height:1.1; }
+    .section-sub { font-size:0.97rem; color:var(--muted); max-width:620px; line-height:1.8; margin-top:0.75rem; }
+
+    /* Track filter pills */
+    .track-filter { display:flex; align-items:center; gap:1rem; margin-bottom:2.5rem; flex-wrap:wrap; }
+    .track-filter-label { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--steel); }
+    .track-pill { padding:0.4rem 1rem; border-radius:20px; font-family:'Outfit',sans-serif; font-size:0.75rem; font-weight:400; letter-spacing:0.05em; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--muted); transition:all 0.2s; }
+    .track-pill.active { background:rgba(201,169,110,0.12); border-color:rgba(201,169,110,0.4); color:var(--gold); }
+    .track-pill[data-filter="admin"].active { background:rgba(74,173,192,0.1); border-color:rgba(74,173,192,0.35); color:#4aadc0; }
+    .track-pill[data-filter="supervisor"].active { background:rgba(63,170,124,0.1); border-color:rgba(63,170,124,0.35); color:#3faa7c; }
+    .track-pill[data-filter="strategy"].active { background:rgba(201,169,110,0.12); border-color:rgba(201,169,110,0.4); color:var(--gold); }
+
+    /* Pyramid visual */
+    .pyramid-visual { margin-bottom:3rem; }
+    .pyramid-svg-wrap { width:100%; max-width:720px; margin:0 auto 2.5rem; display:block; }
+
+    /* Tier cards */
+    .tier-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:4px; overflow:hidden; margin-bottom:3rem; }
+    .tier-card { background:var(--ink); padding:0; cursor:pointer; transition:background 0.2s; position:relative; overflow:hidden; }
+    .tier-card:hover { background:var(--ink3); }
+    .tier-card.active { background:var(--ink3); }
+    .tier-card.active::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; }
+    .tier-card[data-tier="apprentice"].active::after { background:var(--tier-apprentice); }
+    .tier-card[data-tier="practitioner"].active::after { background:var(--tier-practitioner); }
+    .tier-card[data-tier="specialist"].active::after { background:var(--tier-specialist); }
+    .tier-card[data-tier="architect"].active::after { background:var(--tier-architect); }
+    .tier-card-inner { padding:1.5rem 1.25rem; }
+    .tier-badge { display:inline-block; font-family:'DM Mono',monospace; font-size:0.52rem; letter-spacing:0.18em; text-transform:uppercase; padding:0.2rem 0.55rem; border-radius:2px; margin-bottom:0.85rem; }
+    .tier-card[data-tier="apprentice"] .tier-badge { background:rgba(123,111,212,0.15); color:#a99ee0; border:1px solid rgba(123,111,212,0.25); }
+    .tier-card[data-tier="practitioner"] .tier-badge { background:rgba(78,142,207,0.15); color:#7ab5e0; border:1px solid rgba(78,142,207,0.25); }
+    .tier-card[data-tier="specialist"] .tier-badge { background:rgba(63,170,124,0.15); color:#5dd4a0; border:1px solid rgba(63,170,124,0.25); }
+    .tier-card[data-tier="architect"] .tier-badge { background:rgba(201,169,110,0.12); color:var(--gold); border:1px solid rgba(201,169,110,0.25); }
+    .tier-years { font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.1em; color:var(--steel); margin-bottom:0.35rem; }
+    .tier-name { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:600; color:var(--paper); margin-bottom:0.4rem; }
+    .tier-mission { font-size:0.78rem; color:var(--muted); line-height:1.55; }
+
+    /* Tier detail panel */
+    .tier-detail { display:none; }
+    .tier-detail.active { display:block; }
+    .tier-detail-card { background:var(--ink3); border:1px solid var(--border); border-radius:4px; overflow:hidden; }
+    .tier-detail-header { padding:2rem 2.5rem; border-bottom:1px solid var(--border); display:grid; grid-template-columns:1fr auto; gap:2rem; align-items:center; }
+    .tier-detail-eyebrow { font-family:'DM Mono',monospace; font-size:0.62rem; letter-spacing:0.22em; text-transform:uppercase; margin-bottom:0.4rem; }
+    .tier-detail[data-tier="apprentice"] .tier-detail-eyebrow { color:var(--tier-apprentice); }
+    .tier-detail[data-tier="practitioner"] .tier-detail-eyebrow { color:var(--tier-practitioner); }
+    .tier-detail[data-tier="specialist"] .tier-detail-eyebrow { color:var(--tier-specialist); }
+    .tier-detail[data-tier="architect"] .tier-detail-eyebrow { color:var(--tier-architect); }
+    .tier-detail-title { font-family:'Cormorant Garamond',serif; font-size:1.9rem; font-weight:700; }
+    .tier-detail-desc { font-size:0.92rem; color:var(--muted); line-height:1.8; margin-top:0.5rem; max-width:560px; }
+    .tier-detail-years-badge { font-family:'DM Mono',monospace; font-size:0.62rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--steel); background:var(--ink); border:1px solid var(--border); border-radius:3px; padding:0.5rem 0.9rem; white-space:nowrap; text-align:center; }
+    .tier-detail-body { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; }
+    .tier-col { padding:1.75rem 2rem; border-right:1px solid var(--border); }
+    .tier-col:last-child { border-right:none; }
+    .tier-col-label { font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--steel); margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.04); }
+    .tier-col ul { list-style:none; display:flex; flex-direction:column; gap:0.5rem; }
+    .tier-col ul li { font-size:0.82rem; color:var(--fog); line-height:1.5; display:flex; align-items:baseline; gap:0.55rem; }
+    .tier-col ul li::before { content:'→'; color:var(--gold); font-size:0.65rem; flex-shrink:0; opacity:0.7; }
+    .tier-sample-titles { padding:1.25rem 2rem; background:rgba(255,255,255,0.015); border-top:1px solid var(--border); display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; }
+    .tier-sample-label { font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--steel); margin-right:0.5rem; }
+    .tier-title-chip { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.06em; padding:0.25rem 0.65rem; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:2px; color:var(--fog); }
+    .tier-gate { padding:1.5rem 2rem; background:rgba(201,169,110,0.04); border-top:1px solid var(--border); }
+    .tier-gate-label { font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:0.75rem; }
+    .tier-gate-items { display:flex; flex-wrap:wrap; gap:0.5rem; }
+    .tier-gate-item { font-size:0.8rem; color:var(--fog); background:rgba(201,169,110,0.06); border:1px solid rgba(201,169,110,0.15); border-radius:3px; padding:0.35rem 0.8rem; }
+
+    /* 3 tracks view */
+    .tracks-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:4px; overflow:hidden; margin-top:3rem; }
+    .track-column-card { background:var(--ink2); padding:2rem 1.75rem; }
+    .track-column-card.hidden { display:none; }
+    .track-col-eyebrow { font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:0.3rem; }
+    .track-col-eyebrow.admin { color:#4aadc0; }
+    .track-col-eyebrow.supervisor { color:#3faa7c; }
+    .track-col-eyebrow.strategy { color:var(--gold); }
+    .track-col-title { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:600; color:var(--paper); margin-bottom:1rem; }
+    .track-col-desc { font-size:0.82rem; color:var(--muted); line-height:1.7; }
+
+    /* ── TRACK TOGGLE BAR ── */
     .track-bar { background:var(--ink3); border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:0; position:sticky; top:64px; z-index:200; }
     .track-bar-inner { max-width:1100px; margin:0 auto; padding:0 5rem; display:flex; align-items:center; }
     .track-label { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--steel); margin-right:1.5rem; white-space:nowrap; padding:1.1rem 0; }
@@ -73,9 +157,6 @@
     .timeline { padding:5rem 5rem 2rem; background:var(--ink2); }
     .timeline-inner { max-width:1100px; margin:0 auto; }
     .timeline-header { margin-bottom:3rem; }
-    .section-eyebrow { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.28em; text-transform:uppercase; color:var(--gold); margin-bottom:0.6rem; }
-    .section-title { font-family:'Cormorant Garamond',serif; font-size:clamp(1.8rem,3vw,2.8rem); font-weight:700; line-height:1.1; }
-    .section-sub { font-size:0.97rem; color:var(--muted); max-width:580px; line-height:1.8; margin-top:0.75rem; }
     .phase-rail { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:4px; overflow:hidden; }
     .phase-card { background:var(--ink); padding:1.75rem 1.5rem; cursor:pointer; transition:background 0.2s; position:relative; }
     .phase-card:hover { background:var(--ink3); }
@@ -93,6 +174,8 @@
     .phase-label { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--steel); margin-bottom:0.4rem; }
     .phase-name { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:600; color:var(--paper); margin-bottom:0.4rem; }
     .phase-tagline { font-size:0.8rem; color:var(--muted); line-height:1.5; }
+    .phase-tier-link { display:inline-flex; align-items:center; gap:0.35rem; margin-top:0.65rem; font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--steel); }
+    .phase-tier-dot { width:5px; height:5px; border-radius:50%; display:inline-block; }
 
     /* ── PHASE CONTENT ── */
     .phase-content { padding:0 5rem 5rem; background:var(--ink2); }
@@ -112,6 +195,14 @@
     .phase-progress-num { font-family:'Cormorant Garamond',serif; font-size:2.5rem; font-weight:700; color:var(--gold); line-height:1; }
     .phase-progress-sub { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.1em; color:var(--steel); }
 
+    /* Tier context callout inside phase */
+    .phase-tier-callout { display:flex; align-items:center; gap:1rem; padding:0.9rem 1.25rem; background:var(--ink); border:1px solid var(--border); border-radius:3px; margin-bottom:2rem; }
+    .phase-tier-icon { width:32px; height:32px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:0.7rem; }
+    .phase-tier-callout-text { font-size:0.83rem; color:var(--muted); line-height:1.5; }
+    .phase-tier-callout-text strong { color:var(--fog); font-weight:500; }
+    .phase-tier-callout-link { margin-left:auto; font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); text-decoration:none; white-space:nowrap; flex-shrink:0; }
+    .phase-tier-callout-link:hover { color:var(--gold2); }
+
     /* ── DUAL TRACK CHECKLISTS ── */
     .dual-track { display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
     .track-column { }
@@ -125,8 +216,6 @@
     .track-header[data-track="leader"] .track-header-label { color:var(--track-leader); }
     .track-header[data-track="admin"] .track-header-label { color:var(--track-admin); }
     .track-header-role { font-size:0.78rem; color:var(--muted); margin-left:auto; font-style:italic; }
-
-    /* single-track view */
     .track-column.hidden { display:none; }
     .dual-track.single .track-column { grid-column:1 / -1; }
 
@@ -153,14 +242,29 @@
     .checklist-task { font-size:0.88rem; color:var(--fog); line-height:1.5; }
     .checklist-item.checked .checklist-task { text-decoration:line-through; color:var(--steel); }
     .checklist-note { font-size:0.75rem; color:var(--steel); margin-top:0.25rem; line-height:1.5; font-style:italic; }
+    .checklist-tag { display:inline-block; font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase; padding:0.15rem 0.45rem; border-radius:2px; margin-top:0.3rem; margin-right:0.25rem; }
     .checklist-tool-link { display:inline-flex; align-items:center; gap:0.4rem; margin-top:0.5rem; font-size:0.72rem; color:var(--gold); font-family:'DM Mono',monospace; letter-spacing:0.06em; text-decoration:none; border-bottom:1px solid rgba(201,169,110,0.25); padding-bottom:0.05rem; transition:border-color 0.2s, color 0.2s; }
     .checklist-tool-link:hover { color:var(--gold2); border-color:var(--gold2); }
     .checklist-tool-link svg { width:10px; height:10px; flex-shrink:0; }
-    .checklist-tag { display:inline-block; font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase; padding:0.15rem 0.45rem; border-radius:2px; margin-top:0.3rem; margin-right:0.25rem; }
     .tag-tool { background:rgba(123,111,212,0.15); color:#a99ee0; border:1px solid rgba(123,111,212,0.2); }
     .tag-people { background:rgba(63,170,124,0.15); color:#5dd4a0; border:1px solid rgba(63,170,124,0.2); }
     .tag-process { background:rgba(201,169,110,0.12); color:var(--gold); border:1px solid rgba(201,169,110,0.2); }
     .tag-data { background:rgba(212,131,74,0.12); color:#e8a06a; border:1px solid rgba(212,131,74,0.2); }
+    .tag-gate { background:rgba(201,169,110,0.18); color:var(--gold2); border:1px solid rgba(201,169,110,0.3); }
+
+    /* Artifact callout inside checklist */
+    .artifact-callout { margin:0 1.25rem 1.25rem; padding:1rem 1.25rem; background:rgba(201,169,110,0.04); border:1px solid rgba(201,169,110,0.15); border-left:2px solid var(--gold); border-radius:0 3px 3px 0; }
+    .artifact-callout-label { font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold); margin-bottom:0.5rem; }
+    .artifact-callout-items { display:flex; flex-wrap:wrap; gap:0.4rem; }
+    .artifact-chip { font-size:0.75rem; color:var(--fog); background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:2px; padding:0.2rem 0.55rem; }
+
+    /* Capability gate block */
+    .capability-gate { margin:1.5rem 0; padding:1.25rem 1.5rem; background:rgba(201,169,110,0.04); border:1px solid rgba(201,169,110,0.2); border-radius:3px; }
+    .capability-gate-label { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:0.75rem; display:flex; align-items:center; gap:0.5rem; }
+    .capability-gate-label::before { content:'◆'; font-size:0.5rem; }
+    .capability-gate-items { list-style:none; display:flex; flex-direction:column; gap:0.5rem; }
+    .capability-gate-items li { font-size:0.82rem; color:var(--fog); line-height:1.55; display:flex; align-items:baseline; gap:0.6rem; }
+    .capability-gate-items li::before { content:'✓'; color:var(--gold); font-size:0.65rem; flex-shrink:0; }
 
     /* ── PROGRESS BANNER ── */
     .progress-banner { background:var(--ink3); border:1px solid var(--border); border-radius:3px; padding:1.25rem 1.5rem; margin-bottom:2.5rem; display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap; }
@@ -168,16 +272,8 @@
     .progress-bar-wrap { flex:1; min-width:200px; height:4px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden; }
     .progress-bar-fill { height:100%; background:var(--gold); border-radius:2px; width:0%; transition:width 0.4s ease; }
     .progress-pct { font-family:'DM Mono',monospace; font-size:0.72rem; color:var(--gold); white-space:nowrap; min-width:36px; }
-    .progress-reset { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--steel); background:none; border:none; cursor:pointer; padding:0.3rem 0.6rem; border:1px solid var(--border); border-radius:2px; transition:all 0.2s; }
+    .progress-reset { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--steel); background:none; border:1px solid var(--border); cursor:pointer; padding:0.3rem 0.6rem; border-radius:2px; transition:all 0.2s; }
     .progress-reset:hover { color:var(--fog); border-color:var(--muted); }
-
-    /* ── TOOL EXAMPLES ASIDE ── */
-    .tool-callout { margin-top:2rem; padding:1.5rem; background:rgba(123,111,212,0.05); border:1px solid rgba(123,111,212,0.15); border-radius:3px; }
-    .tool-callout-label { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; color:#a99ee0; margin-bottom:1rem; }
-    .tool-callout-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:0.75rem; }
-    .tool-item { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:3px; padding:0.85rem 1rem; }
-    .tool-name { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.1em; color:var(--fog); margin-bottom:0.3rem; }
-    .tool-note { font-size:0.75rem; color:var(--muted); line-height:1.5; }
 
     /* ── READINESS SECTION ── */
     .readiness { padding:5rem 5rem; background:var(--ink); border-top:1px solid var(--border); }
@@ -192,7 +288,7 @@
     .readiness-signal { font-size:0.8rem; color:var(--fog); display:flex; align-items:baseline; gap:0.5rem; }
     .readiness-signal::before { content:'→'; color:var(--gold); font-size:0.7rem; flex-shrink:0; }
 
-    /* ── DOWNLOAD SECTION ── */
+    /* ── DOWNLOAD / PROCESS MAPPER CARD ── */
     .download-section { padding:5rem; background:var(--ink2); border-top:1px solid var(--border); }
     .download-inner { max-width:1100px; margin:0 auto; }
     .download-header { margin-bottom:2.5rem; }
@@ -208,9 +304,9 @@
     .download-tag { font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase; padding:0.25rem 0.6rem; border-radius:3px; background:rgba(201,169,110,0.08); color:var(--gold); border:1px solid rgba(201,169,110,0.15); }
     .download-btn { display:inline-flex; align-items:center; gap:0.5rem; padding:0.7rem 1.4rem; background:var(--gold); color:var(--ink); font-family:'Outfit',sans-serif; font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; border-radius:3px; transition:background 0.2s, transform 0.15s; align-self:flex-start; }
     .download-btn:hover { background:var(--gold2); transform:translateY(-1px); }
-    .download-btn-ghost { background:transparent; color:var(--fog); border:1px solid var(--border); }
-    .download-btn-ghost:hover { background:transparent; border-color:rgba(201,169,110,0.4); color:var(--paper); transform:translateY(-1px); }
     .download-btn svg { width:14px; height:14px; flex-shrink:0; }
+    .book-card-grid { transition:none; }
+    @media(max-width:900px){ .book-card-grid { grid-template-columns:1fr !important; gap:1.5rem !important; } .book-card-grid img { width:90px !important; } .download-section { padding-left:1.5rem; padding-right:1.5rem; } }
 
     /* ── CTA STRIP ── */
     .cta-strip { padding:5rem; background:var(--ink3); border-top:1px solid var(--border); text-align:center; position:relative; overflow:hidden; }
@@ -232,21 +328,23 @@
     @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
 
     /* ── RESPONSIVE ── */
-    .book-card-grid { transition: none; }
     @media(max-width:900px){
-      .book-card-grid { grid-template-columns:1fr !important; gap:1.5rem !important; }
-      .book-card-grid img { width:90px !important; }
       nav{padding:0 1.5rem} .nav-center{display:none}
-      .hero,.timeline,.phase-content,.readiness,.cta-strip{padding-left:1.5rem;padding-right:1.5rem}
+      .hero,.timeline,.phase-content,.readiness,.cta-strip,.pyramid-section{padding-left:1.5rem;padding-right:1.5rem}
       .track-bar-inner{padding:0 1.5rem}
       .phase-rail{grid-template-columns:1fr 1fr}
+      .tier-grid{grid-template-columns:1fr 1fr}
+      .tier-detail-body{grid-template-columns:1fr}
+      .tier-col{border-right:none;border-bottom:1px solid var(--border)}
       .dual-track{grid-template-columns:1fr}
       .readiness-grid{grid-template-columns:1fr}
+      .tracks-row{grid-template-columns:1fr}
       footer{flex-direction:column;gap:1.5rem;padding:2rem 1.5rem}
     }
   </style>
 </head>
 <body>
+
 <!-- DRAFT WATERMARK -->
 <div aria-hidden="true" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;display:flex;align-items:center;justify-content:center;overflow:hidden;">
   <span style="font-family:'Cormorant Garamond',serif;font-size:clamp(80px,18vw,200px);font-weight:700;color:rgba(255,255,255,0.06);letter-spacing:0.15em;text-transform:uppercase;transform:rotate(-35deg);white-space:nowrap;user-select:none;-webkit-user-select:none;">DRAFT</span>
@@ -261,8 +359,8 @@
   <div class="nav-center">
     <a href="index.html">Home</a>
     <a href="library.html">Strategy Library</a>
-    <a href="onboarding.html" class="active">Admin Onboarding</a>
-    <a href="#downloads">Checklists</a>
+    <a href="onboarding.html" class="active">Career Path & Onboarding</a>
+    <a href="#framework">Onboarding Framework</a>
   </div>
   <div style="display:flex;align-items:center;gap:1rem;">
     <a class="nav-cta" href="index.html#signup">Get Updates</a>
@@ -277,26 +375,412 @@
     <div class="breadcrumb">
       <a href="index.html">Home</a>
       <span class="breadcrumb-sep">›</span>
-      <span>Admin Onboarding Framework</span>
+      <span>Career Path &amp; Onboarding Framework</span>
     </div>
-    <div class="hero-eyebrow">The TASSP Onboarding Framework</div>
-    <h1 class="hero-title">Your Admin Was Set Up<br>to <em>Figure It Out.</em><br>That Ends Here.</h1>
-    <p class="hero-sub">Most organizations hand a system admin the keys to the most complex ecosystem in HR and walk away. No roadmap. No context. No strategy. The TASSP Onboarding Framework is the structured 30/60/90 day path that changes that — whether your admin is brand new or has been in the seat for years.</p>
+    <div class="hero-eyebrow">The TASSP Career Path</div>
+    <h1 class="hero-title">What Does <em>Mastery</em><br>Actually Look Like<br>in This Role?</h1>
+    <p class="hero-sub">Most TASSP professionals are handed the keys to a complex, high-stakes ecosystem and told to figure it out. No career ladder. No competency map. No definition of what "good" looks like at each stage. This framework defines it — from Apprentice to Architect, with an onboarding path that gets you there faster and safer.</p>
     <div class="hero-truth">
-      <div class="hero-truth-text">"That's a failure of onboarding, not ability. A proper onboarding plan is the first step to building the next generation of TASSP leaders inside your org."</div>
-      <div class="hero-truth-attr">— From the TASSP Framework</div>
+      <div class="hero-truth-text">"TA technology capability is increasingly defined by rapid platform change — which pushes the TASSP role toward continuous learning and governance rather than one-time implementation."</div>
+      <div class="hero-truth-attr">— TASSP Career Pyramid Research Framework</div>
     </div>
     <div class="hero-actions">
-      <a href="#framework" class="btn-primary">Start the Framework</a>
-      <a href="#readiness" class="btn-ghost">Already in the role?</a>
+      <a href="#career-path" class="btn-primary">Explore the Career Pyramid</a>
+      <a href="#framework" class="btn-ghost">Jump to Onboarding Framework</a>
     </div>
   </div>
 </section>
 
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- CAREER PYRAMID                                      -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section class="pyramid-section" id="career-path">
+  <div class="pyramid-inner">
+    <div class="pyramid-header">
+      <div class="section-eyebrow">The TASSP Career Pyramid</div>
+      <h2 class="section-title">Four Tiers. Three Tracks.<br>One Clear Path to Mastery.</h2>
+      <p class="section-sub">The TASSP career pyramid is built around two compounding ideas: TA technology evolves fast, and selection procedures carry legal and compliance risk. Mastery means growing in both directions at once — deeper technical fluency and broader strategic influence.</p>
+    </div>
+
+    <!-- SVG Pyramid Visual -->
+    <div class="pyramid-visual">
+      <div class="pyramid-svg-wrap">
+        <svg viewBox="0 0 720 340" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">
+          <defs>
+            <linearGradient id="gArch" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#b8946a;stop-opacity:0.9"/>
+              <stop offset="100%" style="stop-color:#e4c98a;stop-opacity:0.9"/>
+            </linearGradient>
+            <linearGradient id="gSpec" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#2d8c63;stop-opacity:0.9"/>
+              <stop offset="100%" style="stop-color:#5dd4a0;stop-opacity:0.85"/>
+            </linearGradient>
+            <linearGradient id="gPrac" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#3070a8;stop-opacity:0.9"/>
+              <stop offset="100%" style="stop-color:#7ab5e0;stop-opacity:0.85"/>
+            </linearGradient>
+            <linearGradient id="gAppr" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#5548a8;stop-opacity:0.9"/>
+              <stop offset="100%" style="stop-color:#a99ee0;stop-opacity:0.85"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Architect tier (top) -->
+          <polygon points="360,20 220,95 500,95" fill="url(#gArch)" opacity="0.95"/>
+          <text x="360" y="60" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="14" font-weight="700" fill="#0c0f14">Architect</text>
+          <text x="360" y="76" text-anchor="middle" font-family="'DM Mono',monospace" font-size="8" fill="rgba(12,15,20,0.65)" letter-spacing="1">72+ MONTHS</text>
+
+          <!-- Specialist tier -->
+          <polygon points="220,100 140,180 580,180 500,100" fill="url(#gSpec)" opacity="0.95"/>
+          <text x="360" y="143" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="14" font-weight="700" fill="#0c0f14">Specialist</text>
+          <text x="360" y="159" text-anchor="middle" font-family="'DM Mono',monospace" font-size="8" fill="rgba(12,15,20,0.65)" letter-spacing="1">36 – 72 MONTHS</text>
+
+          <!-- Practitioner tier -->
+          <polygon points="140,185 60,270 660,270 580,185" fill="url(#gPrac)" opacity="0.95"/>
+          <text x="360" y="228" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="14" font-weight="700" fill="#0c0f14">Practitioner</text>
+          <text x="360" y="244" text-anchor="middle" font-family="'DM Mono',monospace" font-size="8" fill="rgba(12,15,20,0.65)" letter-spacing="1">12 – 36 MONTHS</text>
+
+          <!-- Apprentice tier (base) -->
+          <polygon points="60,275 20,325 700,325 660,275" fill="url(#gAppr)" opacity="0.95"/>
+          <text x="360" y="305" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="14" font-weight="700" fill="#0c0f14">Apprentice</text>
+          <text x="360" y="319" text-anchor="middle" font-family="'DM Mono',monospace" font-size="8" fill="rgba(12,15,20,0.65)" letter-spacing="1">0 – 12 MONTHS</text>
+
+          <!-- Left track labels -->
+          <text x="12" y="200" text-anchor="middle" font-family="'DM Mono',monospace" font-size="7.5" fill="#4aadc0" letter-spacing="1.2" transform="rotate(-90,12,200)">ADMIN</text>
+          <text x="28" y="200" text-anchor="middle" font-family="'DM Mono',monospace" font-size="7.5" fill="#3faa7c" letter-spacing="1.2" transform="rotate(-90,28,200)">SUPERVISOR</text>
+
+          <!-- Right track label -->
+          <text x="708" y="200" text-anchor="middle" font-family="'DM Mono',monospace" font-size="7.5" fill="#c9a96e" letter-spacing="1.2" transform="rotate(90,708,200)">STRATEGY</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Tier selector cards -->
+    <div class="tier-grid">
+      <div class="tier-card active" data-tier="apprentice" onclick="selectTier('apprentice')">
+        <div class="tier-card-inner">
+          <div class="tier-badge">Tier 1</div>
+          <div class="tier-years">0 – 12 months</div>
+          <div class="tier-name">Apprentice</div>
+          <div class="tier-mission">Safe operations, clean data, foundational artifacts. Learn before you touch.</div>
+        </div>
+      </div>
+      <div class="tier-card" data-tier="practitioner" onclick="selectTier('practitioner')">
+        <div class="tier-card-inner">
+          <div class="tier-badge">Tier 2</div>
+          <div class="tier-years">12 – 36 months</div>
+          <div class="tier-name">Practitioner</div>
+          <div class="tier-mission">Own workflows, measure funnel performance, run enablement programs.</div>
+        </div>
+      </div>
+      <div class="tier-card" data-tier="specialist" onclick="selectTier('specialist')">
+        <div class="tier-card-inner">
+          <div class="tier-badge">Tier 3</div>
+          <div class="tier-years">36 – 72 months</div>
+          <div class="tier-name">Specialist</div>
+          <div class="tier-mission">Scale the stack safely through automation, integration resiliency, analytics maturity.</div>
+        </div>
+      </div>
+      <div class="tier-card" data-tier="architect" onclick="selectTier('architect')">
+        <div class="tier-card-inner">
+          <div class="tier-badge">Tier 4</div>
+          <div class="tier-years">72+ months</div>
+          <div class="tier-name">Architect</div>
+          <div class="tier-mission">Own the TA systems operating model end-to-end: governance, budget, vendor strategy, ROI.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tier detail panels -->
+    <div class="tier-detail active" data-tier="apprentice">
+      <div class="tier-detail-card">
+        <div class="tier-detail-header">
+          <div>
+            <div class="tier-detail-eyebrow">Tier 1 · Apprentice</div>
+            <div class="tier-detail-title">Safe Operations & Foundation</div>
+            <div class="tier-detail-desc">Become a safe operator who can support day-to-day TA systems work without breaking workflows, while producing foundational artifacts that make later optimization possible.</div>
+          </div>
+          <div class="tier-detail-years-badge">0 – 12<br>months</div>
+        </div>
+        <div class="tier-detail-body">
+          <div class="tier-col">
+            <div class="tier-col-label">Technical Competencies</div>
+            <ul>
+              <li>Basic ATS navigation and data literacy</li>
+              <li>End-to-end hiring workflow understanding</li>
+              <li>Field and status taxonomy discipline</li>
+              <li>Basic reporting extraction</li>
+              <li>Integration awareness for triage</li>
+              <li>Sandbox-first mindset</li>
+            </ul>
+          </div>
+          <div class="tier-col">
+            <div class="tier-col-label">Key Deliverables</div>
+            <ul>
+              <li>TA stack architecture map (not just inventory)</li>
+              <li>Happy-path process map with BPMN notation</li>
+              <li>Data dictionary v0 (stages, dispositions, fields)</li>
+              <li>Sandbox test scripts for proposed changes</li>
+              <li>Baseline KPI pack with precise definitions</li>
+              <li>Top-20 tickets knowledge base</li>
+            </ul>
+          </div>
+          <div class="tier-col">
+            <div class="tier-col-label">Learning Milestones</div>
+            <ul>
+              <li>Vendor on-demand foundations (iCIMS, Greenhouse, etc.)</li>
+              <li>Learn Greenhouse badges / iCIMS certifications</li>
+              <li>SHRM-CP eligibility pathway</li>
+              <li>AI ethics &amp; bias in TA micro-module</li>
+              <li>Books: The First 90 Days, The Checklist Manifesto</li>
+              <li>Podcast: Recruiting Future (weekly)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tier-sample-titles">
+          <span class="tier-sample-label">Sample titles:</span>
+          <span class="tier-title-chip">ATS Support Analyst</span>
+          <span class="tier-title-chip">Recruiting Systems Coordinator</span>
+          <span class="tier-title-chip">TA Ops Support Coordinator</span>
+          <span class="tier-title-chip">TA Analytics Apprentice</span>
+        </div>
+        <div class="tier-gate">
+          <div class="tier-gate-label">Capability Gates — Demonstrate Before Advancing</div>
+          <div class="tier-gate-items">
+            <span class="tier-gate-item">Zero unapproved production changes</span>
+            <span class="tier-gate-item">Can explain time-to-fill vs. time-to-hire data sources</span>
+            <span class="tier-gate-item">Reduced repetitive tickets via knowledge base</span>
+            <span class="tier-gate-item">Stakeholder confidence in data literacy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tier-detail" data-tier="practitioner">
+      <div class="tier-detail-card">
+        <div class="tier-detail-header">
+          <div>
+            <div class="tier-detail-eyebrow">Tier 2 · Practitioner</div>
+            <div class="tier-detail-title">Workflow Ownership & Enablement</div>
+            <div class="tier-detail-desc">Become the owner of one or more recruiting workflows — able to configure safely, measure funnel performance, and run enablement programs that drive consistent system use across the organization.</div>
+          </div>
+          <div class="tier-detail-years-badge">12 – 36<br>months</div>
+        </div>
+        <div class="tier-detail-body">
+          <div class="tier-col">
+            <div class="tier-col-label">Technical Competencies</div>
+            <ul>
+              <li>Workflow configuration and template management</li>
+              <li>Reporting and dashboard building</li>
+              <li>Data dictionary stewardship</li>
+              <li>Integration monitoring basics</li>
+              <li>Change control: intake, sandbox, release comms</li>
+              <li>Formal change log ownership</li>
+            </ul>
+          </div>
+          <div class="tier-col">
+            <div class="tier-col-label">Key Deliverables</div>
+            <ul>
+              <li>Formal change intake process and change log</li>
+              <li>Role-based training pathway and onboarding kit</li>
+              <li>Time-to-fill vs. time-to-hire dashboard with definitions</li>
+              <li>Integration inventory with owners and runbooks</li>
+              <li>Updated SOPs for key workflows</li>
+              <li>Monthly "what changed and why" release comms</li>
+            </ul>
+          </div>
+          <div class="tier-col">
+            <div class="tier-col-label">Learning Milestones</div>
+            <ul>
+              <li>Vendor certification programs (iCIMS, Greenhouse tiers)</li>
+              <li>SHRM-CP or CIPD Foundation/Associate</li>
+              <li>UNLEASH America or Greenhouse Open for Ops attendance</li>
+              <li>Conference-linked deliverable (pilot proposal or training)</li>
+              <li>Change management fundamentals</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tier-sample-titles">
+          <span class="tier-sample-label">Sample titles:</span>
+          <span class="tier-title-chip">ATS Administrator</span>
+          <span class="tier-title-chip">TA Systems Analyst</span>
+          <span class="tier-title-chip">TA Ops Lead</span>
+          <span class="tier-title-chip">Enablement Lead</span>
+          <span class="tier-title-chip">TA Product Analyst</span>
+        </div>
+        <div class="tier-gate">
+          <div class="tier-gate-label">Capability Gates — Demonstrate Before Advancing</div>
+          <div class="tier-gate-items">
+            <span class="tier-gate-item">Demonstrable reduction in one bottleneck</span>
+            <span class="tier-gate-item">Stable, documented metric definitions</span>
+            <span class="tier-gate-item">Measurable adoption improvement</span>
+            <span class="tier-gate-item">Can implement a change end-to-end with measurement</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tier-detail" data-tier="specialist">
+      <div class="tier-detail-card">
+        <div class="tier-detail-header">
+          <div>
+            <div class="tier-detail-eyebrow">Tier 3 · Specialist</div>
+            <div class="tier-detail-title">Stack Optimization & Governance</div>
+            <div class="tier-detail-desc">Scale the TA stack safely and measurably through automation, integration resiliency, and analytics maturity — while building governance frameworks for AI-enabled and skills-based hiring capabilities.</div>
+          </div>
+          <div class="tier-detail-years-badge">36 – 72<br>months</div>
+        </div>
+        <div class="tier-detail-body">
+          <div class="tier-col">
+            <div class="tier-col-label">Technical Competencies</div>
+            <ul>
+              <li>Integration architecture, data flows, incident response</li>
+              <li>Advanced reporting and segmentation</li>
+              <li>Automation design with candidate experience guardrails</li>
+              <li>Structured hiring tooling (scorecards, interview plans)</li>
+              <li>AI feature governance and bias monitoring</li>
+              <li>New tool evaluation criteria</li>
+            </ul>
+          </div>
+          <div class="tier-col">
+            <div class="tier-col-label">Key Deliverables</div>
+            <ul>
+              <li>Multi-quarter TA stack roadmap</li>
+              <li>Integration monitoring program and runbooks</li>
+              <li>AI and automated-tool governance checklist</li>
+              <li>Quality-of-hire measurement framework</li>
+              <li>Adverse impact monitoring approach (EEOC-aligned)</li>
+              <li>Quarterly adverse impact review cadence</li>
+            </ul>
+          </div>
+          <div class="tier-col">
+            <div class="tier-col-label">Learning Milestones</div>
+            <ul>
+              <li>SHRM-SCP (requires 3+ years strategic HR)</li>
+              <li>AI ethics and TA AI targeted coursework</li>
+              <li>HR Technology Conference intensive</li>
+              <li>HBR IdeaCast rotation for executive framing</li>
+              <li>Written brief required post-conference</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tier-sample-titles">
+          <span class="tier-sample-label">Sample titles:</span>
+          <span class="tier-title-chip">Senior ATS Admin</span>
+          <span class="tier-title-chip">TA Tech Lead</span>
+          <span class="tier-title-chip">TA Ops Manager</span>
+          <span class="tier-title-chip">Recruiting Enablement Manager</span>
+          <span class="tier-title-chip">TA Analytics Lead</span>
+        </div>
+        <div class="tier-gate">
+          <div class="tier-gate-label">Capability Gates — Demonstrate Before Advancing</div>
+          <div class="tier-gate-items">
+            <span class="tier-gate-item">Reduced integration error rates and faster recovery</span>
+            <span class="tier-gate-item">Measurable productivity gains without compliance findings</span>
+            <span class="tier-gate-item">Adverse impact monitoring cadence established</span>
+            <span class="tier-gate-item">Structured hiring adoption visible through completion rates</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tier-detail" data-tier="architect">
+      <div class="tier-detail-card">
+        <div class="tier-detail-header">
+          <div>
+            <div class="tier-detail-eyebrow">Tier 4 · Architect</div>
+            <div class="tier-detail-title">Operating Model Ownership</div>
+            <div class="tier-detail-desc">Own the TA systems operating model end-to-end — governance, budget, vendor strategy, and the measurement system that ties TA operations to business outcomes like quality of hire, cost efficiency, and candidate experience.</div>
+          </div>
+          <div class="tier-detail-years-badge">72+<br>months</div>
+        </div>
+        <div class="tier-detail-body">
+          <div class="tier-col">
+            <div class="tier-col-label">Technical Competencies</div>
+            <ul>
+              <li>Portfolio architecture across ATS, CRM, assessments, analytics</li>
+              <li>AI tooling governance at enterprise scale</li>
+              <li>Data strategy and recordkeeping design</li>
+              <li>Audit readiness in regulated contexts</li>
+              <li>Vendor negotiation and stack rationalization</li>
+            </ul>
+          </div>
+          <div class="tier-col">
+            <div class="tier-col-label">Key Deliverables</div>
+            <ul>
+              <li>Multi-year roadmap and annual operating plan</li>
+              <li>Cross-functional governance charter</li>
+              <li>Internal training academy with credentialing</li>
+              <li>Published metrics operating cadence (QBRs)</li>
+              <li>Annual compliance readiness review</li>
+              <li>Adverse impact program institutionalized</li>
+            </ul>
+          </div>
+          <div class="tier-col">
+            <div class="tier-col-label">Learning Milestones</div>
+            <ul>
+              <li>CIPD Chartered levels (where applicable)</li>
+              <li>SHRM-SCP maintained with executive education</li>
+              <li>SHRM Annual Conference (Orlando, June 2026)</li>
+              <li>HR Tech Conference (Las Vegas, Oct 2026)</li>
+              <li>Books: Good Strategy Bad Strategy, Measure What Matters</li>
+            </ul>
+          </div>
+        </div>
+        <div class="tier-sample-titles">
+          <span class="tier-sample-label">Sample titles:</span>
+          <span class="tier-title-chip">TA Systems Architect</span>
+          <span class="tier-title-chip">Director TA Ops</span>
+          <span class="tier-title-chip">Head of TA Enablement</span>
+          <span class="tier-title-chip">Director TA Strategy &amp; Systems</span>
+          <span class="tier-title-chip">Head of TA Product</span>
+        </div>
+        <div class="tier-gate">
+          <div class="tier-gate-label">Success Metrics at This Level</div>
+          <div class="tier-gate-items">
+            <span class="tier-gate-item">Documented cost savings from automation</span>
+            <span class="tier-gate-item">Sustained quality-of-hire improvements</span>
+            <span class="tier-gate-item">Leadership-trusted measurement system</span>
+            <span class="tier-gate-item">Business case ownership with evidence and benchmarks</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Three tracks row -->
+    <div style="margin-top:3.5rem;">
+      <div class="section-eyebrow" style="margin-bottom:0.5rem;">Three Parallel Tracks</div>
+      <p class="section-sub" style="margin-bottom:1.5rem;">Every tier supports three tracks. The pyramid is your level — the track is your lane within it.</p>
+      <div class="tracks-row">
+        <div class="track-column-card">
+          <div class="track-col-eyebrow admin">Admin Track</div>
+          <div class="track-col-title">Platform Mastery &amp; Configuration</div>
+          <div class="track-col-desc">Systems depth: configuration, integration ops, data architecture, compliance readiness. This is the backbone of the TASSP role — the person who knows what the system can and can't do, and why it matters.</div>
+        </div>
+        <div class="track-column-card">
+          <div class="track-col-eyebrow supervisor">Supervisor / People Ops Track</div>
+          <div class="track-col-title">Service Model &amp; Enablement Leadership</div>
+          <div class="track-col-desc">Training design, intake governance, user adoption, change management. The person who ensures the humans using the system do it consistently and correctly — and who designs the support infrastructure around them.</div>
+        </div>
+        <div class="track-column-card">
+          <div class="track-col-eyebrow strategy">Strategy Track</div>
+          <div class="track-col-title">Product Vision &amp; Business Outcomes</div>
+          <div class="track-col-desc">Roadmap ownership, metrics design, vendor strategy, business cases. The person who connects TA technology decisions to hiring quality, cost efficiency, and organizational strategy at the leadership table.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- ONBOARDING FRAMEWORK                                -->
+<!-- ═══════════════════════════════════════════════════ -->
+
 <!-- TRACK TOGGLE -->
-<div class="track-bar">
+<div class="track-bar" id="framework">
   <div class="track-bar-inner">
-    <div class="track-label">Your track:</div>
+    <div class="track-label">Checklist track:</div>
     <div class="track-tabs">
       <button class="track-tab active" data-track="both">
         <span class="track-dot" style="background:var(--gold)"></span>
@@ -308,108 +792,118 @@
       </button>
       <button class="track-tab" data-track="admin">
         <span class="track-dot"></span>
-        <span>System Admin</span>
+        <span>TASSP / Admin</span>
       </button>
     </div>
   </div>
 </div>
 
-<!-- PHASE RAIL -->
-<section class="timeline" id="framework">
+<!-- PHASE TIMELINE -->
+<section class="timeline">
   <div class="timeline-inner">
     <div class="timeline-header">
-      <div class="section-eyebrow">The 30 / 60 / 90 Day Framework</div>
-      <h2 class="section-title">Four Phases. One Strategic Path.</h2>
-      <p class="section-sub">Each phase builds on the last. Pre-boarding sets the foundation. Day 30 builds confidence. Day 60 builds competence. Day 90 establishes strategic ownership.</p>
+      <div class="section-eyebrow">Onboarding Framework</div>
+      <h2 class="section-title">The 30/60/90 Path to Mastery</h2>
+      <p class="section-sub">Three phases, two tracks, one structured path. Each phase maps to the Apprentice tier — building the foundation you need to advance with confidence and without compliance risk.</p>
     </div>
     <div class="phase-rail">
-      <div class="phase-card active" data-phase="pre">
+      <div class="phase-card active" data-phase="pre" onclick="selectPhase('pre')">
         <div class="phase-dot"></div>
-        <div class="phase-label">Phase 0 · Before Day 1</div>
-        <div class="phase-name">Foundation</div>
-        <div class="phase-tagline">Stack mapping, access provisioning, and orienting the admin before they touch anything live.</div>
+        <div class="phase-label">Pre-Start</div>
+        <div class="phase-name">Foundation Phase</div>
+        <div class="phase-tagline">Before Day 1 — set the table for safe, structured learning.</div>
+        <div class="phase-tier-link"><span class="phase-tier-dot" style="background:var(--tier-apprentice)"></span> Apprentice Tier</div>
       </div>
-      <div class="phase-card" data-phase="30">
+      <div class="phase-card" data-phase="30" onclick="selectPhase('30')">
         <div class="phase-dot"></div>
-        <div class="phase-label">Phase 1 · Days 1–30</div>
-        <div class="phase-name">Orientation</div>
-        <div class="phase-tagline">Learning the tools, the team, the workflows, and where the bodies are buried in the current config.</div>
+        <div class="phase-label">First 30 Days</div>
+        <div class="phase-name">Learning & Risk Control</div>
+        <div class="phase-tagline">Understand before you touch. Map everything. Fix nothing yet.</div>
+        <div class="phase-tier-link"><span class="phase-tier-dot" style="background:var(--tier-apprentice)"></span> Apprentice Tier</div>
       </div>
-      <div class="phase-card" data-phase="60">
+      <div class="phase-card" data-phase="60" onclick="selectPhase('60')">
         <div class="phase-dot"></div>
-        <div class="phase-label">Phase 2 · Days 31–60</div>
-        <div class="phase-name">Competence</div>
-        <div class="phase-tagline">Connecting system knowledge to strategy. First independent optimizations, first metrics ownership.</div>
+        <div class="phase-label">Days 31 – 60</div>
+        <div class="phase-name">Competence & Ownership</div>
+        <div class="phase-tagline">Configuration, change control, enablement, integration ops.</div>
+        <div class="phase-tier-link"><span class="phase-tier-dot" style="background:var(--tier-practitioner)"></span> Practitioner Track</div>
       </div>
-      <div class="phase-card" data-phase="90">
+      <div class="phase-card" data-phase="90" onclick="selectPhase('90')">
         <div class="phase-dot"></div>
-        <div class="phase-label">Phase 3 · Days 61–90</div>
-        <div class="phase-name">Ownership</div>
-        <div class="phase-tagline">The admin presents a roadmap, owns a KPI dashboard, and graduates to full TASSP positioning.</div>
+        <div class="phase-label">Days 61 – 90</div>
+        <div class="phase-name">Strategic Ownership</div>
+        <div class="phase-tagline">Roadmap, KPIs, governance, business outcomes.</div>
+        <div class="phase-tier-link"><span class="phase-tier-dot" style="background:var(--tier-practitioner)"></span> → Practitioner</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- PHASE CONTENT -->
+<!-- PHASE PANELS -->
 <section class="phase-content">
   <div class="phase-content-inner">
 
-    <!-- PHASE PRE -->
+    <!-- ── PRE-START PHASE ── -->
     <div class="phase-panel active" data-phase="pre">
       <div class="phase-panel-header">
         <div>
-          <div class="phase-panel-eyebrow">Phase 0 · Before Day 1</div>
-          <div class="phase-panel-title">Foundation: Set Them Up to Succeed</div>
-          <div class="phase-panel-desc">Most admins walk in on day one with zero access and zero context. This phase ensures the leader has done the work before the admin even starts — and that the admin knows what they're walking into.</div>
+          <div class="phase-panel-eyebrow">Foundation Phase · Pre-Start</div>
+          <div class="phase-panel-title">Set the Table Before Day One</div>
+          <div class="phase-panel-desc">The most expensive mistake in TASSP onboarding is letting someone touch production before they understand what they're touching. This phase is about structured preparation — the artifacts, access, and context that make everything else possible.</div>
         </div>
         <div class="phase-progress">
-          <div class="phase-progress-label">Tasks this phase</div>
+          <div class="phase-progress-label">Phase Tasks</div>
           <div class="phase-progress-num">12</div>
-          <div class="phase-progress-sub">across both tracks</div>
+          <div class="phase-progress-sub">checklist items</div>
         </div>
+      </div>
+
+      <div class="phase-tier-callout">
+        <div class="phase-tier-icon" style="background:rgba(123,111,212,0.15);">🎓</div>
+        <div class="phase-tier-callout-text">This phase corresponds to the <strong>Apprentice Tier</strong> — safe operations, clean data, foundational artifacts. The goal is to prepare without touching production.</div>
+        <a href="#career-path" class="phase-tier-callout-link" onclick="selectTier('apprentice');return false;">View Tier →</a>
       </div>
 
       <div class="progress-banner" id="progress-pre">
-        <span class="progress-banner-label">Phase progress</span>
+        <div class="progress-banner-label">Phase Progress</div>
         <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
-        <span class="progress-pct">0%</span>
+        <div class="progress-pct">0%</div>
         <button class="progress-reset" onclick="resetPhase('pre')">Reset</button>
       </div>
 
-      <div class="dual-track" id="track-pre">
+      <div class="dual-track">
         <!-- TA LEADER TRACK -->
         <div class="track-column" data-for="leader">
           <div class="track-header" data-track="leader">
             <div class="track-header-dot"></div>
             <span class="track-header-label">TA Leader Track</span>
-            <span class="track-header-role">Director / VP / HR Leader</span>
+            <span class="track-header-role">Hiring Manager / Director</span>
           </div>
           <div class="checklist-group">
             <div class="checklist-section open">
-              <div class="checklist-section-title">Stack &amp; Access <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-section-title">Stack &amp; Access Preparation <span class="checklist-section-arrow">▲</span></div>
               <div class="checklist-items">
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Audit and document every tool in your TA tech stack</div>
-                    <div class="checklist-note">ATS, CRM, scheduling, texting, assessments, background check, video studio, career site CMS, and HCM integration points</div>
-                    <span class="checklist-tag tag-tool">Tool Inventory</span>
+                    <div class="checklist-task">Create a complete TA stack inventory: every platform, owner, contract tier, renewal date, and support path</div>
+                    <div class="checklist-note">If you can't produce this list, that's the first thing the TASSP needs to build — which means your pre-start work is documenting what you know and what's unknown</div>
+                    <span class="checklist-tag tag-tool">Stack Clarity</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Provision admin-level access to all platforms before Day 1</div>
-                    <div class="checklist-note">Do not wait — access delays kill momentum and signal the role isn't valued</div>
-                    <span class="checklist-tag tag-tool">Access</span>
+                    <div class="checklist-task">Provision access to all platforms including sandbox environments — before Day 1</div>
+                    <div class="checklist-note">Set permissions at the appropriate level: view-only where possible until the admin demonstrates sandbox competency</div>
+                    <span class="checklist-tag tag-tool">Access</span><span class="checklist-tag tag-process">Sandbox First</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
                     <div class="checklist-task">Identify and document existing vendor contracts, renewal dates, and tier levels</div>
-                    <div class="checklist-note">The admin needs to know what's contracted, what's add-on, and what's underused</div>
+                    <div class="checklist-note">The TASSP needs to know what's contracted, what's add-on, and what's underused — this shapes their entire first roadmap</div>
                     <span class="checklist-tag tag-tool">Contracts</span>
                   </div>
                 </div>
@@ -421,8 +915,8 @@
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Schedule a pre-start briefing with the incoming admin</div>
-                    <div class="checklist-note">Walk through the stack, team structure, and top 3 priorities before they start</div>
+                    <div class="checklist-task">Schedule a pre-start briefing: walk through the stack, team structure, and top 3 priorities before they start</div>
+                    <div class="checklist-note">This single conversation saves weeks of discovery time. Don't skip it.</div>
                     <span class="checklist-tag tag-people">Kickoff</span>
                   </div>
                 </div>
@@ -430,24 +924,16 @@
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
                     <div class="checklist-task">Identify a buddy or shadow partner from the recruiting team</div>
-                    <div class="checklist-note">Someone who can show the admin how the system is actually used day-to-day vs. how it was designed</div>
+                    <div class="checklist-note">Someone who can show the TASSP how the system is actually used day-to-day vs. how it was designed</div>
                     <span class="checklist-tag tag-people">Buddy System</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Document known pain points, workarounds, and legacy issues in the current config</div>
-                    <div class="checklist-note">Don't let the admin discover these by accident — brief them on inherited technical debt upfront</div>
-                    <span class="checklist-tag tag-process">Inherited Issues</span>
-                  </div>
-                </div>
-                <div class="checklist-item" onclick="toggleItem(this)">
-                  <div class="checklist-box"></div>
-                  <div class="checklist-text">
-                    <div class="checklist-task">Set up a sandbox environment before Day 1</div>
-                    <div class="checklist-note">The sandbox is where learning happens safely. Build exercises around actual workflows, not hypotheticals</div>
-                    <span class="checklist-tag tag-tool">Sandbox</span>
+                    <div class="checklist-task">Document known pain points, workarounds, and legacy issues — brief the TASSP on inherited technical debt upfront</div>
+                    <div class="checklist-note">Don't let them discover critical issues by accident in production. Known debt briefed early becomes a prioritized backlog item.</div>
+                    <span class="checklist-tag tag-process">Inherited Debt</span>
                   </div>
                 </div>
               </div>
@@ -455,12 +941,12 @@
           </div>
         </div>
 
-        <!-- ADMIN TRACK -->
+        <!-- TASSP ADMIN TRACK -->
         <div class="track-column" data-for="admin">
           <div class="track-header" data-track="admin">
             <div class="track-header-dot"></div>
-            <span class="track-header-label">Admin Track</span>
-            <span class="track-header-role">Incoming TASSP / System Admin</span>
+            <span class="track-header-label">TASSP / Admin Track</span>
+            <span class="track-header-role">Incoming Systems Professional</span>
           </div>
           <div class="checklist-group">
             <div class="checklist-section open">
@@ -469,8 +955,8 @@
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Request a full list of every platform you'll be responsible for administering</div>
-                    <div class="checklist-note">If your leader can't provide one, that itself is a signal about the state of the stack</div>
+                    <div class="checklist-task">Request a full list of every platform you'll be responsible for — if your leader can't provide one, that's your first signal</div>
+                    <div class="checklist-note">If this list doesn't exist, you've just identified your first artifact to build</div>
                     <span class="checklist-tag tag-tool">Stack Clarity</span>
                   </div>
                 </div>
@@ -478,14 +964,14 @@
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
                     <div class="checklist-task">Join vendor communities and user groups for each platform before Day 1</div>
-                    <div class="checklist-note">iCIMS Community, Greenhouse Support, Workday Community, Lever Help Center — these are your real lifelines</div>
-                    <span class="checklist-tag tag-tool">Communities</span><span class="checklist-tag tag-tool">Examples: iCIMS, Greenhouse, Workday, Lever, Ashby</span>
+                    <div class="checklist-note">iCIMS Community, Greenhouse Support, Workday Community, Lever Help Center — these are your real lifelines, not just the internal help desk</div>
+                    <span class="checklist-tag tag-tool">Communities</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Identify available certifications for your primary ATS and CRM platforms</div>
+                    <div class="checklist-task">Identify available certifications for your primary ATS and CRM platforms and start foundations coursework</div>
                     <div class="checklist-note">Certification is not vanity — it's how you build the credibility to make configuration decisions autonomously</div>
                     <span class="checklist-tag tag-tool">Certifications</span>
                   </div>
@@ -494,150 +980,96 @@
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
                     <div class="checklist-task">Ask your leader for the top 3 things they wish the last admin had done differently</div>
-                    <div class="checklist-note">This question alone gives you more context than a 2-week onboarding doc</div>
+                    <div class="checklist-note">This one question gives you more strategic context than a two-week onboarding doc</div>
                     <span class="checklist-tag tag-people">Context</span>
-                  </div>
-                </div>
-                <div class="checklist-item" onclick="toggleItem(this)">
-                  <div class="checklist-box"></div>
-                  <div class="checklist-text">
-                    <div class="checklist-task">Write down your starting assumptions about the role — revisit them at Day 30</div>
-                    <div class="checklist-note">Most new admins underestimate the strategic scope. Documenting your starting mindset helps measure growth</div>
-                    <span class="checklist-tag tag-process">Self-Awareness</span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div><!-- /dual-track -->
 
-      <div class="tool-callout">
-        <div class="tool-callout-label">Tool-Specific Provisioning Examples</div>
-        <div class="tool-callout-grid">
-          <div class="tool-item">
-            <div class="tool-name">iCIMS</div>
-            <div class="tool-note">Admin console access, Academy enrollment, Community registration</div>
-            <div style="margin-top:0.6rem;display:flex;flex-direction:column;gap:0.3rem;">
-              <a href="https://www.icims.com/community/professional-services/" target="_blank" rel="noopener" style="font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;color:var(--gold);text-decoration:none;display:flex;align-items:center;gap:0.3rem;">↗ Training &amp; Certification</a>
-              <a href="https://community.icims.com" target="_blank" rel="noopener" style="font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:0.3rem;">↗ iCIMS Community <span style="color:var(--steel);font-size:0.55rem;">(customers)</span></a>
+            <div class="artifact-callout">
+              <div class="artifact-callout-label">Pre-Start Artifacts to Begin Building</div>
+              <div class="artifact-callout-items">
+                <span class="artifact-chip">Stack architecture map</span>
+                <span class="artifact-chip">Vendor community memberships</span>
+                <span class="artifact-chip">Certification learning plan</span>
+              </div>
             </div>
-          </div>
-          <div class="tool-item">
-            <div class="tool-name">Greenhouse</div>
-            <div class="tool-note">Site Admin role, Harvest API access, Learn Greenhouse hub</div>
-            <div style="margin-top:0.6rem;display:flex;flex-direction:column;gap:0.3rem;">
-              <a href="https://learn.greenhouse.io" target="_blank" rel="noopener" style="font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;color:var(--gold);text-decoration:none;display:flex;align-items:center;gap:0.3rem;">↗ Learn Greenhouse</a>
-              <a href="https://support.greenhouse.io/hc/en-us/sections/4405933096731-Training-resources" target="_blank" rel="noopener" style="font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;color:var(--muted);text-decoration:none;">↗ Training Resources</a>
-            </div>
-          </div>
-          <div class="tool-item">
-            <div class="tool-name">Workday Recruiting</div>
-            <div class="tool-note">Workday Community account, tenant sandbox access, security group configuration</div>
-            <div style="margin-top:0.6rem;">
-              <a href="https://www.workday.com/en-us/services/community.html" target="_blank" rel="noopener" style="font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;color:var(--gold);text-decoration:none;display:flex;align-items:center;gap:0.3rem;">↗ Workday Community <span style="color:var(--steel);font-size:0.55rem;">(customers)</span></a>
-            </div>
-          </div>
-          <div class="tool-item">
-            <div class="tool-name">Lever</div>
-            <div class="tool-note">Super Admin access, Lever Help Center, API key management — community access via your CSM</div>
-          </div>
-          <div class="tool-item">
-            <div class="tool-name">Ashby</div>
-            <div class="tool-note">Admin role access, Ashby University, Slack community — request access through your account team</div>
-          </div>
-          <div class="tool-item">
-            <div class="tool-name">Any ATS</div>
-            <div class="tool-note">Sandbox/test environment, vendor CSM introduction, support ticket access</div>
           </div>
         </div>
       </div>
-    </div><!-- /phase-pre -->
+    </div>
 
-    <!-- PHASE 30 -->
+    <!-- ── 30-DAY PHASE ── -->
     <div class="phase-panel" data-phase="30">
       <div class="phase-panel-header">
         <div>
-          <div class="phase-panel-eyebrow">Phase 1 · Days 1–30</div>
-          <div class="phase-panel-title">Orientation: Learn Before You Touch</div>
-          <div class="phase-panel-desc">The first 30 days are about deep observation and structured learning — not reconfiguring anything. The admin's job is to understand the system as it is before improving it.</div>
+          <div class="phase-panel-eyebrow">First 30 Days · Learning &amp; Risk Control</div>
+          <div class="phase-panel-title">Understand Before You Touch</div>
+          <div class="phase-panel-desc">This phase is about structured discovery. You are mapping — not fixing. Every audit, every shadow session, every review is feeding the artifacts that will make safe change possible later. Compliance and selection design failures create legal risk; analytics failures create false certainty. Get the foundation right.</div>
         </div>
         <div class="phase-progress">
-          <div class="phase-progress-label">Tasks this phase</div>
-          <div class="phase-progress-num">16</div>
-          <div class="phase-progress-sub">across both tracks</div>
+          <div class="phase-progress-label">Phase Tasks</div>
+          <div class="phase-progress-num">18</div>
+          <div class="phase-progress-sub">checklist items</div>
         </div>
+      </div>
+
+      <div class="phase-tier-callout">
+        <div class="phase-tier-icon" style="background:rgba(123,111,212,0.15);">🎓</div>
+        <div class="phase-tier-callout-text">Still in the <strong>Apprentice Tier</strong> — the mandate is safe operations, data hygiene, and learning the system as-is before making any changes. Sandbox is your only configuration environment.</div>
+        <a href="#career-path" class="phase-tier-callout-link" onclick="selectTier('apprentice');return false;">View Tier →</a>
       </div>
 
       <div class="progress-banner" id="progress-30">
-        <span class="progress-banner-label">Phase progress</span>
+        <div class="progress-banner-label">Phase Progress</div>
         <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
-        <span class="progress-pct">0%</span>
+        <div class="progress-pct">0%</div>
         <button class="progress-reset" onclick="resetPhase('30')">Reset</button>
       </div>
 
-      <div class="dual-track" id="track-30">
+      <div class="dual-track">
+        <!-- TA LEADER TRACK -->
         <div class="track-column" data-for="leader">
           <div class="track-header" data-track="leader">
             <div class="track-header-dot"></div>
             <span class="track-header-label">TA Leader Track</span>
-            <span class="track-header-role">Director / VP / HR Leader</span>
+            <span class="track-header-role">Hiring Manager / Director</span>
           </div>
           <div class="checklist-group">
             <div class="checklist-section open">
-              <div class="checklist-section-title">Structure &amp; Support <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-section-title">Structured Discovery Support <span class="checklist-section-arrow">▲</span></div>
               <div class="checklist-items">
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Schedule weekly 1:1s for the first 30 days — no exceptions</div>
-                    <div class="checklist-note">This is where you catch misalignments early before they become configurations that need to be undone</div>
-                    <span class="checklist-tag tag-people">Cadence</span>
+                    <div class="checklist-task">Provide access to historical reporting, past configuration change records, and any existing process documentation</div>
+                    <div class="checklist-note">Even imperfect historical docs give the TASSP a baseline to audit against</div>
+                    <span class="checklist-tag tag-data">Documentation</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Share current TA KPI baseline — time to fill, time to hire, offer acceptance rate, source of hire</div>
-                    <div class="checklist-note">The admin can't connect system to strategy without knowing what the strategy is measuring</div>
-                    <span class="checklist-tag tag-data">KPI Baseline</span>
+                    <div class="checklist-task">Schedule shadowing sessions with at least 2 different recruiter types and 1 hiring manager to show real system usage</div>
+                    <div class="checklist-note">The gap between designed workflow and actual behavior is where most data quality problems live</div>
+                    <span class="checklist-tag tag-people">Shadowing</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Introduce the admin to every recruiter, coordinator, and hiring manager they'll support</div>
-                    <div class="checklist-note">Relationships are how admins learn what's actually broken vs. what's technically configured correctly</div>
-                    <span class="checklist-tag tag-people">Introductions</span>
+                    <div class="checklist-task">Share any open compliance obligations or pending audits the TASSP should be aware of</div>
+                    <div class="checklist-note">OFCCP federal contractor recordkeeping, background check adverse action workflows, EEO reporting — these need to be briefed early, not discovered</div>
+                    <span class="checklist-tag tag-process">Compliance Briefing</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Assign a first observation project: shadow 3 full recruiting cycles end-to-end</div>
-                    <div class="checklist-note">Req opening through hire — in the system, with the recruiter, not just in documentation</div>
-                    <span class="checklist-tag tag-process">Shadow Project</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="checklist-section open">
-              <div class="checklist-section-title">Learning Plan <span class="checklist-section-arrow">▲</span></div>
-              <div class="checklist-items">
-                <div class="checklist-item" onclick="toggleItem(this)">
-                  <div class="checklist-box"></div>
-                  <div class="checklist-text">
-                    <div class="checklist-task">Build a 90-day learning plan focused on contracted solutions, not general HR ed</div>
-                    <div class="checklist-note">Confidence in your specific stack is more valuable than broad ATS knowledge at this stage</div>
-                    <span class="checklist-tag tag-process">Learning Plan</span>
-                  </div>
-                </div>
-                <div class="checklist-item" onclick="toggleItem(this)">
-                  <div class="checklist-box"></div>
-                  <div class="checklist-text">
-                    <div class="checklist-task">Set a certification goal: primary ATS certification within 60 days</div>
-                    <div class="checklist-note">Make it an official milestone, not a nice-to-have</div>
-                    <span class="checklist-tag tag-tool">Certification Goal</span>
+                    <div class="checklist-task">Set a week-2 check-in to review the TASSP's initial audit findings and field questions</div>
+                    <div class="checklist-note">Early check-ins catch misinterpretations before they become bad habits</div>
+                    <span class="checklist-tag tag-people">Check-in</span>
                   </div>
                 </div>
               </div>
@@ -645,159 +1077,216 @@
           </div>
         </div>
 
+        <!-- TASSP ADMIN TRACK -->
         <div class="track-column" data-for="admin">
           <div class="track-header" data-track="admin">
             <div class="track-header-dot"></div>
-            <span class="track-header-label">Admin Track</span>
-            <span class="track-header-role">Incoming TASSP / System Admin</span>
+            <span class="track-header-label">TASSP / Admin Track</span>
+            <span class="track-header-role">Incoming Systems Professional</span>
           </div>
           <div class="checklist-group">
             <div class="checklist-section open">
-              <div class="checklist-section-title">System Audit <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-section-title">Stack &amp; Architecture Audit <span class="checklist-section-arrow">▲</span></div>
               <div class="checklist-items">
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Document every active workflow, automation rule, and trigger in your ATS</div>
-                    <div class="checklist-note">Don't change anything yet — just map what exists. You'll find things running that nobody remembers creating</div>
-                    <span class="checklist-tag tag-process">Audit</span>
+                    <div class="checklist-task">Build the TA stack architecture map: systems of record, candidate surfaces, data flows, owners, support paths, and renewals</div>
+                    <div class="checklist-note">This is more than an inventory — it shows how data moves between systems and where it breaks. Every integration failure becomes diagnosable.</div>
+                    <span class="checklist-tag tag-tool">Architecture Map</span><span class="checklist-tag tag-data">Artifact</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Map your end-to-end TA process — from req open to hire — in a structured swimlane format</div>
-                    <div class="checklist-note">Who does what, at what stage, and who owns each handoff. One session per hiring track (hourly, salaried, executive, etc.). The output becomes your SOP baseline for the rest of onboarding.</div>
-                    <a class="checklist-tool-link" href="process-mapper.html" target="_blank">
-                      <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 5h8M6 2l3 3-3 3"/></svg>
-                      Recommended tool: TA Process Mapper — generates a print-ready BPMN map + SOP
-                    </a>
-                    <span class="checklist-tag tag-process">Process Map</span><span class="checklist-tag tag-tool">Process Mapper</span>
+                    <div class="checklist-task">Complete a full integrations inventory: version, authentication model, owner, runbook status, monitoring method</div>
+                    <div class="checklist-note">APIs deprecate. Permissions models evolve. If no runbooks exist, flag this as a critical gap.</div>
+                    <span class="checklist-tag tag-tool">Integrations</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Identify all integrations: HRIS, background check, scheduling, assessments, job boards</div>
-                    <div class="checklist-note">Document what's connected, what the data flow is, and who owns each integration on both sides</div>
-                    <span class="checklist-tag tag-tool">Integrations</span><span class="checklist-tag tag-tool">Examples: Workday, ADP, Sterling, Checkr, GoodTime, HireVue</span>
-                  </div>
-                </div>
-                <div class="checklist-item" onclick="toggleItem(this)">
-                  <div class="checklist-box"></div>
-                  <div class="checklist-text">
-                    <div class="checklist-task">Catalog all existing reports and dashboards — who uses them, how often, for what decisions</div>
-                    <div class="checklist-note">Many reports are run because "we've always run them" — you need to know which ones actually inform strategy</div>
-                    <span class="checklist-tag tag-data">Reporting Audit</span>
-                  </div>
-                </div>
-                <div class="checklist-item" onclick="toggleItem(this)">
-                  <div class="checklist-box"></div>
-                  <div class="checklist-text">
-                    <div class="checklist-task">Review data hygiene: naming conventions, stage labels, disposition codes, requisition structure</div>
-                    <div class="checklist-note">Bad taxonomy in week 1 becomes a reporting nightmare in month 6. Document what exists before fixing it</div>
+                    <div class="checklist-task">Conduct a data hygiene audit: stage and disposition completeness, source taxonomy consistency, required fields</div>
+                    <div class="checklist-note">Unreliable data in = unreliable metrics out. This audit is the foundation of everything you'll report on later.</div>
                     <span class="checklist-tag tag-data">Data Hygiene</span>
                   </div>
                 </div>
               </div>
             </div>
+
             <div class="checklist-section open">
-              <div class="checklist-section-title">People &amp; Process <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-section-title">Process &amp; Workflow Discovery <span class="checklist-section-arrow">▲</span></div>
               <div class="checklist-items">
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Interview 3–5 recruiters about where the system fails them in daily workflows</div>
-                    <div class="checklist-note">Recruiters hold tribal knowledge the system documentation never captured</div>
-                    <span class="checklist-tag tag-people">Recruiter Interviews</span>
+                    <div class="checklist-task">Map the end-to-end recruiting workflow using BPMN swimlane notation — at least two hiring types (e.g., hourly and salaried)</div>
+                    <div class="checklist-note">Identify the highest-risk handoffs: where data is created, where it's lost, where compliance exposure lives. One session per hiring track — the output becomes your SOP baseline for the rest of onboarding.</div>
+                    <a class="checklist-tool-link" href="process-mapper.html" target="_blank">
+                      <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 5h8M6 2l3 3-3 3"/></svg>
+                      Recommended tool: TA Process Mapper (BETA) — generates a print-ready BPMN map + SOP
+                    </a>
+                    <span class="checklist-tag tag-process">Process Map</span><span class="checklist-tag tag-tool">Process Mapper</span><span class="checklist-tag tag-data">Artifact</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Use sandbox to rebuild 2 core workflows from scratch — without looking at production config</div>
-                    <div class="checklist-note">If you can rebuild it independently, you understand it. If you can't, you don't yet — and that's fine at Day 30</div>
-                    <span class="checklist-tag tag-tool">Sandbox Practice</span>
+                    <div class="checklist-task">Build data dictionary v0: definitions for each stage and disposition, required fields by workflow, controlled vocabularies, deprecated values</div>
+                    <div class="checklist-note">This is the foundation for reliable conversion reporting. Without consistent definitions, your metrics will contradict themselves.</div>
+                    <span class="checklist-tag tag-data">Data Dictionary</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Deliver a Day 30 findings brief to your TA leader</div>
-                    <div class="checklist-note">What you observed, what surprised you, what's working, and what you're not touching yet — all in one clear summary</div>
-                    <span class="checklist-tag tag-process">30-Day Brief</span>
+                    <div class="checklist-task">Conduct a reporting audit: what exists, what's being used, what definitions are inconsistent or missing</div>
+                    <div class="checklist-note">Pay special attention to how time-to-fill and time-to-hire are currently calculated — these are commonly mis-measured</div>
+                    <span class="checklist-tag tag-data">Reporting Audit</span>
                   </div>
                 </div>
               </div>
             </div>
+
+            <div class="checklist-section open">
+              <div class="checklist-section-title">Compliance &amp; Risk Posture Review <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-items">
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Document selection procedure governance: what gets screened, assessed, or scored, and whether criteria are job-related and defensible</div>
+                    <div class="checklist-note">EEOC guidance is explicit: selection tools can violate anti-discrimination law if they disproportionately exclude protected groups without legal justification</div>
+                    <span class="checklist-tag tag-process">Selection Governance</span>
+                  </div>
+                </div>
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Review recordkeeping and retention posture — flag any gaps for federal contractor obligations or general data retention policy</div>
+                    <div class="checklist-note">OFCCP requires preserving job postings, applications, resumes, tests, and interview notes for at least 2 years in some contexts</div>
+                    <span class="checklist-tag tag-process">Recordkeeping</span>
+                  </div>
+                </div>
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Verify background check adverse action workflow is supportable by current system templates and process</div>
+                    <div class="checklist-note">U.S. law requires a two-step notice process before and after adverse action. If your system can't support this, it's a priority fix.</div>
+                    <span class="checklist-tag tag-process">Adverse Action</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="capability-gate">
+              <div class="capability-gate-label">30-Day Capability Gate — Can You Demonstrate These?</div>
+              <ul class="capability-gate-items">
+                <li>Can explain the full TA stack, data flows, and owners using your architecture map</li>
+                <li>Can describe the end-to-end recruiting workflow for at least two hiring types</li>
+                <li>Can articulate baseline definitions for time-to-fill and time-to-hire and show where each comes from</li>
+                <li>Can identify the top three compliance risks embedded in current workflows</li>
+              </ul>
+            </div>
+
+            <div class="artifact-callout">
+              <div class="artifact-callout-label">Required Artifacts by Day 30</div>
+              <div class="artifact-callout-items">
+                <span class="artifact-chip">TA stack architecture map</span>
+                <span class="artifact-chip">Integrations inventory</span>
+                <span class="artifact-chip">Process map (2 hiring types)</span>
+                <span class="artifact-chip">Data dictionary v0</span>
+                <span class="artifact-chip">Reporting audit</span>
+                <span class="artifact-chip">Compliance risk flag list</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div><!-- /dual-track -->
-    </div><!-- /phase-30 -->
+      </div>
+    </div>
 
-    <!-- PHASE 60 -->
+    <!-- ── 60-DAY PHASE ── -->
     <div class="phase-panel" data-phase="60">
       <div class="phase-panel-header">
         <div>
-          <div class="phase-panel-eyebrow">Phase 2 · Days 31–60</div>
-          <div class="phase-panel-title">Competence: Connect System to Strategy</div>
-          <div class="phase-panel-desc">With the audit complete, the admin now makes their first strategic connections — tying configuration decisions to business outcomes and taking on first-owned optimizations.</div>
+          <div class="phase-panel-eyebrow">Days 31–60 · Competence &amp; Ownership</div>
+          <div class="phase-panel-title">Configure, Enable, and Measure</div>
+          <div class="phase-panel-desc">This phase is where the TASSP moves from observer to operator. Change control goes live. Dashboards get built with real definitions. Training programs launch. The integration landscape gets actively managed. This is where Practitioner-track competencies begin.</div>
         </div>
         <div class="phase-progress">
-          <div class="phase-progress-label">Tasks this phase</div>
-          <div class="phase-progress-num">14</div>
-          <div class="phase-progress-sub">across both tracks</div>
+          <div class="phase-progress-label">Phase Tasks</div>
+          <div class="phase-progress-num">22</div>
+          <div class="phase-progress-sub">checklist items</div>
         </div>
+      </div>
+
+      <div class="phase-tier-callout">
+        <div class="phase-tier-icon" style="background:rgba(78,142,207,0.15);">⚙️</div>
+        <div class="phase-tier-callout-text">Transitioning into <strong>Practitioner Tier</strong> competencies — workflow ownership, change governance, user enablement, integration operations.</div>
+        <a href="#career-path" class="phase-tier-callout-link" onclick="selectTier('practitioner');return false;">View Tier →</a>
       </div>
 
       <div class="progress-banner" id="progress-60">
-        <span class="progress-banner-label">Phase progress</span>
+        <div class="progress-banner-label">Phase Progress</div>
         <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
-        <span class="progress-pct">0%</span>
+        <div class="progress-pct">0%</div>
         <button class="progress-reset" onclick="resetPhase('60')">Reset</button>
       </div>
 
-      <div class="dual-track" id="track-60">
+      <div class="dual-track">
         <div class="track-column" data-for="leader">
           <div class="track-header" data-track="leader">
             <div class="track-header-dot"></div>
             <span class="track-header-label">TA Leader Track</span>
-            <span class="track-header-role">Director / VP / HR Leader</span>
+            <span class="track-header-role">Hiring Manager / Director</span>
           </div>
           <div class="checklist-group">
             <div class="checklist-section open">
-              <div class="checklist-section-title">Strategic Enablement <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-section-title">Change Governance Activation <span class="checklist-section-arrow">▲</span></div>
               <div class="checklist-items">
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Share TA org's strategic priorities for the next quarter — not just open reqs</div>
-                    <div class="checklist-note">Hiring plans, diversity goals, sourcing shifts, tech evaluations — the admin needs strategic context to configure with intention</div>
-                    <span class="checklist-tag tag-process">Strategy Alignment</span>
+                    <div class="checklist-task">Approve and formalize the TASSP's change intake process and triage rubric</div>
+                    <div class="checklist-note">All change requests must flow through this process. Ad-hoc "can you just fix this?" requests are where configuration debt is born.</div>
+                    <span class="checklist-tag tag-process">Change Governance</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Assign first optimization project with a defined success metric</div>
-                    <div class="checklist-note">Example: "Reduce average days in recruiter screen stage from X to Y by Day 60." Make the outcome measurable</div>
-                    <span class="checklist-tag tag-data">First Project</span>
+                    <div class="checklist-task">Establish a biweekly change review cadence with TA leadership and cross-functional partners</div>
+                    <div class="checklist-note">Change review meetings create alignment before something breaks, not after</div>
+                    <span class="checklist-tag tag-people">Governance Cadence</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Introduce admin to HRIS and IT counterparts — establish the cross-functional relationship</div>
-                    <div class="checklist-note">TASSP work almost always requires coordination across HRIS, IT, and Compliance. Plant these seeds now</div>
-                    <span class="checklist-tag tag-people">Cross-Functional</span>
+                    <div class="checklist-task">Begin receiving and reviewing the TASSP's first monthly "what changed and why" release communication</div>
+                    <div class="checklist-note">This creates accountability, improves recruiter adoption, and surfaces configuration decisions for leadership visibility</div>
+                    <span class="checklist-tag tag-process">Release Comms</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="checklist-section open">
+              <div class="checklist-section-title">Enablement &amp; Metrics <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-items">
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Validate and approve the KPI dashboard definitions before they become official reporting</div>
+                    <div class="checklist-note">Time-to-fill, time-to-hire, source of hire, conversion rates — agree on definitions now or fix inconsistencies forever</div>
+                    <span class="checklist-tag tag-data">Metrics Sign-off</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Review Day 30 brief together — validate priorities, adjust learning plan if needed</div>
-                    <div class="checklist-note">The brief isn't a performance review — it's a calibration session. Treat it that way</div>
-                    <span class="checklist-tag tag-process">Calibration</span>
+                    <div class="checklist-task">Review the TASSP's training plan and confirm role-based pathway for recruiters, coordinators, and hiring managers</div>
+                    <div class="checklist-note">Inconsistent system use costs time and pollutes data. A formal training pathway is not optional.</div>
+                    <span class="checklist-tag tag-people">Training Plan</span>
                   </div>
                 </div>
               </div>
@@ -808,139 +1297,207 @@
         <div class="track-column" data-for="admin">
           <div class="track-header" data-track="admin">
             <div class="track-header-dot"></div>
-            <span class="track-header-label">Admin Track</span>
-            <span class="track-header-role">Incoming TASSP / System Admin</span>
+            <span class="track-header-label">TASSP / Admin Track</span>
+            <span class="track-header-role">Incoming Systems Professional</span>
           </div>
           <div class="checklist-group">
             <div class="checklist-section open">
-              <div class="checklist-section-title">First Optimizations <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-section-title">Change Control System <span class="checklist-section-arrow">▲</span></div>
               <div class="checklist-items">
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Complete certification on your primary ATS platform</div>
-                    <div class="checklist-note">iCIMS Certified Admin, Greenhouse Certified Implementer, Workday Pro, or equivalent. This is your credibility anchor</div>
-                    <span class="checklist-tag tag-tool">Certification</span><span class="checklist-tag tag-tool">Examples: iCIMS Academy, Greenhouse Cert, Workday Pro</span>
+                    <div class="checklist-task">Build a formal change intake process: request form, triage rubric (compliance risk, candidate impact, throughput impact, reporting impact), and approval path</div>
+                    <div class="checklist-note">Every change without intake documentation is future technical debt. A triage rubric stops low-priority requests from crowding out high-risk fixes.</div>
+                    <span class="checklist-tag tag-process">Change Intake</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Identify and fix top 3 data hygiene issues discovered in audit — with documented before/after</div>
-                    <div class="checklist-note">Standardize naming conventions, clean up disposition codes, fix stage label inconsistencies. Document the change so future admins understand why</div>
-                    <span class="checklist-tag tag-data">Data Clean-up</span>
+                    <div class="checklist-task">Formalize the sandbox test protocol: testing scenarios mapped to workflows, acceptance criteria, rollback plan, sign-off path</div>
+                    <div class="checklist-note">Sandbox-first is your policy from Day 1. The protocol turns that policy into a repeatable, auditable process.</div>
+                    <span class="checklist-tag tag-tool">Sandbox Protocol</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Build or rebuild your first dashboard — time-to-fill and stage conversion at minimum</div>
-                    <div class="checklist-note">This is your proof of concept that you can turn system data into strategic visibility. Present it to your leader</div>
-                    <span class="checklist-tag tag-data">First Dashboard</span>
-                  </div>
-                </div>
-                <div class="checklist-item" onclick="toggleItem(this)">
-                  <div class="checklist-box"></div>
-                  <div class="checklist-text">
-                    <div class="checklist-task">Map at least one end-to-end workflow using the Triad framework: Efficient Process → Productivity → Outcome</div>
-                    <div class="checklist-note">Choose a workflow you improved and document: what changed, what it unlocked, what the downstream business impact is</div>
-                    <span class="checklist-tag tag-process">Triad Mapping</span>
+                    <div class="checklist-task">Implement and publish your first change log entry for any configuration change made in this phase</div>
+                    <div class="checklist-note">Log: what changed, why, who requested, who approved, what metric or risk it affects, how it was tested</div>
+                    <span class="checklist-tag tag-process">Change Log</span><span class="checklist-tag tag-data">Artifact</span>
                   </div>
                 </div>
               </div>
             </div>
+
             <div class="checklist-section open">
-              <div class="checklist-section-title">Strategic KPIs <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-section-title">User Enablement Program <span class="checklist-section-arrow">▲</span></div>
               <div class="checklist-items">
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Learn to answer these 5 questions from the system without help: time-to-fill, time-to-hire, offer acceptance rate, source of hire, stage conversion rate</div>
-                    <div class="checklist-note">These are the questions leadership asks. If you can answer them confidently, you've connected tools to strategy</div>
-                    <span class="checklist-tag tag-data">Core KPIs</span>
+                    <div class="checklist-task">Build role-based training pathways for recruiters, coordinators, hiring managers, and interviewers</div>
+                    <div class="checklist-note">Each persona has different system touchpoints and different ways they create data quality problems</div>
+                    <span class="checklist-tag tag-people">Training Design</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Identify one bottleneck in the hiring funnel and propose a system-level solution</div>
-                    <div class="checklist-note">Don't just surface the problem — bring the configuration option, the tradeoff, and the expected impact</div>
-                    <span class="checklist-tag tag-process">First Proposal</span>
+                    <div class="checklist-task">Create a "common failure modes" guide: duplicate profiles, wrong stage movement, missing dispositions, off-process workarounds</div>
+                    <div class="checklist-note">Document the 10 most common mistakes your users make and build them into training before they become data quality disasters</div>
+                    <span class="checklist-tag tag-process">Failure Modes</span>
+                  </div>
+                </div>
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Deliver your first training session for one user group and establish an office hours and escalation cadence</div>
+                    <div class="checklist-note">The session is also intelligence-gathering: every FAQ becomes a knowledge base article. Every confusion becomes a UX improvement ticket.</div>
+                    <span class="checklist-tag tag-people">First Training</span>
+                  </div>
+                </div>
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Build and maintain a "top 20 tickets" knowledge base with resolution steps, updated as new issues emerge</div>
+                    <div class="checklist-note">If you answer the same question twice without documenting it, you'll answer it 200 more times</div>
+                    <span class="checklist-tag tag-process">Knowledge Base</span>
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div class="checklist-section open">
+              <div class="checklist-section-title">Metrics &amp; Integration Operations <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-items">
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Build the first KPI dashboard distinguishing time-to-fill from time-to-hire — and teach the interpretation to stakeholders</div>
+                    <div class="checklist-note">Time-to-fill = days from req approval to offer acceptance. Time-to-hire = days from application to offer acceptance. These reveal different bottlenecks and are often conflated.</div>
+                    <span class="checklist-tag tag-data">KPI Dashboard</span><span class="checklist-tag tag-data">Artifact</span>
+                  </div>
+                </div>
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Establish a monthly integration health review: error logs, failed sync counts, vendor release calendar review</div>
+                    <div class="checklist-note">Integrations break silently. A monthly health check turns unknown failures into managed incidents.</div>
+                    <span class="checklist-tag tag-tool">Integration Health</span>
+                  </div>
+                </div>
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Set up vendor release calendar reviews for each core platform — flag releases that affect data definitions, workflow triggers, or compliance artifacts</div>
+                    <div class="checklist-note">Platform changes are not optional. If you miss a release that deprecates a field your reports depend on, you'll find out when the dashboard breaks.</div>
+                    <span class="checklist-tag tag-tool">Release Management</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="capability-gate">
+              <div class="capability-gate-label">60-Day Capability Gate — Can You Demonstrate These?</div>
+              <ul class="capability-gate-items">
+                <li>Can implement and document a change end-to-end: intake → sandbox → production → communication → metric check</li>
+                <li>Can deliver a dashboard distinguishing time-to-fill from time-to-hire and explain what delays each reveals</li>
+                <li>Can run a training session for one user group and maintain an ongoing support cadence</li>
+                <li>Can explain the integration landscape and identify the single highest operational risk integration</li>
+              </ul>
             </div>
           </div>
         </div>
       </div>
-    </div><!-- /phase-60 -->
+    </div>
 
-    <!-- PHASE 90 -->
+    <!-- ── 90-DAY PHASE ── -->
     <div class="phase-panel" data-phase="90">
       <div class="phase-panel-header">
         <div>
-          <div class="phase-panel-eyebrow">Phase 3 · Days 61–90</div>
-          <div class="phase-panel-title">Ownership: Graduate to TASSP</div>
-          <div class="phase-panel-desc">Day 90 is graduation. The admin now owns a roadmap, presents independently to leadership, and is positioned not as a system maintainer but as a strategic professional with a seat at the table.</div>
+          <div class="phase-panel-eyebrow">Days 61–90 · Strategic Ownership</div>
+          <div class="phase-panel-title">Translate Metrics Into Decisions</div>
+          <div class="phase-panel-desc">This phase is about moving from operational execution to strategic influence. You're not just running the system — you're connecting it to business outcomes, building the governance infrastructure, and positioning yourself for the Practitioner tier and beyond.</div>
         </div>
         <div class="phase-progress">
-          <div class="phase-progress-label">Tasks this phase</div>
-          <div class="phase-progress-num">12</div>
-          <div class="phase-progress-sub">across both tracks</div>
+          <div class="phase-progress-label">Phase Tasks</div>
+          <div class="phase-progress-num">20</div>
+          <div class="phase-progress-sub">checklist items</div>
         </div>
+      </div>
+
+      <div class="phase-tier-callout">
+        <div class="phase-tier-icon" style="background:rgba(63,170,124,0.12);">📊</div>
+        <div class="phase-tier-callout-text">Graduating toward <strong>Practitioner Tier</strong> — roadmap ownership, metrics as decision-making tools, business case development, and governance systems that scale.</div>
+        <a href="#career-path" class="phase-tier-callout-link" onclick="selectTier('practitioner');return false;">View Tier →</a>
       </div>
 
       <div class="progress-banner" id="progress-90">
-        <span class="progress-banner-label">Phase progress</span>
+        <div class="progress-banner-label">Phase Progress</div>
         <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
-        <span class="progress-pct">0%</span>
+        <div class="progress-pct">0%</div>
         <button class="progress-reset" onclick="resetPhase('90')">Reset</button>
       </div>
 
-      <div class="dual-track" id="track-90">
+      <div class="dual-track">
         <div class="track-column" data-for="leader">
           <div class="track-header" data-track="leader">
             <div class="track-header-dot"></div>
             <span class="track-header-label">TA Leader Track</span>
-            <span class="track-header-role">Director / VP / HR Leader</span>
+            <span class="track-header-role">Hiring Manager / Director</span>
           </div>
           <div class="checklist-group">
             <div class="checklist-section open">
-              <div class="checklist-section-title">TASSP Positioning <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-section-title">Strategic Positioning <span class="checklist-section-arrow">▲</span></div>
               <div class="checklist-items">
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Formally update the admin's role definition to reflect TASSP scope — not just "ATS Administrator"</div>
-                    <div class="checklist-note">This signals organizational commitment and sets expectations for the strategic work that comes next</div>
-                    <span class="checklist-tag tag-people">Role Definition</span>
+                    <div class="checklist-task">Ensure the TASSP is included in TA leadership meetings where technology decisions, workflow changes, or metrics are discussed</div>
+                    <div class="checklist-note">If the TASSP isn't in the room when you make decisions about the system they run, you'll pay for that in rework</div>
+                    <span class="checklist-tag tag-people">Seat at the Table</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Give the admin a standing slot in TA leadership meetings or QBRs</div>
-                    <div class="checklist-note">Visibility creates accountability. If the TASSP never presents to leadership, they'll never be positioned as strategic</div>
-                    <span class="checklist-tag tag-people">Leadership Visibility</span>
+                    <div class="checklist-task">Validate and accept the 6-month roadmap presentation from the TASSP — provide feedback, priorities, and resource constraints</div>
+                    <div class="checklist-note">The roadmap is only valuable if leadership engages with it seriously. Push back on anything that isn't metric-linked or resource-realistic.</div>
+                    <span class="checklist-tag tag-process">Roadmap Approval</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Create a TASSP development plan for the next 6 months: certifications, projects, and KPI ownership</div>
-                    <div class="checklist-note">The 90-day framework is the foundation. The development plan is what happens next</div>
-                    <span class="checklist-tag tag-process">Development Plan</span>
+                    <div class="checklist-task">Schedule the first formal quarterly business review (QBR) cadence with metrics, insights, and recommended actions</div>
+                    <div class="checklist-note">The QBR is where TA technology investment gets justified. Build this habit in the first 90 days, not the first 18 months.</div>
+                    <span class="checklist-tag tag-data">QBR Cadence</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="checklist-section open">
+              <div class="checklist-section-title">Development Planning <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-items">
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Create a formal development plan using the TASSP career pyramid — agree on target tier, target track, and development timeline</div>
+                    <div class="checklist-note">This conversation anchors career growth to the TASSP framework and makes retention intentional</div>
+                    <span class="checklist-tag tag-people">Career Plan</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Evaluate whether "already in seat" admins need a retroactive version of this framework</div>
-                    <div class="checklist-note">There's no wrong time to reset. See the "Already in the role?" section below for a condensed audit path</div>
-                    <span class="checklist-tag tag-process">Existing Admins</span>
+                    <div class="checklist-task">Identify certification pathways, conference budget, and professional development investment for the next 12 months</div>
+                    <div class="checklist-note">SHRM-CP, CIPD, vendor certifications, HR Tech — these are the credentials that accelerate advancement up the pyramid</div>
+                    <span class="checklist-tag tag-tool">Development Budget</span>
                   </div>
                 </div>
-          </div>
+              </div>
             </div>
           </div>
         </div>
@@ -948,73 +1505,168 @@
         <div class="track-column" data-for="admin">
           <div class="track-header" data-track="admin">
             <div class="track-header-dot"></div>
-            <span class="track-header-label">Admin Track</span>
-            <span class="track-header-role">Incoming TASSP / System Admin</span>
+            <span class="track-header-label">TASSP / Admin Track</span>
+            <span class="track-header-role">Incoming Systems Professional</span>
           </div>
           <div class="checklist-group">
             <div class="checklist-section open">
-              <div class="checklist-section-title">Your TASSP Roadmap <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-section-title">Measurement System <span class="checklist-section-arrow">▲</span></div>
               <div class="checklist-items">
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Build and present a 6-month TA systems roadmap to your leader</div>
-                    <div class="checklist-note">Prioritized optimizations, integration improvements, reporting gaps, and certification goals. This is your TASSP strategy document</div>
-                    <span class="checklist-tag tag-process">TASSP Roadmap</span>
+                    <div class="checklist-task">Define your metrics operating system: metric definitions, owners, reporting cadence (weekly ops / monthly leadership / quarterly QBR), and decision rules</div>
+                    <div class="checklist-note">A dashboard that nobody acts on is noise. Decision rules turn metrics into triggers: "if time-to-hire crosses X days for Y role type, escalate to leadership"</div>
+                    <span class="checklist-tag tag-data">Metrics OS</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Own a standing KPI dashboard and present it at your first leadership meeting</div>
-                    <div class="checklist-note">You are not presenting data — you are presenting insight. Lead with the "so what," not the numbers</div>
-                    <span class="checklist-tag tag-data">KPI Ownership</span>
+                    <div class="checklist-task">Establish baseline cost-per-hire and translate time savings from workflow improvements into recruiter capacity returned</div>
+                    <div class="checklist-note">Average cost-per-hire benchmarks are commonly cited around $4,700 (SHRM). Making the financial case for your work requires knowing your baseline.</div>
+                    <span class="checklist-tag tag-data">Cost Baseline</span>
                   </div>
                 </div>
                 <div class="checklist-item" onclick="toggleItem(this)">
                   <div class="checklist-box"></div>
                   <div class="checklist-text">
-                    <div class="checklist-task">Complete or schedule certification on secondary platform (CRM or scheduling tool)</div>
-                    <div class="checklist-note">The full TASSP operates across the stack, not just the ATS. Broaden your certification footprint</div>
-                    <span class="checklist-tag tag-tool">Second Certification</span>
-                  </div>
-                </div>
-                <div class="checklist-item" onclick="toggleItem(this)">
-                  <div class="checklist-box"></div>
-                  <div class="checklist-text">
-                    <div class="checklist-task">Document everything you changed and why — build your first system change log</div>
-                    <div class="checklist-note">This protects the org when you're out, and proves your strategic impact when your role comes up for review</div>
-                    <span class="checklist-tag tag-process">Change Log</span>
-                  </div>
-                </div>
-                <div class="checklist-item" onclick="toggleItem(this)">
-                  <div class="checklist-box"></div>
-                  <div class="checklist-text">
-                    <div class="checklist-task">Revisit your Day 0 assumptions document — write a reflection on how your understanding of the role has changed</div>
-                    <div class="checklist-note">This is for you. Most TASSP professionals discover on Day 90 that the role is far more strategic than they were told it would be</div>
-                    <span class="checklist-tag tag-process">Reflection</span>
+                    <div class="checklist-task">Define your quality-of-hire framework: retention, performance indicators, engagement — agree on components with TA leadership</div>
+                    <div class="checklist-note">Quality of hire is locally defined — there's no universal formula. Define it for your org now, measure it consistently later.</div>
+                    <span class="checklist-tag tag-data">Quality of Hire</span>
                   </div>
                 </div>
               </div>
             </div>
+
+            <div class="checklist-section open">
+              <div class="checklist-section-title">Roadmap &amp; Governance <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-items">
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Build and present your 6-month prioritized roadmap: metric-linked, resource-realistic, sorted by compliance risk and business impact</div>
+                    <div class="checklist-note">Every item needs a "why now" based on data, not just opinion. Compliance items go first; productivity items follow.</div>
+                    <span class="checklist-tag tag-process">6-Month Roadmap</span><span class="checklist-tag tag-data">Artifact</span>
+                  </div>
+                </div>
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Formalize a governance charter: change control process, training cadence, release review schedule, integration health check frequency</div>
+                    <div class="checklist-note">The governance charter is the operating agreement for how the TA systems function. Get it in writing, get it signed off.</div>
+                    <span class="checklist-tag tag-process">Governance Charter</span><span class="checklist-tag tag-data">Artifact</span>
+                  </div>
+                </div>
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Produce your documentation bundle: architecture map, data dictionary, integration catalog, change log — all version-controlled and accessible</div>
+                    <div class="checklist-note">This bundle is your institutional knowledge artifact. If you left tomorrow, the next TASSP should be able to understand the system from this documentation alone.</div>
+                    <span class="checklist-tag tag-data">Documentation Bundle</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="checklist-section open">
+              <div class="checklist-section-title">Continuous Learning Cadence <span class="checklist-section-arrow">▲</span></div>
+              <div class="checklist-items">
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Complete your first quarterly self-assessment against the TASSP career pyramid — identify your current tier, target tier, and gaps</div>
+                    <div class="checklist-note">This isn't a performance review exercise — it's a personal roadmap. Be honest about capability gaps. They're just the next area to close.</div>
+                    <span class="checklist-tag tag-process">Tier Self-Assessment</span>
+                  </div>
+                </div>
+                <div class="checklist-item" onclick="toggleItem(this)">
+                  <div class="checklist-box"></div>
+                  <div class="checklist-text">
+                    <div class="checklist-task">Publish a "what we changed and why" summary tied to metric movement — this is your first quarterly improvement narrative</div>
+                    <div class="checklist-note">The narrative is what gets you the next roadmap approved. Connect your work to outcomes in leadership language: efficiency, cost, quality, risk reduction.</div>
+                    <span class="checklist-tag tag-process">Impact Narrative</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="capability-gate">
+              <div class="capability-gate-label">Day-90 Graduation Artifacts — Required for Advancement</div>
+              <ul class="capability-gate-items">
+                <li>6-month roadmap: prioritized, metric-linked, resourced</li>
+                <li>Dashboard plus narrative — insight and recommended actions, not just numbers</li>
+                <li>Governance charter: change control, training, release review, integration health</li>
+                <li>Documentation bundle: architecture map, data dictionary, integration catalog, change log</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
-    </div><!-- /phase-90 -->
+    </div>
 
   </div>
 </section>
 
-<!-- DOWNLOAD CHECKLISTS -->
-<section class="download-section" id="downloads">
+<!-- READINESS CHECK -->
+<section class="readiness" id="readiness">
+  <div class="readiness-inner">
+    <div class="readiness-header">
+      <div class="section-eyebrow">Already In The Role?</div>
+      <h2 class="section-title">Where Are You on the Pyramid?</h2>
+      <p class="section-sub" style="margin:0.75rem auto 0;text-align:center;">Use these signals to identify your current tier and what's needed to advance.</p>
+    </div>
+    <div class="readiness-grid">
+      <div class="readiness-card">
+        <div class="readiness-icon">🎓</div>
+        <div class="readiness-title">Still at Apprentice</div>
+        <div class="readiness-body">You're doing important work, but there are still gaps in foundational artifacts and governance discipline.</div>
+        <div class="readiness-signals">
+          <div class="readiness-signal">No formal change log or intake process</div>
+          <div class="readiness-signal">Data dictionary v0 doesn't exist</div>
+          <div class="readiness-signal">Metrics contradict depending on who pulls them</div>
+          <div class="readiness-signal">Production changes happen without sandbox testing</div>
+          <div class="readiness-signal">Compliance posture is undocumented</div>
+        </div>
+      </div>
+      <div class="readiness-card">
+        <div class="readiness-icon">⚙️</div>
+        <div class="readiness-title">Ready for Practitioner</div>
+        <div class="readiness-body">Foundation artifacts exist. Change control is live. You're measuring and communicating consistently.</div>
+        <div class="readiness-signals">
+          <div class="readiness-signal">Can implement changes end-to-end with documentation</div>
+          <div class="readiness-signal">Dashboards have agreed-upon definitions</div>
+          <div class="readiness-signal">Training programs exist for core user groups</div>
+          <div class="readiness-signal">Integration inventory is maintained and monitored</div>
+          <div class="readiness-signal">One measurable bottleneck improvement on record</div>
+        </div>
+      </div>
+      <div class="readiness-card">
+        <div class="readiness-icon">🏛️</div>
+        <div class="readiness-title">Building Toward Specialist</div>
+        <div class="readiness-body">Practitioner competencies are mastered. You're expanding into automation, governance, and strategic influence.</div>
+        <div class="readiness-signals">
+          <div class="readiness-signal">Multi-quarter roadmap exists and is leadership-trusted</div>
+          <div class="readiness-signal">Adverse impact monitoring cadence established</div>
+          <div class="readiness-signal">AI and automation governance frameworks in place</div>
+          <div class="readiness-signal">QBR cadence tied to metric-driven decisions</div>
+          <div class="readiness-signal">Can build a business case for major platform change</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- PROCESS MAPPER TOOL -->
+<section class="download-section">
   <div class="download-inner">
     <div class="download-header">
-      <div class="section-eyebrow">Printable Checklists</div>
-      <h2 class="section-title">Take the Framework Offline</h2>
-      <p class="download-sub">Two versions of the 30/60/90 checklist — one for the supervisor running the onboarding, one for the admin living it. Print them, share them, work through them together.</p>
+      <div class="section-eyebrow">Interactive Tool</div>
+      <h2 class="section-title">Build Your Process Map</h2>
+      <p class="download-sub">The TA Process Mapper is purpose-built for the Day 30 checklist item. Answer structured questions about your hiring workflow and get a print-ready BPMN swimlane diagram and a written SOP — no process design experience required.</p>
     </div>
-    <div class="download-grid">
-
+    <div class="download-grid" style="max-width:520px;">
       <!-- Process Mapper -->
       <div class="download-card" style="border-color:rgba(201,169,110,0.25);">
         <div class="download-card-icon">🗺️</div>
@@ -1034,106 +1686,6 @@
         </a>
       </div>
 
-      <!-- Supervisor checklist -->
-      <div class="download-card">
-        <div class="download-card-icon">🧭</div>
-        <div>
-          <div class="download-card-meta">Checklist · Supervisor Track</div>
-          <div class="download-card-title">TASSP Onboarding Checklist — Supervisor of the TASSP</div>
-        </div>
-        <div class="download-card-desc">The facilitation guide for TA Leaders and hiring managers. Covers what to provide, what to observe, and how to evaluate readiness at each 30-day gate — across all four phases.</div>
-        <div class="download-card-tags">
-          <span class="download-tag">Phase 0–3</span>
-          <span class="download-tag">30 / 60 / 90 Day</span>
-          <span class="download-tag">Print-Ready</span>
-        </div>
-        <a href="tassp-onboarding-checklist-supervisor.pdf" download class="download-btn">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
-          Download PDF
-        </a>
-      </div>
-
-      <!-- Admin checklist -->
-      <div class="download-card">
-        <div class="download-card-icon">📋</div>
-        <div>
-          <div class="download-card-meta">Checklist · Admin / TASSP Track</div>
-          <div class="download-card-title">TASSP Onboarding Checklist — The Admin / TASSP</div>
-        </div>
-        <div class="download-card-desc">The working document for the person in the seat. Structured by phase and milestone, with write-in fields for notes, owners, and completion dates — designed to be used daily, not filed away.</div>
-        <div class="download-card-tags">
-          <span class="download-tag">Phase 0–3</span>
-          <span class="download-tag">30 / 60 / 90 Day</span>
-          <span class="download-tag">Print-Ready</span>
-        </div>
-        <a href="tassp-onboarding-checklist-admin.pdf" download class="download-btn">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
-          Download PDF
-        </a>
-      </div>
-
-      <!-- Word doc bundle -->
-      <div class="download-card">
-        <div class="download-card-icon">📄</div>
-        <div>
-          <div class="download-card-meta">Editable · Both Tracks</div>
-          <div class="download-card-title">Full Checklist Bundle — Word Format</div>
-        </div>
-        <div class="download-card-desc">Both checklists in a single editable Word document. Customize task owners, add org-specific milestones, or adapt the language for your team before you print or share.</div>
-        <div class="download-card-tags">
-          <span class="download-tag">Editable</span>
-          <span class="download-tag">Both Tracks</span>
-          <span class="download-tag">.docx</span>
-        </div>
-        <a href="tassp-onboarding-checklists.docx" download class="download-btn download-btn-ghost">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
-          Download .docx
-        </a>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- READINESS: ALREADY IN THE ROLE -->
-<section class="readiness" id="readiness">
-  <div class="readiness-inner">
-    <div class="readiness-header">
-      <div class="section-eyebrow">Already in the Seat</div>
-      <h2 class="section-title">No Formal Onboarding? There's No Better Time to Start.</h2>
-      <p class="section-sub" style="margin:0.75rem auto 0;">Most admins were never onboarded properly. That's not a failure — it's an industry-wide gap. The TASSP approach works at any stage of tenure. Here's how to retrofit it.</p>
-    </div>
-    <div class="readiness-grid">
-      <div class="readiness-card">
-        <div class="readiness-icon">🗺️</div>
-        <div class="readiness-title">Run the Stack Audit Anyway</div>
-        <div class="readiness-body">Even if you've been in the role for 2 years, the audit in Phase 0 and Phase 1 is worth running. Most tenured admins discover integrations they didn't know existed, reports nobody reads, and automations that fire incorrectly.</div>
-        <div class="readiness-signals">
-          <div class="readiness-signal">Document every tool, integration, and workflow as if you're briefing your replacement</div>
-          <div class="readiness-signal">Flag any configuration decisions made without a documented rationale</div>
-          <div class="readiness-signal">Identify the last time any workflow was reviewed vs. just maintained</div>
-        </div>
-      </div>
-      <div class="readiness-card">
-        <div class="readiness-icon">📊</div>
-        <div class="readiness-title">Connect Your Work to the KPIs</div>
-        <div class="readiness-body">If you can't answer these five questions from the system right now — time-to-fill, time-to-hire, offer acceptance rate, source of hire, stage conversion rate — that's your Phase 2 work. Start there.</div>
-        <div class="readiness-signals">
-          <div class="readiness-signal">Build one dashboard that answers a question leadership actually asks</div>
-          <div class="readiness-signal">Map one recent system change to a business outcome using the Triad</div>
-          <div class="readiness-signal">Present that connection to your leader, even informally</div>
-        </div>
-      </div>
-      <div class="readiness-card">
-        <div class="readiness-icon">🎓</div>
-        <div class="readiness-title">Get Certified if You Aren't</div>
-        <div class="readiness-body">Certification isn't about proving you know the system. You already do. It's about having the credential that gives you standing to propose changes, push back on configurations, and influence how the stack evolves.</div>
-        <div class="readiness-signals">
-          <div class="readiness-signal">Identify available certifications for each platform you administer</div>
-          <div class="readiness-signal">Commit to completing at least one in the next 60 days</div>
-          <div class="readiness-signal">Use certification communities as a network, not just a training resource</div>
-        </div>
-      </div>
     </div>
   </div>
 </section>
@@ -1161,7 +1713,7 @@
   <div class="cta-strip-inner">
     <div class="section-eyebrow">Continue the Framework</div>
     <h2 class="section-title">The Strategies That Power Every Phase</h2>
-    <p class="cta-strip-sub">Each phase of the TASSP onboarding framework connects to specific strategies in the library — career site audits, CRM configuration, metrics dashboards, onboarding workflows, and more.</p>
+    <p class="cta-strip-sub">Each phase of the TASSP onboarding framework connects to specific strategies in the library — career site audits, CRM configuration, metrics dashboards, onboarding workflows, and more. Stay current with weekly strategy drops.</p>
     <div class="cta-actions">
       <a href="library.html" class="btn-primary">Explore the Strategy Library</a>
       <a href="index.html#signup" class="btn-ghost">Get Weekly Strategies</a>
@@ -1175,26 +1727,32 @@
   <nav class="footer-nav">
     <a href="index.html">Home</a>
     <a href="library.html">Strategy Library</a>
-    <a href="onboarding.html">Admin Onboarding</a>
+    <a href="onboarding.html">Career Path & Onboarding</a>
     <a href="index.html#signup">Get Updates</a>
   </nav>
 </footer>
 
 <script>
-// ── PHASE SWITCHING ──
-const phaseCards = document.querySelectorAll('.phase-card');
-const phasePanels = document.querySelectorAll('.phase-panel');
+// ── TIER PYRAMID SELECTOR ──
+function selectTier(tier) {
+  document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tier-detail').forEach(d => d.classList.remove('active'));
+  const card = document.querySelector(`.tier-card[data-tier="${tier}"]`);
+  const detail = document.querySelector(`.tier-detail[data-tier="${tier}"]`);
+  if (card) card.classList.add('active');
+  if (detail) detail.classList.add('active');
+}
 
-phaseCards.forEach(card => {
-  card.addEventListener('click', () => {
-    const phase = card.dataset.phase;
-    phaseCards.forEach(c => c.classList.remove('active'));
-    phasePanels.forEach(p => p.classList.remove('active'));
-    card.classList.add('active');
-    document.querySelector(`.phase-panel[data-phase="${phase}"]`).classList.add('active');
-    document.querySelector('.phase-content').scrollIntoView({ behavior:'smooth', block:'start' });
-  });
-});
+// ── PHASE SWITCHING ──
+function selectPhase(phase) {
+  document.querySelectorAll('.phase-card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.phase-panel').forEach(p => p.classList.remove('active'));
+  const card = document.querySelector(`.phase-card[data-phase="${phase}"]`);
+  const panel = document.querySelector(`.phase-panel[data-phase="${phase}"]`);
+  if (card) card.classList.add('active');
+  if (panel) panel.classList.add('active');
+  document.querySelector('.phase-content').scrollIntoView({ behavior:'smooth', block:'start' });
+}
 
 // ── TRACK TOGGLE ──
 const trackTabs = document.querySelectorAll('.track-tab');
@@ -1221,10 +1779,11 @@ trackTabs.forEach(tab => {
 });
 
 // ── CHECKLIST SECTIONS ──
-document.querySelectorAll('.checklist-section-title').forEach(title => {
-  title.addEventListener('click', () => {
-    const section = title.parentElement;
-    section.classList.toggle('open');
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.checklist-section-title').forEach(title => {
+    title.addEventListener('click', () => {
+      title.parentElement.classList.toggle('open');
+    });
   });
 });
 
@@ -1235,7 +1794,6 @@ function toggleItem(item) {
 }
 
 function updateProgress() {
-  // Update progress for visible/active phase
   const activePanel = document.querySelector('.phase-panel.active');
   if (!activePanel) return;
   const phase = activePanel.dataset.phase;
@@ -1256,7 +1814,7 @@ function resetPhase(phase) {
   updateProgress();
 }
 
-// ── SMOOTH SCROLL FOR ANCHOR BUTTONS ──
+// ── SMOOTH SCROLL ──
 document.querySelectorAll('a[href^="#"]').forEach(a => {
   a.addEventListener('click', e => {
     const target = document.querySelector(a.getAttribute('href'));
