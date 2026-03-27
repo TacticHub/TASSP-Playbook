@@ -304,6 +304,8 @@
     .download-tag { font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase; padding:0.25rem 0.6rem; border-radius:3px; background:rgba(201,169,110,0.08); color:var(--gold); border:1px solid rgba(201,169,110,0.15); }
     .download-btn { display:inline-flex; align-items:center; gap:0.5rem; padding:0.7rem 1.4rem; background:var(--gold); color:var(--ink); font-family:'Outfit',sans-serif; font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; border-radius:3px; transition:background 0.2s, transform 0.15s; align-self:flex-start; }
     .download-btn:hover { background:var(--gold2); transform:translateY(-1px); }
+    .download-btn-ghost { background:transparent; color:var(--fog); border:1px solid var(--border); }
+    .download-btn-ghost:hover { background:transparent; border-color:rgba(201,169,110,0.4); color:var(--paper); transform:translateY(-1px); }
     .download-btn svg { width:14px; height:14px; flex-shrink:0; }
     .book-card-grid { transition:none; }
     @media(max-width:900px){ .book-card-grid { grid-template-columns:1fr !important; gap:1.5rem !important; } .book-card-grid img { width:90px !important; } .download-section { padding-left:1.5rem; padding-right:1.5rem; } }
@@ -361,6 +363,7 @@
     <a href="library.html">Strategy Library</a>
     <a href="onboarding.html" class="active">Career Path & Onboarding</a>
     <a href="#framework">Onboarding Framework</a>
+    <a href="#downloads">Checklists</a>
   </div>
   <div style="display:flex;align-items:center;gap:1rem;">
     <a class="nav-cta" href="index.html#signup">Get Updates</a>
@@ -1657,6 +1660,77 @@
   </div>
 </section>
 
+
+<!-- DOWNLOAD CHECKLISTS -->
+<section class="download-section" id="downloads">
+  <div class="download-inner">
+    <div class="download-header">
+      <div class="section-eyebrow">Printable Checklists</div>
+      <h2 class="section-title">Take the Framework Offline</h2>
+      <p class="download-sub">Two versions of the 30/60/90 checklist — one for the supervisor running the onboarding, one for the TASSP living it. Print them, share them, work through them together.</p>
+    </div>
+    <div class="download-grid">
+
+      <!-- Supervisor checklist -->
+      <div class="download-card">
+        <div class="download-card-icon">🧭</div>
+        <div>
+          <div class="download-card-meta">Checklist · Supervisor Track</div>
+          <div class="download-card-title">TASSP Onboarding Checklist — Supervisor of the TASSP</div>
+        </div>
+        <div class="download-card-desc">The facilitation guide for TA Leaders and hiring managers. Covers what to provide, what to observe, and how to evaluate readiness at each 30-day gate — across all four phases. Includes capability gates and artifact sign-off checklists.</div>
+        <div class="download-card-tags">
+          <span class="download-tag">Phase 0–3</span>
+          <span class="download-tag">30 / 60 / 90 Day</span>
+          <span class="download-tag">Print-Ready</span>
+        </div>
+        <a href="tassp-onboarding-checklist-supervisor.pdf" download class="download-btn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
+          Download PDF
+        </a>
+      </div>
+
+      <!-- Admin checklist -->
+      <div class="download-card">
+        <div class="download-card-icon">📋</div>
+        <div>
+          <div class="download-card-meta">Checklist · Admin / TASSP Track</div>
+          <div class="download-card-title">TASSP Onboarding Checklist — The Admin / TASSP</div>
+        </div>
+        <div class="download-card-desc">The working document for the person in the seat. Structured by phase and milestone — with artifact callouts, capability gates, and compliance checkpoints. Designed to be used daily throughout the first 90 days.</div>
+        <div class="download-card-tags">
+          <span class="download-tag">Phase 0–3</span>
+          <span class="download-tag">30 / 60 / 90 Day</span>
+          <span class="download-tag">Print-Ready</span>
+        </div>
+        <a href="tassp-onboarding-checklist-admin.pdf" download class="download-btn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
+          Download PDF
+        </a>
+      </div>
+
+      <!-- Word doc bundle -->
+      <div class="download-card">
+        <div class="download-card-icon">📄</div>
+        <div>
+          <div class="download-card-meta">Editable · Both Tracks</div>
+          <div class="download-card-title">Full Checklist Bundle — Word Format</div>
+        </div>
+        <div class="download-card-desc">Both checklists in a single editable Word document. Customize task owners, add org-specific milestones, or adapt the language for your team before you print or share.</div>
+        <div class="download-card-tags">
+          <span class="download-tag">Editable</span>
+          <span class="download-tag">Both Tracks</span>
+          <span class="download-tag">.docx</span>
+        </div>
+        <a href="tassp-onboarding-checklists.docx" download class="download-btn download-btn-ghost">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
+          Download .docx
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
 
 <!-- PROCESS MAPPER TOOL -->
 <section class="download-section">
