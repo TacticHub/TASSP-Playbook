@@ -232,14 +232,90 @@
     @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
 
     /* ── RESPONSIVE ── */
+    /* ── RECOMMENDED READING ── */
+    .reading-section { padding:5rem; background:var(--ink2); border-top:1px solid var(--border); }
+    .reading-inner { max-width:1100px; margin:0 auto; }
+    .reading-eyebrow { font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.28em; text-transform:uppercase; color:var(--gold); margin-bottom:2rem; }
+    .book-card { display:grid; grid-template-columns:auto 1fr; gap:3rem; align-items:start; background:var(--ink); border:1px solid var(--border); border-radius:4px; padding:2.5rem; max-width:780px; }
+    .book-cover { width:80px; height:110px; background:var(--ink3); border:1px solid var(--border); border-radius:3px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .book-cover-text { font-family:'Cormorant Garamond',serif; font-size:0.65rem; color:var(--gold); text-align:center; padding:0.5rem; line-height:1.4; }
+    .book-title { font-family:'Cormorant Garamond',serif; font-size:1.35rem; font-weight:700; color:var(--paper); line-height:1.2; margin-bottom:0.35rem; }
+    .book-author { font-family:'DM Mono',monospace; font-size:0.62rem; letter-spacing:0.12em; color:var(--muted); margin-bottom:1rem; }
+    .book-desc { font-size:0.88rem; color:var(--muted); line-height:1.8; margin-bottom:1.25rem; }
+    .book-cta { display:inline-flex; align-items:center; gap:0.5rem; padding:0.65rem 1.25rem; background:var(--gold); color:var(--ink); font-family:'Outfit',sans-serif; font-size:0.75rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; text-decoration:none; border-radius:3px; transition:background 0.2s; }
+    .book-cta:hover { background:var(--gold2); }
+
+    /* ── HAMBURGER NAV ── */
+    .nav-hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:0.5rem; background:none; border:none; }
+    .nav-hamburger span { display:block; width:22px; height:1.5px; background:var(--fog); transition:all 0.25s; border-radius:2px; }
+    .nav-hamburger.open span:nth-child(1) { transform:translateY(6.5px) rotate(45deg); }
+    .nav-hamburger.open span:nth-child(2) { opacity:0; }
+    .nav-hamburger.open span:nth-child(3) { transform:translateY(-6.5px) rotate(-45deg); }
+    .nav-mobile-menu { display:none; position:fixed; top:64px; left:0; right:0; background:rgba(12,15,20,0.98); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); padding:1.5rem; z-index:299; flex-direction:column; gap:0; }
+    .nav-mobile-menu a { display:block; padding:0.9rem 0; font-size:0.85rem; font-weight:400; letter-spacing:0.08em; text-transform:uppercase; color:var(--fog); text-decoration:none; border-bottom:1px solid rgba(255,255,255,0.04); transition:color 0.2s; }
+    .nav-mobile-menu a:last-child { border-bottom:none; }
+    .nav-mobile-menu a:hover, .nav-mobile-menu a.active { color:var(--gold); }
+    .nav-mobile-menu .nav-cta-mobile { margin-top:1.25rem; display:inline-block; padding:0.75rem 1.5rem; background:var(--gold); color:var(--ink); font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; border-radius:3px; border-bottom:none; }
+    .nav-mobile-menu.open { display:flex; }
+
     @media(max-width:900px){
-      nav{padding:0 1.5rem} .nav-center{display:none}
-      .hero,.timeline,.phase-content,.readiness,.cta-strip{padding-left:1.5rem;padding-right:1.5rem}
-      .track-bar-inner{padding:0 1.5rem}
-      .phase-rail{grid-template-columns:1fr 1fr}
-      .dual-track{grid-template-columns:1fr}
-      .readiness-grid{grid-template-columns:1fr}
-      footer{flex-direction:column;gap:1.5rem;padding:2rem 1.5rem}
+      /* Nav */
+      nav { padding:0 1.25rem; }
+      .nav-center { display:none; }
+      .nav-hamburger { display:flex; }
+
+      /* Hero */
+      .hero { padding:7rem 1.5rem 3.5rem; }
+      .hero-title { font-size:clamp(2.2rem,8vw,3rem); line-height:1.08; }
+      .hero-sub { font-size:0.97rem; margin-top:1.25rem; }
+      .hero-truth { padding:1.25rem 1.25rem; }
+      .hero-actions { flex-direction:column; align-items:flex-start; gap:0.75rem; margin-top:1.75rem; }
+      .hero-actions a { width:100%; text-align:center; }
+
+      /* Timeline */
+      .timeline { padding:3.5rem 1.5rem; }
+      .phase-rail { grid-template-columns:1fr 1fr; gap:0.75rem; }
+
+      /* Phase content */
+      .phase-content { padding:3rem 1.5rem; }
+      .phase-panel-header { flex-direction:column; gap:1.25rem; align-items:flex-start; }
+      .dual-track { grid-template-columns:1fr; gap:0; }
+      .track-column + .track-column { border-left:none; border-top:1px solid var(--border); padding-top:2rem; margin-top:2rem; }
+      .track-bar { padding:0 1.5rem; }
+      .track-bar-inner { padding:0 0; }
+
+      /* Download section */
+      .download-section { padding:3.5rem 1.5rem; }
+      .download-grid { grid-template-columns:1fr; }
+
+      /* Readiness */
+      .readiness { padding:3.5rem 1.5rem; }
+      .readiness-grid { grid-template-columns:1fr; }
+
+      /* Book recommendation — stack cover + text */
+      .reading-section { padding:3.5rem 1.5rem; }
+      .book-card { grid-template-columns:1fr !important; gap:1.5rem !important; }
+
+      /* CTA strip */
+      .cta-strip { padding:3.5rem 1.5rem; }
+      .cta-actions { flex-direction:column; align-items:center; }
+      .cta-actions a { width:100%; text-align:center; }
+
+      /* Footer */
+      footer { flex-direction:column; gap:1.5rem; padding:2rem 1.5rem; text-align:center; }
+      .footer-nav { flex-wrap:wrap; justify-content:center; gap:1rem; }
+    }
+
+    @media(max-width:480px) {
+      .hero-title { font-size:1.95rem; }
+      .phase-rail { grid-template-columns:1fr 1fr; }
+      .phase-card { padding:1rem; }
+      .phase-panel-title { font-size:1.3rem; }
+      .checklist-section-title { font-size:0.85rem; }
+      .progress-banner { flex-wrap:wrap; gap:0.75rem; }
+      .progress-bar-wrap { min-width:100%; }
+      .section-title { font-size:1.6rem; }
+      .download-card { padding:1.5rem; }
     }
   </style>
 </head>
@@ -259,8 +335,20 @@
   </div>
   <div style="display:flex;align-items:center;gap:1rem;">
     <a class="nav-cta" href="index.html#signup">Get Updates</a>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+
+<!-- MOBILE MENU -->
+<div class="nav-mobile-menu" id="nav-mobile-menu">
+  <a href="index.html">Home</a>
+  <a href="library.html">Strategy Library</a>
+  <a href="onboarding.html" class="active">Admin Onboarding</a>
+  <a href="#downloads">Checklists</a>
+  <a href="index.html#signup" class="nav-cta-mobile">Get Updates</a>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -1132,18 +1220,18 @@
 </section>
 
 <!-- RECOMMENDED READING -->
-<section style="padding:5rem;background:var(--ink2);border-top:1px solid var(--border);">
-  <div style="max-width:1100px;margin:0 auto;">
-    <div style="font-family:'DM Mono',monospace;font-size:0.68rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--gold);margin-bottom:2rem;">Recommended Reading</div>
-    <div style="display:grid;grid-template-columns:auto 1fr;gap:3rem;align-items:start;background:var(--ink);border:1px solid var(--border);border-radius:4px;padding:2.5rem;max-width:780px;">
-      <div style="width:80px;height:110px;background:var(--ink3);border:1px solid var(--border);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <div style="font-family:'Cormorant Garamond',serif;font-size:0.65rem;color:var(--gold);text-align:center;padding:0.5rem;line-height:1.4;">From<br>Zero to<br>ATS Hero</div>
+<section class="reading-section">
+  <div class="reading-inner">
+    <div class="reading-eyebrow">Recommended Reading</div>
+    <div class="book-card">
+      <div class="book-cover">
+        <div class="book-cover-text">From<br>Zero to<br>ATS Hero</div>
       </div>
       <div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:700;color:var(--paper);line-height:1.2;margin-bottom:0.35rem;">From Zero to ATS Hero: The Accidental Admin's Journey</div>
-        <div style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.12em;color:var(--muted);margin-bottom:1rem;">Vivian Larsen with Alex Marcus</div>
-        <p style="font-size:0.88rem;color:var(--muted);line-height:1.8;margin-bottom:1.25rem;">Written specifically for the TA professionals handed ATS projects without a manual, a warning, or sometimes even a job title change. Vivian Larsen — who describes herself as "the accidental admin" — takes you from that first panicked moment through implementation, go-live, and building the long-term support structure that keeps your investment paying off. A natural companion to the TASSP onboarding framework.</p>
-        <a href="https://www.amazon.com/Zero-ATS-Hero-Accidental-Journey-ebook/dp/B0GN55JD48" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.65rem 1.25rem;background:var(--gold);color:var(--ink);font-family:'Outfit',sans-serif;font-size:0.75rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;border-radius:3px;transition:background 0.2s;" onmouseover="this.style.background='#e4c98a'" onmouseout="this.style.background='#c9a96e'">View on Amazon ↗</a>
+        <div class="book-title">From Zero to ATS Hero: The Accidental Admin's Journey</div>
+        <div class="book-author">Vivian Larsen with Alex Marcus</div>
+        <p class="book-desc">Written specifically for the TA professionals handed ATS projects without a manual, a warning, or sometimes even a job title change. Vivian Larsen — who describes herself as "the accidental admin" — takes you from that first panicked moment through implementation, go-live, and building the long-term support structure that keeps your investment paying off. A natural companion to the TASSP onboarding framework.</p>
+        <a href="https://www.amazon.com/Zero-ATS-Hero-Accidental-Journey-ebook/dp/B0GN55JD48" target="_blank" rel="noopener" class="book-cta">View on Amazon ↗</a>
       </div>
     </div>
   </div>
@@ -1256,6 +1344,24 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     if (target) { e.preventDefault(); target.scrollIntoView({ behavior:'smooth', block:'start' }); }
   });
 });
+
+// Hamburger nav
+const hamburger = document.getElementById('nav-hamburger');
+const mobileMenu = document.getElementById('nav-mobile-menu');
+if (hamburger && mobileMenu) {
+  hamburger.addEventListener('click', () => {
+    const open = mobileMenu.classList.toggle('open');
+    hamburger.classList.toggle('open', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+  });
+  mobileMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('open');
+      document.body.style.overflow = '';
+    });
+  });
+}
 </script>
 </body>
 </html>
