@@ -531,7 +531,7 @@ function buildLibrary(filterCat='all', searchTerm='') {
         <div class="card-summary">${s.summary}</div>
         <div class="card-footer">
           <div class="card-access ${isLocked?'access-locked':'access-free'}">${isLocked?'🔒 Sign in to unlock':'🔓 Open access'}</div>
-          <span class="card-cta">Read →</span>
+          <span class="card-cta">Preview →</span>
         </div>
       `;
       card.addEventListener('click', () => handleCardClick(id, isLocked));
