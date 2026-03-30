@@ -161,10 +161,7 @@
     .bundle-count strong { color:var(--paper); font-weight:500; }
     .bundle-topics { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:1.5rem; }
     .bundle-topic { font-size:0.72rem; padding:0.2rem 0.55rem; border:1px solid var(--border); border-radius:2px; color:var(--muted); }
-    .bundle-card-footer { padding:1rem 1.75rem; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-    .bundle-price { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:700; color:var(--gold); }
-    .bundle-price sup { font-size:0.75rem; vertical-align:super; }
-    .bundle-per { font-size:0.7rem; font-family:'DM Mono',monospace; color:var(--muted); font-weight:400; }
+    .bundle-card-footer { padding:1rem 1.75rem; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:flex-end; }
     .bundle-btn { padding:0.5rem 1.1rem; background:transparent; border:1px solid var(--border); border-radius:3px; font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--fog); cursor:pointer; transition:all 0.2s; }
     .bundle-btn:hover { background:var(--gold); border-color:var(--gold); color:var(--ink); }
 
@@ -202,7 +199,7 @@
   <div class="nav-center">
     <a href="index.html">Home</a>
     <a href="library.html" class="active">Strategy Library</a>
-    <a href="process-mapper.html">Process Mapper</a>
+    <a href="process-mapper.html">Process Mapper <span style="font-size:0.65em;letter-spacing:0.1em;opacity:0.7">(BETA)</span></a>
     <a href="#playbooks">Playbooks</a>
   </div>
   <div class="nav-right">
@@ -214,7 +211,7 @@
 <div class="page-header">
   <div class="page-header-label">The TASSP Playbook</div>
   <h1>Strategy Library</h1>
-  <p>Strategies spanning the full talent acquisition funnel. Free previews available. Sign up to unlock the full collection. Buy a playbook bundle for deep-dive action frameworks.</p>
+  <p>Strategies spanning the full talent acquisition funnel. Sign up to unlock the full collection and get new strategies delivered to your inbox.</p>
 </div>
 
 <!-- SEARCH + FILTERS -->
@@ -266,7 +263,7 @@
   <div class="section-header">
     <div>
       <div class="section-eyebrow">Playbook Bundles</div>
-      <div class="section-title">Go Deeper. Buy the Full Playbook.</div>
+      <div class="section-title">Go Deeper with Full Playbook Bundles.</div>
       <p class="section-sub">Each bundle contains the complete, unabridged version of every strategy in that funnel stage — full action frameworks, system configuration guides, and triad outcome breakdowns.</p>
     </div>
   </div>
@@ -281,7 +278,6 @@
         <div class="bundle-topics"><span class="bundle-topic">Conversion Architecture</span><span class="bundle-topic">JD Optimization</span><span class="bundle-topic">CRM Campaigns</span><span class="bundle-topic">Talent Communities</span><span class="bundle-topic">Nurture Sequences</span></div>
       </div>
       <div class="bundle-card-footer">
-        <div class="bundle-price"><sup>$</sup>0 <span class="bundle-per">/ bundle</span></div>
         <button class="bundle-btn">Coming Soon</button>
       </div>
     </div>
@@ -295,7 +291,6 @@
         <div class="bundle-topics"><span class="bundle-topic">Application Flow</span><span class="bundle-topic">Screen Frameworks</span><span class="bundle-topic">Assessments</span><span class="bundle-topic">Interview Architecture</span><span class="bundle-topic">Scorecard Design</span></div>
       </div>
       <div class="bundle-card-footer">
-        <div class="bundle-price"><sup>$</sup>0 <span class="bundle-per">/ bundle</span></div>
         <button class="bundle-btn">Coming Soon</button>
       </div>
     </div>
@@ -309,7 +304,6 @@
         <div class="bundle-topics"><span class="bundle-topic">Offer Workflow</span><span class="bundle-topic">Pre-Board Engagement</span><span class="bundle-topic">BGC Automation</span><span class="bundle-topic">HRIS Handoff</span><span class="bundle-topic">Quality-of-Hire Loop</span></div>
       </div>
       <div class="bundle-card-footer">
-        <div class="bundle-price"><sup>$</sup>0 <span class="bundle-per">/ bundle</span></div>
         <button class="bundle-btn">Coming Soon</button>
       </div>
     </div>
@@ -323,7 +317,6 @@
         <div class="bundle-topics"><span class="bundle-topic">Communication Cadence</span><span class="bundle-topic">Rejection Architecture</span><span class="bundle-topic">CX Surveys</span></div>
       </div>
       <div class="bundle-card-footer">
-        <div class="bundle-price"><sup>$</sup>0 <span class="bundle-per">/ bundle</span></div>
         <button class="bundle-btn">Coming Soon</button>
       </div>
     </div>
@@ -337,7 +330,6 @@
         <div class="bundle-topics"><span class="bundle-topic">Metrics Framework</span><span class="bundle-topic">Conversion Analysis</span><span class="bundle-topic">Cost-Per-Hire Model</span></div>
       </div>
       <div class="bundle-card-footer">
-        <div class="bundle-price"><sup>$</sup>0 <span class="bundle-per">/ bundle</span></div>
         <button class="bundle-btn">Coming Soon</button>
       </div>
     </div>
@@ -351,7 +343,6 @@
         <div class="bundle-topics"><span class="bundle-topic">All 9 Categories</span><span class="bundle-topic">Full Action Frameworks</span><span class="bundle-topic">System Guides</span><span class="bundle-topic">Future Updates</span></div>
       </div>
       <div class="bundle-card-footer">
-        <div class="bundle-price" style="color:var(--gold2)"><sup>$</sup>0 <span class="bundle-per">/ full access</span></div>
         <button class="bundle-btn" style="border-color:var(--gold);color:var(--gold)">Coming Soon</button>
       </div>
     </div>
@@ -404,11 +395,11 @@
     <div class="gate-body">
       <div class="gate-icon">🔓</div>
       <div class="gate-title">Unlock the Full Strategy Library</div>
-      <div class="gate-desc">Enter your email to get free access to all 27 strategies — plus a new strategy every week, delivered to your inbox.</div>
+      <div class="gate-desc">Enter your email to get free access to all 50 strategies — plus new strategies delivered to your inbox.</div>
       <div class="gate-perks">
-        <div class="gate-perk">Instant access to all 27 published strategies</div>
-        <div class="gate-perk">New strategy every week, free in your inbox</div>
-        <div class="gate-perk">Early access to new playbook bundles</div>
+        <div class="gate-perk">Instant access to all published strategies</div>
+        <div class="gate-perk">New strategies delivered to your inbox</div>
+        <div class="gate-perk">First to know when new content is available</div>
       </div>
       <div class="gate-form">
         <input class="gate-input" id="gateEmail" type="email" placeholder="Your email address"/>
@@ -539,7 +530,7 @@ function buildLibrary(filterCat='all', searchTerm='') {
         <div class="card-title">${s.title}</div>
         <div class="card-summary">${s.summary}</div>
         <div class="card-footer">
-          <div class="card-access ${isLocked?'access-locked':'access-free'}">${isLocked?'🔒 Sign in to unlock':'🔓 Free preview'}</div>
+          <div class="card-access ${isLocked?'access-locked':'access-free'}">${isLocked?'🔒 Sign in to unlock':'🔓 Open access'}</div>
           <span class="card-cta">Read →</span>
         </div>
       `;
