@@ -3,10 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <title>TA Process Mapper — TASSP Playbook</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://unpkg.com/docx@8.5.0/build/index.js">
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js"></script>
+<script>
 // ── EDITABLE OPTIONS ─────────────────────────────────────────────────────────
 function olEditable(opts, sel, multi, toggleFn, section, reRenderFnName) {
   var html = '<div class="opts">';
@@ -88,14 +91,18 @@ window.editOutcomeLabel = function(sid, outcomeKey, defaultLabel) {
 };
 // ── REQFLOW NAMED FUNCTION ────────────────────────────────────────────────────
 function rReqFlow() {
-  qc(`${sl('Requisition flow')}${qt('How are job requisitions opened?')}${qh('This determines the first action on your map.')}
-  ${olEditable(REQ_OPEN,D.reqflow.reqOpenMethod,true,'tReqO','reqflow','rReqFlow')}
-  <div style="margin-top:14px;"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">Notes (optional)</label><input class="mini" type="text" placeholder="e.g. HM submits Google Form, recruiter converts to ATS req" value="${D.reqflow.reqOpenNote||''}" oninput="D.reqflow.reqOpenNote=this.value"></div>
-  ${emailSavePanel()}${fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0)}`);
+  qc(qstep('Req flow')
+    +qheading('How are job requisitions opened?')
+    +qsubhead('This determines the first action on your process map. Select all that apply.')
+    +olEditable(REQ_OPEN,D.reqflow.reqOpenMethod,true,'tReqO','reqflow','rReqFlow')
+    +'<div style="margin-top:var(--space-md);"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">Notes (optional)</label><input class="mini" type="text" placeholder="e.g. HM submits Google Form, recruiter converts to ATS req" value="'+(D.reqflow.reqOpenNote||'')+'" oninput="D.reqflow.reqOpenNote=this.value"></div>'
+    +fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0));
 }
 // ── BEFOREUNLOAD ──────────────────────────────────────────────────────────────
 // Delegated handlers for outcome pills - avoids inline onclick quote issues
 document.addEventListener('click', function(e) {
+  var atsCard = e.target.closest('[data-ats-click]');
+  if (atsCard) { sATS(atsCard.getAttribute('data-ats')); return; }
   var pill = e.target.closest('.outcome-pill');
   var editBtn = e.target.closest('.outcome-edit-btn');
   var addBtn = e.target.closest('.add-status-btn');
@@ -140,7 +147,13 @@ window.generateOutput = async function() {
   } catch(e2) {
     console.error('Generation error:',e2);
     if(btn){btn.textContent='Generate BPMN map & SOP →';btn.disabled=false;}
-    showToast('Error generating — see console',4000);
+    var msg = e2 && e2.message ? e2.message : 'Unknown error';
+    if(msg.toLowerCase().includes('docx is not defined') || msg.toLowerCase().includes('docx')) {
+      showToast('SOP library not loaded — try deploying to GitHub Pages or refreshing',6000);
+    } else {
+      showToast('Error: '+msg.slice(0,80),5000);
+    }
+    console.error('Full error:', e2);
   }
 };
 function hexToRgbArr(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];}
@@ -166,7 +179,7 @@ async function generatePDF() {
   doc.setTextColor(255,255,255);doc.setFontSize(24);doc.setFont('helvetica','bold');
   doc.text(D.setup.orgName||'Organization',MARGIN+14,MARGIN+30);
   doc.setFontSize(13);doc.setFont('helvetica','normal');
-  doc.text((D.setup.trackName||'Hiring process')+' · '+(ATS_P.find(p=>p.id===D.ats.platform)||{label:'ATS'}).label+' · BPMN',MARGIN+14,MARGIN+52);
+  doc.text((D.setup.trackName||'Hiring process')+' · '+(D.ats.platform==='other'?(D.ats.customPlatform||'Other ATS'):(ATS_P.find(p=>p.id===D.ats.platform)||{label:'ATS'}).label)+' · BPMN',MARGIN+14,MARGIN+52);
   doc.setFontSize(10);doc.text('36" × 24" · 300 DPI · '+new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'}),W-MARGIN-14,MARGIN+44,{align:'right'});
   PHASES.forEach((ph,idx)=>{
     const x0=px(ph.f0),x1=px(ph.f1),lt=idx%2===1;
@@ -235,6 +248,13 @@ async function generateDOCX() {
   const stageList=getStageList();
   const integLabels=[...D.integrations.selected.map(i=>(D.integrations.customLabels&&D.integrations.customLabels[i])||(INTEGS.find(o=>o.id===i)||{label:i}).label),...D.integrations.custom];
   const BH=AC.replace('#','');
+  // Resolve platform label — handles 'other' + custom entry
+  function getATSLabel(fallback){
+    if(D.ats.platform==='other') return D.ats.customPlatform||fallback||'Other ATS';
+    var p=ATS_P.find(function(p){return p.id===D.ats.platform;});
+    return p?p.label:(fallback||'ATS');
+  }
+  var atsLabel=getATSLabel('ATS');
   const bd={style:BorderStyle.SINGLE,size:1,color:'CCCCCC'};
   const borders={top:bd,bottom:bd,left:bd,right:bd};
   const h1=t=>new Paragraph({heading:HeadingLevel.HEADING_1,spacing:{before:320,after:100},children:[new TextRun({text:t,bold:true,size:32,color:BH,font:'Arial'})]});
@@ -249,31 +269,82 @@ async function generateDOCX() {
     sections:[{properties:{page:{size:{width:12240,height:15840},margin:{top:1440,right:1440,bottom:1440,left:1440}}},children:[
       new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:720,after:120},children:[new TextRun({text:'TALENT ACQUISITION SOP',font:'Arial',size:36,bold:true,color:BH})]}),
       new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:160},children:[new TextRun({text:D.setup.orgName||'Organization',font:'Arial',size:48,bold:true})]}),
-      new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:480},children:[new TextRun({text:(D.setup.trackName||'Process')+' · '+(ATS_P.find(p=>p.id===D.ats.platform)||{label:'ATS'}).label,font:'Arial',size:22,color:'777777'})]}),
+      new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:480},children:[new TextRun({text:(D.setup.trackName||'Process')+' · '+atsLabel,font:'Arial',size:22,color:'777777'})]}),
       sp(),sp(),
       h1('1. System Users'),
-      new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2800,6560],rows:[
+      ...(userLabels.length ? [new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2800,6560],rows:[
         hRow(['Role','Responsibility'],[2800,6560]),
         ...userLabels.map((u,i)=>dRow([u,'Participant in hiring process'],[2800,6560],i%2===1))
-      ]}),sp(),
+      ]})] : [body('No users defined.')]),sp(),
       h1('2. Requisition Opening'),
       body('Method: '+(D.reqflow.reqOpenMethod.map(m=>(REQ_OPEN.find(o=>o.id===m)||{label:m}).label).join(', ')||'Not specified')),sp(),
-      h1('3. Candidate Pipeline Stages'),
+      h1('3. Candidate Pipeline Stages & Statuses'),
       ...stageList.map(s=>{
-        const a=D.actions[s.id],sp2=D.subprocess[s.id];
-        const rows=[bul(s.label+(a&&a.decisionOwners&&a.decisionOwners.length?' — Owner: '+a.decisionOwners.join(', '):''))];
-        if(sp2&&sp2.hasSubprocess&&sp2.rounds&&sp2.rounds.length){
-          sp2.rounds.forEach((r,ri)=>rows.push(new Paragraph({numbering:{reference:'bullets',level:0},indent:{left:1080},children:[new TextRun({text:'Round '+(ri+1)+': '+r.name+(r.condition?' ('+r.condition+')':''),size:18,color:'555555',font:'Arial'})]})));
-        }
-        return rows;
+        // Stage header
+        var stageRows=[new Paragraph({spacing:{before:120,after:60},children:[new TextRun({text:s.label,bold:true,size:22,font:'Arial',color:BH})]})];
+        // Statuses within stage
+        var st=D.statuses&&D.statuses[s.id];
+        var statusList=st?[].concat(st.selected||[],st.custom||[]):[];
+        statusList.forEach(function(statusName){
+          var sid=s.id+'__'+statusName.replace(/[^a-zA-Z0-9]/g,'_');
+          var sp2=D.subprocess&&D.subprocess[sid];
+          var ownerTxt=sp2&&sp2.owner&&sp2.owner.length?' — Owner: '+sp2.owner.join(', '):'';
+          var outTxt=sp2&&sp2.outcomes&&sp2.outcomes.length?' — Outcomes: '+sp2.outcomes.join(', '):'';
+          stageRows.push(bul(statusName+ownerTxt+outTxt));
+          if(sp2&&sp2.hasRounds&&sp2.rounds&&sp2.rounds.length){
+            sp2.rounds.forEach(function(r,ri){
+              stageRows.push(new Paragraph({numbering:{reference:'bullets',level:0},spacing:{before:30,after:30},indent:{left:1080},children:[new TextRun({text:'Round '+(ri+1)+': '+r.name+(r.condition?' ('+r.condition+')':''),size:18,color:'555555',font:'Arial'})]}));
+            });
+          }
+          // Entrance criteria — brief inline flag; full detail in Section 6
+          var critKey=sid;
+          var crit=D.branching&&D.branching.criteria&&D.branching.criteria[critKey];
+          if(crit&&crit.rules&&crit.rules.length){
+            stageRows.push(new Paragraph({spacing:{before:20,after:20},indent:{left:720},children:[new TextRun({text:'Entrance requirements: '+crit.rules.length+' defined — see Section 6',size:17,color:'854F0B',font:'Arial',italics:true})]}));
+          }
+        });
+        if(!statusList.length) stageRows.push(bul(s.label+' (no statuses defined)'));
+        return stageRows;
       }).flat(),sp(),
       h1('4. Integrations'),
-      integLabels.length?new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[3000,6360],rows:[hRow(['Integration','Function'],[3000,6360]),...integLabels.map((ig,i)=>dRow([ig,'Connected to '+(ATS_P.find(p=>p.id===D.ats.platform)||{label:'ATS'}).label],[3000,6360],i%2===1))]}):body('No integrations defined.'),sp(),
-      h1('5. Document Information'),
+      integLabels.length?new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[3000,6360],rows:[hRow(['Integration','Function'],[3000,6360]),...integLabels.map((ig,i)=>dRow([ig,'Connected to '+atsLabel],[3000,6360],i%2===1))]}):body('No integrations defined.'),sp(),
+      h1('5. Entrance Criteria by Status'),
+      body('The following statuses have prerequisite conditions that must be satisfied before a candidate can be moved into that status. These requirements are enforced by the recruiting team and/or configured as workflow rules in the ATS.'),sp(),
+      ...(function(){
+        var criteriaRows=[];
+        var hasCriteria=false;
+        stageList.forEach(function(s){
+          var st=D.statuses&&D.statuses[s.id];
+          var statusList=st?[].concat(st.selected||[],st.custom||[]):[];
+          statusList.forEach(function(statusName){
+            var sid=s.id+'__'+statusName.replace(/[^a-zA-Z0-9]/g,'_');
+            var crit=D.branching&&D.branching.criteria&&D.branching.criteria[sid];
+            if(crit&&crit.rules&&crit.rules.length){
+              hasCriteria=true;
+              // Stage + status header
+              criteriaRows.push(new Paragraph({spacing:{before:160,after:40},children:[
+                new TextRun({text:s.label+' › ',size:19,font:'Arial',color:'888888'}),
+                new TextRun({text:statusName,bold:true,size:20,font:'Arial',color:BH})
+              ]}));
+              // Each rule as its own bullet
+              crit.rules.forEach(function(rule){
+                criteriaRows.push(new Paragraph({
+                  numbering:{reference:'bullets',level:0},
+                  spacing:{before:40,after:40},
+                  children:[new TextRun({text:rule,size:19,font:'Arial'})]
+                }));
+              });
+            }
+          });
+        });
+        if(!hasCriteria) criteriaRows.push(body('No entrance criteria were defined for this process track.'));
+        return criteriaRows;
+      })(),sp(),
+      h1('6. Document Information'),
       new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2400,6960],rows:[
         dRow(['Organization',D.setup.orgName||'—'],[2400,6960]),
         dRow(['Track',D.setup.trackName||'—'],[2400,6960],true),
-        dRow(['ATS',(ATS_P.find(p=>p.id===D.ats.platform)||{label:'—'}).label],[2400,6960]),
+        dRow(['ATS',atsLabel],[2400,6960]),
         dRow(['Generated',new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})],[2400,6960],true),
         dRow(['Tool','TA Process Mapping Tool — TASSP Playbook'],[2400,6960]),
       ]}),
@@ -297,19 +368,24 @@ async function generateDOCX() {
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --ac: #8B1A1A;
-    --ac-bg: rgba(139,26,26,0.07);
-    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --ac: #0D7377;
+    --ac-bg: rgba(13,115,119,0.06);
+    --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --bg: #ffffff;
     --bg2: #f8f7f4;
     --bg3: #f1efe8;
-    --border: rgba(0,0,0,0.12);
-    --border2: rgba(0,0,0,0.2);
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
     --text: #1a1a18;
     --text2: #5f5e5a;
     --text3: #888780;
     --radius: 8px;
     --radius-lg: 12px;
+    --space-xs: 6px;
+    --space-sm: 10px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 28px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -322,62 +398,98 @@ async function generateDOCX() {
 
   /* ── LAYOUT ── */
   #shell { max-width: 860px; margin: 0 auto; min-height: 100vh; }
-  .header { background: var(--ac); color: #fff; padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+
+  /* ── HEADER ── */
+  .header { background: var(--ac); color: #fff; padding: 16px var(--space-xl); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 52px; z-index: 100; }
   .hdr-left { display: flex; align-items: center; gap: 14px; }
-  .hdr-logo { width: 36px; height: 36px; background: rgba(255,255,255,.18); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
-  .hdr-title { font-size: 15px; font-weight: 500; }
-  .hdr-sub { font-size: 12px; opacity: .65; margin-top: 1px; }
+  .hdr-logo { width: 34px; height: 34px; background: rgba(255,255,255,.18); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; letter-spacing: .03em; }
+  .hdr-title { font-size: 14px; font-weight: 500; }
+  .hdr-sub { font-size: 11px; opacity: .6; margin-top: 2px; letter-spacing: .01em; }
   .hdr-right { display: flex; align-items: center; gap: 10px; }
-  .save-indicator { font-size: 11px; opacity: .8; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.12); padding: 4px 10px; border-radius: 20px; }
-  .save-dot { width: 7px; height: 7px; border-radius: 50%; background: #7fff7f; flex-shrink: 0; }
+  .save-indicator { font-size: 11px; opacity: .85; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.12); padding: 4px 10px; border-radius: 20px; }
+  .save-dot { width: 6px; height: 6px; border-radius: 50%; background: #7fff7f; flex-shrink: 0; }
   .save-dot.saving { background: #ffdd44; animation: pulse .8s ease-in-out infinite; }
   .save-dot.error { background: #ff6b6b; }
   @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
 
-  /* ── PROGRESS ── */
-  .pbar-wrap { height: 3px; background: rgba(0,0,0,.08); }
-  .pbar-fill { height: 100%; background: var(--ac); transition: width .4s ease; }
+  /* ── PROGRESS BAR ── */
+  .pbar-wrap { height: 2px; background: rgba(0,0,0,.06); }
+  .pbar-fill { height: 100%; background: var(--ac); transition: width .45s cubic-bezier(.4,0,.2,1); }
 
-  /* ── NAV ── */
-  .snav { background: var(--bg2); border-bottom: 0.5px solid var(--border); padding: 0 28px; display: flex; overflow-x: auto; gap: 0; }
+  /* ── STEP NAV ── */
+  .snav { background: var(--bg2); border-bottom: 0.5px solid var(--border); padding: 0 var(--space-xl); display: flex; overflow-x: auto; gap: 0; }
   .snav::-webkit-scrollbar { display: none; }
-  .nitem { padding: 11px 12px 9px; font-size: 11px; color: var(--text3); border-bottom: 2px solid transparent; cursor: default; white-space: nowrap; display: flex; align-items: center; gap: 5px; transition: all .15s; }
+  .nitem { padding: 12px 13px 10px; font-size: 11px; color: var(--text3); border-bottom: 2px solid transparent; cursor: default; white-space: nowrap; display: flex; align-items: center; gap: 6px; transition: all .15s; letter-spacing: .01em; }
   .nitem.done { color: #3B6D11; cursor: pointer; }
+  .nitem.done:hover { color: #27500A; }
   .nitem.active { color: var(--ac); border-bottom-color: var(--ac); font-weight: 500; }
-  .ndot { width: 16px; height: 16px; border-radius: 50%; background: var(--bg3); border: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 500; }
+  .ndot { width: 17px; height: 17px; border-radius: 50%; background: var(--bg3); border: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 500; flex-shrink: 0; }
   .nitem.done .ndot { background: #EAF3DE; border-color: #3B6D11; color: #27500A; }
   .nitem.active .ndot { background: var(--ac); border-color: var(--ac); color: #fff; }
 
-  /* ── MAIN ── */
-  .main { padding: 28px; }
-  .qcard { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 26px; animation: fadeIn .2s ease; }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-  .qlabel { font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--ac); margin-bottom: 10px; }
-  .qtext { font-size: 17px; font-weight: 500; margin-bottom: 6px; color: var(--text); line-height: 1.4; }
-  .qhint { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.55; }
+  /* ── MAIN CONTENT AREA ── */
+  .main { padding: var(--space-xl); }
 
-  /* ── OPTIONS ── */
-  .opts { display: flex; flex-direction: column; gap: 8px; }
-  .opt { display: flex; align-items: flex-start; gap: 12px; padding: 12px 15px; border: 0.5px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all .12s; background: var(--bg); user-select: none; }
-  .opt:hover, .opt.sel { border-color: var(--ac); background: var(--ac-bg); }
-  .chk { width: 18px; height: 18px; min-width: 18px; border: 0.5px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-top: 1px; background: var(--bg); transition: all .12s; }
+  /* ── QUESTION CARD ── */
+  .qcard { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: var(--space-xl); animation: fadeIn .18s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── TYPOGRAPHY SYSTEM ── */
+  .qstep { font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); margin-bottom: var(--space-md); display: flex; align-items: center; gap: 7px; }
+  .qstep-num { width: 18px; height: 18px; border-radius: 50%; background: var(--bg2); border: 0.5px solid var(--border2); font-size: 10px; font-weight: 500; color: var(--text2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .qheading { font-size: 22px; font-weight: 500; color: var(--text); line-height: 1.3; margin-bottom: 8px; }
+  .qsubhead { font-size: 13px; color: var(--text2); margin-bottom: var(--space-lg); line-height: 1.65; }
+  .qlabel { font-size: 11px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase; color: var(--ac); margin-bottom: 10px; }
+  .qtext { font-size: 17px; font-weight: 500; margin-bottom: 6px; color: var(--text); line-height: 1.4; }
+  .qhint { font-size: 13px; color: var(--text2); margin-bottom: var(--space-lg); line-height: 1.6; }
+  .qsec-label { font-size: 11px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase; color: var(--text3); margin-bottom: var(--space-sm); }
+
+  /* ── TRACK CARD GRID (Step 1) ── */
+  .track-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 9px; margin-bottom: var(--space-md); }
+  .track-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px; cursor: pointer; transition: border-color .12s, background .12s; }
+  .track-card:hover { border-color: var(--border2); }
+  .track-card.sel { border: 0.5px solid var(--ac); background: var(--ac-bg); }
+  .track-card-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 9px; }
+  .track-card-name { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; line-height: 1.3; }
+  .track-card-desc { font-size: 11px; color: var(--text2); line-height: 1.4; }
+
+  /* ── MODE CARDS (Step 1) ── */
+  .mode-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 9px; }
+  .mode-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; cursor: pointer; transition: border-color .12s, background .12s; }
+  .mode-card:hover { border-color: var(--border2); }
+  .mode-card.sel { border: 0.5px solid var(--ac); background: var(--ac-bg); }
+  .mode-card-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 3px; display: flex; align-items: center; gap: 8px; }
+  .mode-card-badge { font-size: 11px; font-weight: 400; color: var(--text3); }
+  .mode-card-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+  /* ── SECTION DIVIDER ── */
+  .qdivider { height: 0.5px; background: var(--border); margin: var(--space-lg) 0; }
+
+  /* ── OPTIONS (list-style, non-track steps) ── */
+  .opts { display: flex; flex-direction: column; gap: 8px; margin-bottom: var(--space-sm); }
+  .opt { display: flex; align-items: flex-start; gap: 13px; padding: 13px 16px; border: 0.5px solid var(--border); border-radius: 10px; cursor: pointer; transition: border-color .12s, background .12s; background: var(--bg); user-select: none; }
+  .opt:hover { border-color: var(--border2); }
+  .opt.sel { border-color: var(--ac); background: var(--ac-bg); }
+  .chk { width: 18px; height: 18px; min-width: 18px; border: 0.5px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-top: 2px; background: var(--bg); transition: all .12s; flex-shrink: 0; }
   .opt.sel .chk { background: var(--ac); border-color: var(--ac); }
   .chkm { display: none; font-size: 11px; color: #fff; font-weight: 600; }
   .opt.sel .chkm { display: block; }
-  .rad { width: 18px; height: 18px; min-width: 18px; border: 0.5px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 1px; background: var(--bg); }
+  .rad { width: 18px; height: 18px; min-width: 18px; border: 0.5px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 2px; background: var(--bg); flex-shrink: 0; }
   .opt.sel .rad { border-color: var(--ac); }
   .radd { width: 8px; height: 8px; border-radius: 50%; display: none; background: var(--ac); }
   .opt.sel .radd { display: block; }
-  .ol { font-size: 14px; color: var(--text); line-height: 1.4; }
-  .od { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .ol { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.4; }
+  .od { font-size: 12px; color: var(--text2); margin-top: 3px; line-height: 1.5; }
 
   /* ── INPUTS ── */
-  .mini { width: 100%; font-size: 13px; padding: 9px 12px; border: 0.5px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: var(--font); }
+  .mini { width: 100%; font-size: 13px; padding: 10px 13px; border: 0.5px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: var(--font); transition: border-color .12s; }
   .mini:focus { outline: none; border-color: var(--ac); }
+  .mini::placeholder { color: var(--text3); }
   .addc { display: flex; gap: 8px; margin-top: 8px; }
-  .addc input { flex: 1; font-size: 13px; padding: 10px 12px; border: 0.5px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); }
+  .addc input { flex: 1; font-size: 13px; padding: 10px 13px; border: 0.5px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: var(--font); transition: border-color .12s; }
+  .addc input::placeholder { color: var(--text3); }
   .addc input:focus { outline: none; border-color: var(--ac); }
-  .addc button, .btn-ac { padding: 10px 18px; color: #fff; border: none; border-radius: var(--radius); cursor: pointer; font-size: 13px; font-family: var(--font); background: var(--ac); transition: opacity .12s; }
+  .addc button, .btn-ac { padding: 10px 18px; color: #fff; border: none; border-radius: var(--radius); cursor: pointer; font-size: 13px; font-family: var(--font); background: var(--ac); transition: opacity .12s; font-weight: 500; }
   .addc button:hover, .btn-ac:hover { opacity: .88; }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .tag { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: 20px; font-size: 12px; color: var(--text); }
@@ -385,30 +497,35 @@ async function generateDOCX() {
   .tx:hover { color: var(--ac); }
 
   /* ── FOOTER NAV ── */
-  .fnav { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
-  .bbtn { padding: 10px 20px; background: transparent; border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 14px; cursor: pointer; color: var(--text2); font-family: var(--font); transition: all .12s; }
-  .bbtn:hover { border-color: var(--border2); color: var(--text); }
-  .nbtn { padding: 10px 24px; color: #fff; border: none; border-radius: var(--radius); font-size: 14px; cursor: pointer; font-weight: 500; font-family: var(--font); display: flex; align-items: center; gap: 8px; background: var(--ac); transition: opacity .12s; }
+  .fnav { display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-lg); padding-top: var(--space-lg); border-top: 0.5px solid var(--border); }
+  .bbtn { padding: 9px 16px; background: transparent; border: none; border-radius: var(--radius); font-size: 13px; cursor: pointer; color: var(--text3); font-family: var(--font); transition: color .12s; }
+  .bbtn:hover { color: var(--text); }
+  .nbtn { padding: 10px 22px; color: #fff; border: none; border-radius: var(--radius); font-size: 13px; cursor: pointer; font-weight: 500; font-family: var(--font); display: flex; align-items: center; gap: 7px; background: var(--ac); transition: opacity .12s; }
   .nbtn:hover { opacity: .88; }
-  .nbtn:disabled { opacity: .4; cursor: default; }
+  .nbtn:disabled { opacity: .35; cursor: default; }
   .qctr { font-size: 12px; color: var(--text3); }
 
-  /* ── EMAIL SAVE PANEL ── */
-  .save-panel { margin-top: 18px; padding: 16px 18px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); }
-  .save-panel-title { font-size: 13px; font-weight: 500; margin-bottom: 8px; color: var(--text); display: flex; align-items: center; gap: 7px; }
-  .save-panel-hint { font-size: 12px; color: var(--text2); margin-bottom: 12px; line-height: 1.5; }
-  .save-email-row { display: flex; gap: 8px; }
-  .save-email-row input { flex: 1; font-size: 13px; padding: 9px 12px; border: 0.5px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: var(--font); }
-  .save-email-row input:focus { outline: none; border-color: var(--ac); }
-  .save-success { font-size: 12px; color: #3B6D11; margin-top: 8px; display: none; }
+  /* ── PERSISTENT SAVE FOOTER (replaces per-card save panel) ── */
+  .save-footer { margin-top: var(--space-lg); padding: 13px var(--space-xl); background: var(--bg2); border-top: 0.5px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .save-footer-label { font-size: 12px; color: var(--text3); }
+  .save-footer-row { display: flex; gap: 7px; flex: 1; max-width: 400px; }
+  .save-footer-row input { flex: 1; font-size: 12px; padding: 7px 11px; border: 0.5px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: var(--font); }
+  .save-footer-row input:focus { outline: none; border-color: var(--ac); }
+  .save-footer-row input::placeholder { color: var(--text3); }
+  .save-footer-btn { padding: 7px 14px; font-size: 12px; color: #fff; background: var(--ac); border: none; border-radius: var(--radius); cursor: pointer; font-family: var(--font); font-weight: 500; white-space: nowrap; transition: opacity .12s; }
+  .save-footer-btn:hover { opacity: .88; }
+  .save-footer-success { font-size: 12px; color: #3B6D11; display: none; }
+
+  /* ── EMAIL SAVE PANEL (kept for backwards compat, hidden by default) ── */
+  .save-panel { display: none; }
 
   /* ── RESUME SCREEN ── */
-  .resume-screen { padding: 40px 28px; text-align: center; }
-  .resume-card { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 32px; max-width: 520px; margin: 0 auto; }
-  .resume-icon { width: 56px; height: 56px; background: var(--ac-bg); border: 0.5px solid; border-color: var(--ac); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+  .resume-screen { padding: 48px var(--space-xl); text-align: center; }
+  .resume-card { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 36px; max-width: 520px; margin: 0 auto; }
+  .resume-icon { width: 52px; height: 52px; background: var(--ac-bg); border: 0.5px solid var(--ac); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
   .resume-title { font-size: 20px; font-weight: 500; margin-bottom: 8px; }
   .resume-meta { font-size: 13px; color: var(--text2); margin-bottom: 22px; line-height: 1.6; }
-  .resume-detail { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+  .resume-detail { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
   .resume-detail:last-child { border-bottom: none; }
   .resume-detail span:first-child { color: var(--text2); }
   .resume-detail span:last-child { font-weight: 500; }
@@ -425,13 +542,15 @@ async function generateDOCX() {
   .copy-btn:hover { border-color: var(--ac); color: var(--ac); }
 
   /* ── CALLOUT ── */
-  .callout { border-radius: var(--radius); padding: 14px 16px; margin-bottom: 18px; border-left: 3px solid; }
+  .callout { border-radius: 0; border-left: 3px solid; padding: 13px 16px; margin-bottom: var(--space-md); }
   .callout.info { background: #f0f7ff; border-color: #185FA5; }
-  .callout.info p { font-size: 13px; color: #0C447C; line-height: 1.5; }
+  .callout.info p { font-size: 13px; color: #0C447C; line-height: 1.55; }
   @media (prefers-color-scheme: dark) {
     .callout.info { background: #0d1f35; }
     .callout.info p { color: #85B7EB; }
   }
+
+  /* ── EDITABLE OPTION LABELS ── */
   .opt-edit-btn { background:none;border:none;cursor:pointer;padding:2px 5px;color:var(--text3);font-size:12px;border-radius:3px;margin-left:4px;opacity:0;transition:opacity .12s; }
   .opt.sel .opt-edit-btn { opacity:1; }
   .opt.sel:hover .opt-edit-btn { color:var(--ac); }
@@ -488,6 +607,14 @@ async function generateDOCX() {
   <div class="pbar-wrap"><div class="pbar-fill" id="pbar" style="width:0%"></div></div>
   <div class="snav" id="snav"></div>
   <div class="main" id="main"></div>
+  <div class="save-footer" id="save-footer" style="display:none;">
+    <span class="save-footer-label">Save &amp; resume later:</span>
+    <div class="save-footer-row">
+      <input type="email" id="save-footer-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')submitFooterEmail()">
+      <button class="save-footer-btn" onclick="submitFooterEmail()">Send link</button>
+    </div>
+    <span class="save-footer-success" id="save-footer-success">&#10003; Resume link sent</span>
+  </div>
 </div>
 <div id="toast"></div>
 
@@ -544,7 +671,7 @@ async function initSession() {
   // Try to load existing session
   const { data: existing } = await sb
     .from('sessions')
-    .select('id, track_name, mode, accent_color, current_section, status')
+    .select('id, org_name, track_name, mode, accent_color, current_section, status')
     .eq('resume_token', RESUME_TOKEN)
     .single();
 
@@ -567,6 +694,7 @@ async function initSession() {
       if (idx > -1) cs = idx;
     }
     if (existing.accent_color) applyAC(existing.accent_color);
+    if (existing.org_name) D.setup.orgName = existing.org_name;
     showResumeScreen(existing);
     return;
   }
@@ -615,6 +743,7 @@ async function saveSection(section) {
         current_section: activeSecs[cs] || section,
         updated_at: new Date().toISOString(),
       };
+      if (D.setup.orgName) updates.org_name = D.setup.orgName;
       if (D.setup.trackName) updates.track_name = D.setup.trackName;
       if (D.setup.mode) updates.mode = D.setup.mode;
       if (AC) updates.accent_color = AC;
@@ -754,7 +883,7 @@ window.copyResumeLink = function(url) {
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERVIEW ENGINE (abbreviated — same logic as v4, now with save hooks)
 // ─────────────────────────────────────────────────────────────────────────────
-let AC = '#8B1A1A'; let mode = 'quick'; let cs = 0;
+let AC = '#0D7377'; let mode = 'quick'; let cs = 0;
 const QSECS = ['setup','org','users','ats','reqflow','stages','subprocess','actions','integrations','review'];
 const ASECS = ['setup','org','users','terms','ats','reqflow','stages','subprocess','actions','integrations','branching','sla','compliance','approvals','onboarding','review'];
 let activeSecs = [...QSECS];
@@ -764,7 +893,7 @@ const SMETA = {
   terms:{label:'Terms',icon:'4'},ats:{label:'ATS',icon:'5'},reqflow:{label:'Req flow',icon:'6'},
   stages:{label:'Stages & statuses',icon:'7'},subprocess:{label:'Sub-processes',icon:'8'},
   actions:{label:'Actions',icon:'9'},integrations:{label:'Integrations',icon:'10'},
-  branching:{label:'Branching',icon:'11'},sla:{label:'SLAs',icon:'12'},
+  branching:{label:'Entrance criteria',icon:'11'},sla:{label:'SLAs',icon:'12'},
   compliance:{label:'Compliance',icon:'13'},approvals:{label:'Approvals',icon:'14'},
   onboarding:{label:'Handoff',icon:'15'},review:{label:'Review',icon:'16'},
 };
@@ -784,8 +913,22 @@ function applyAC(hex){
 }
 
 const USERS=[{id:'recruiter',label:'Recruiter'},{id:'coordinator',label:'Recruiting coordinator'},{id:'hm',label:'Hiring manager'},{id:'hr_ops',label:'HR operations'},{id:'hris',label:'HRIS analyst'},{id:'ta_ops',label:'TA operations specialist'},{id:'ta_leader',label:'TA leader / director'},{id:'exec',label:'Executive / CHRO'},{id:'sysadmin',label:'System administrator'},{id:'div_leader',label:'Divisional / field leader'},{id:'legal',label:'Legal / compliance'},{id:'finance',label:'Finance / comp team'}];
-const ATS_P=[{id:'workday',label:'Workday'},{id:'icims',label:'iCIMS'},{id:'greenhouse',label:'Greenhouse'},{id:'lever',label:'Lever'},{id:'smartrecruiters',label:'SmartRecruiters'},{id:'taleo',label:'Oracle Taleo'},{id:'successfactors',label:'SAP SuccessFactors'},{id:'bamboohr',label:'BambooHR'},{id:'jobvite',label:'Jobvite'},{id:'other',label:'Other'}];
-const ATS_ST={workday:['Applied','Recruiter screen','HM review','Interview','Offer','Pre-hire','Hired'],icims:['Initial Review','Screen','Interview','Offer','Hire'],greenhouse:['Application review','Screen','Interview','Offer','Reference check','Hired'],lever:['New applicant','Screen','Interview','Offer','Reference','Hired'],default:['Applied','Recruiter review','Phone screen','HM review','Interview','Offer','Background','Hired']};
+const ATS_P=[
+  {id:'icims',      label:'iCIMS',              desc:'Enterprise ATS',          icon:'🔵'},
+  {id:'workday',    label:'Workday',             desc:'HCM + recruiting',         icon:'🟠'},
+  {id:'greenhouse', label:'Greenhouse',          desc:'Structured hiring',         icon:'🟢'},
+  {id:'lever',      label:'Lever',               desc:'CRM + ATS',                icon:'🔷'},
+  {id:'ashby',      label:'Ashby',               desc:'Modern all-in-one',         icon:'⬛'},
+  {id:'smartrecruiters', label:'SmartRecruiters',desc:'Global enterprise',         icon:'🔴'},
+  {id:'avature',    label:'Avature',             desc:'CRM-first platform',        icon:'🟣'},
+  {id:'taleo',      label:'Oracle Taleo',        desc:'Enterprise legacy',         icon:'🔶'},
+  {id:'successfactors', label:'SAP SuccessFactors', desc:'SAP ecosystem',         icon:'🟡'},
+  {id:'bamboohr',   label:'BambooHR',            desc:'SMB HR suite',              icon:'🟤'},
+  {id:'jobvite',    label:'Jobvite',             desc:'Mid-market ATS',            icon:'🔹'},
+  {id:'recruiting', label:'Oracle Recruiting',   desc:'Oracle Cloud HCM',          icon:'🔸'},
+  {id:'other',      label:'Other / not listed',  desc:'Type your platform below',  icon:'＋'},
+];
+const ATS_ST={workday:['Applied','Recruiter screen','HM review','Interview','Offer','Pre-hire','Hired'],icims:['Initial Review','Screen','Interview','Offer','Hire'],greenhouse:['Application review','Screen','Interview','Offer','Reference check','Hired'],lever:['New applicant','Screen','Interview','Offer','Reference','Hired'],ashby:['Applied','Recruiter review','Phone screen','Interview','Offer','Reference','Hired'],avature:['New','Screening','Assessment','Interview','Offer','Pre-hire','Hired'],smartrecruiters:['Applied','Screening','Interview','Offered','Hired'],recruiting:['Applied','HM review','Interview','Offer','Pre-employment','Hired'],default:['Applied','Recruiter review','Phone screen','HM review','Interview','Offer','Background','Hired']};
 const STATUS_SUGGESTIONS = {
   'Initial Review': ['New Applicant','Incomplete Application','Under Review','Recruiter Screen Pending','Reviewed - Advance','Reviewed - Decline','Withdrawn'],
   'Screen':         ['Phone Screen Scheduled','Phone Screen Complete','Video Screen Scheduled','Video Screen Complete','Assessment Sent','Assessment Complete'],
@@ -810,13 +953,13 @@ const FORMATS=[{id:'virtual',label:'Virtual'},{id:'inperson',label:'In-person'},
 const SCHED=[{id:'selfschedule',label:'Candidate self-schedules'},{id:'coordinator',label:'Coordinator schedules'},{id:'automated',label:'Automated (scheduling tool)'},{id:'recruiter',label:'Recruiter schedules manually'}];
 
 let D={
-  setup:{orgName:'',trackName:'',accentColor:'#8B1A1A',useCases:[],mode:'quick'},
+  setup:{orgName:'',trackName:'',accentColor:'#0D7377',useCases:[],mode:'quick'},
   org:{type:[]},users:{selected:[],custom:[],customLabels:{}},
   terms:{req:'Requisition',candidate:'Candidate',disposition:'Disposition',screen:'Phone screen',offer:'Offer',hm:'Hiring manager'},
-  ats:{platform:'',selectedPlatform:false,wantsPrepopulate:null,stages:[]},
+  ats:{platform:'',customPlatform:'',selectedPlatform:false,wantsPrepopulate:null,stages:[]},
   reqflow:{reqOpenMethod:[],customLabels:{},reqOpenNote:'',hasApproval:null,approvers:[],customApprovers:[]},
   stages:{selected:[],custom:[]},statuses:{},subprocess:{},actions:{},
-  integrations:{selected:[],custom:[],customLabels:{}},branching:{rules:[]},sla:{values:{}},
+  integrations:{selected:[],custom:[],customLabels:{}},branching:{rules:[],criteria:{}},sla:{values:{}},
   compliance:{selected:[],custom:[]},approvals:{req:false,offer:false,supComp:false,audit:false},
   onboarding:{tasks:[],customTasks:[],notes:''},
 };
@@ -824,12 +967,10 @@ let D={
 function setMode(m){
   mode=m;D.setup.mode=m;
   activeSecs=m==='quick'?[...QSECS]:[...ASECS];
-  var bq=document.getElementById('btn-quick');if(bq)bq.classList.toggle('active',m==='quick');
-  var bf=document.getElementById('btn-full');if(bf)bf.classList.toggle('active',m==='full');
   var mq=document.getElementById('mode-quick');
-  if(mq){mq.style.border='.5px solid '+(m==='quick'?AC:'var(--border)');mq.style.background=m==='quick'?AC+'18':'var(--bg)';var nq=mq.querySelector('.mode-opt-name');if(nq)nq.style.color=m==='quick'?AC:'var(--text)';}
+  if(mq){mq.classList.toggle('sel',m==='quick');mq.style.border='';mq.style.background='';}
   var mf=document.getElementById('mode-full');
-  if(mf){mf.style.border='.5px solid '+(m==='full'?AC:'var(--border)');mf.style.background=m==='full'?AC+'18':'var(--bg)';var nff=mf.querySelector('.mode-opt-name');if(nff)nff.style.color=m==='full'?AC:'var(--text)';}
+  if(mf){mf.classList.toggle('sel',m==='full');mf.style.border='';mf.style.background='';}
   rNav();rProg();
 }
 function rNav(){
@@ -868,10 +1009,23 @@ function jmp(i){if(i<cs){cs=i;render();}}
 window.jmp=jmp;
 function msel(arr,v){const i=arr.indexOf(v);if(i>-1)arr.splice(i,1);else arr.push(v);}
 
-function qc(h){document.getElementById('main').innerHTML=`<div class="qcard">${h}</div>`;}
+function qc(h){
+  document.getElementById('main').innerHTML=`<div class="qcard">${h}</div>`;
+  // Show persistent save footer after step 1
+  var sf=document.getElementById('save-footer');
+  if(sf) sf.style.display = cs > 0 ? 'flex' : 'none';
+}
 function sl(t){return`<div class="qlabel" style="color:${AC}">${t}</div>`;}
 function qt(t){return`<div class="qtext">${t}</div>`;}
 function qh(t){return`<div class="qhint">${t}</div>`;}
+function qstep(label){
+  var num=cs+1; var total=activeSecs.length;
+  return`<div class="qstep"><span class="qstep-num">${num}</span>${label}<span style="margin-left:auto;font-size:11px;color:var(--text3);font-weight:400;">${num} of ${total}</span></div>`;
+}
+function qheading(t){return`<div class="qheading">${t}</div>`;}
+function qsubhead(t){return`<div class="qsubhead">${t}</div>`;}
+function qseclabel(t){return`<div class="qsec-label">${t}</div>`;}
+function qdivider(){return`<div class="qdivider"></div>`;}
 function ol(opts,sel,multi,fn){
   return`<div class="opts">${opts.map(o=>`<div class="opt ${sel.includes(o.id)?'sel':''}" onclick="${fn}('${o.id}')">
     ${multi?`<span class="chk"><span class="chkm">✓</span></span>`:`<span class="rad"><span class="radd"></span></span>`}
@@ -908,6 +1062,15 @@ function emailSavePanel(){
   </div>`;
 }
 
+window.submitFooterEmail = async function() {
+  var inp = document.getElementById('save-footer-email');
+  if (!inp || !inp.value.trim()) return;
+  var email = inp.value.trim();
+  var ok = await saveEmail(email);
+  var succ = document.getElementById('save-footer-success');
+  if (succ) succ.style.display = 'block';
+  showToast('Resume link sent — check your inbox');
+};
 window.submitEmail = async function() {
   const inp = document.getElementById('save-email-inp');
   if (!inp || !inp.value) return;
@@ -934,7 +1097,10 @@ window.copyLink = function() {
 };
 
 function fnav(nfn,nl,dis){
-  return`<div class="fnav"><button class="bbtn" onclick="ps()">← Back</button><span class="qctr">${cs+1} of ${activeSecs.length}</span><button class="nbtn" onclick="${nfn}()" style="background:${AC}" ${dis?'disabled':''}>${nl||'Continue'} →</button></div>`;
+  var nextSid = activeSecs[cs+1];
+  var nextLabel = nextSid && SMETA[nextSid] ? SMETA[nextSid].label : '';
+  var btnLabel = nl || (nextLabel ? 'Continue to '+nextLabel : 'Continue');
+  return`<div class="fnav"><button class="bbtn" onclick="ps()">← Back</button><button class="nbtn" onclick="${nfn}()" style="background:${AC}" ${dis?'disabled':''}>${btnLabel} →</button></div>`;
 }
 
 function getAllRoles(){return[...D.users.selected.map(u=>USERS.find(o=>o.id===u)?.label||u),...D.users.custom];}
@@ -955,61 +1121,70 @@ function getStageList(){
 // ── SECTION RENDERERS ──────────────────────────────────────────────────────────
 
 function rSetup(){
-  const{r,g,b}=h2r(AC);
-  qc(`${sl('Welcome — step 1')}
-  <div style="padding:14px 16px;background:${AC}12;border:.5px solid ${AC}40;border-radius:var(--radius);margin-bottom:20px;">
-    <div style="font-size:13px;font-weight:500;color:${AC};margin-bottom:4px;">One map = one process track</div>
-    <div style="font-size:12px;color:var(--text2);line-height:1.5;">Each session maps a single hiring process — Hourly, Salaried, Executive, High Volume, etc. Run one session per track. Your progress saves automatically after each section.</div>
-  </div>
-  ${qt("What process track are you mapping?")}${qh('Name it clearly — this appears on your final map and SOP.')}
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;" id="track-grid">
-    ${['Hourly / hourly-temp','Salaried / professional','Corporate / office','Executive / leadership','High volume / seasonal','Internal transfer / promotion'].map(t=>
-      `<div style="padding:12px 14px;border:.5px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .12s;background:var(--bg);" class="track-opt ${D.setup.trackName===t?'sel':''}" onclick="selTrack('${t}')">
-        <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;">${t}</div>
-      </div>`
-    ).join('')}
-  </div>
-  <input class="mini" type="text" id="inp-track" placeholder="Or type your own — e.g. Union, Campus recruiting, Contract-to-perm…" value="${D.setup.trackName}" oninput="D.setup.trackName=this.value;syncHdr();checkSetupReady()">
-  <div style="height:16px;"></div>
-  <div style="font-size:13px;font-weight:500;margin-bottom:4px;">Brand accent color</div><div style="font-size:12px;color:var(--text2);margin-bottom:12px;">This color appears throughout your map and SOP. Use your company brand color or the brand of the client you are building this map for.</div>
-  <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:20px;">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><input type="color" id="color-wheel" value="${AC}" oninput="onWC(this.value)" style="width:52px;height:52px;border:.5px solid var(--border);border-radius:var(--radius);cursor:pointer;padding:3px;background:var(--bg);"><label style="font-size:10px;color:var(--text3);">Wheel</label></div>
-    <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:160px;">
-      <div style="display:flex;align-items:center;gap:8px;"><label style="font-size:11px;color:var(--text2);min-width:26px;">Hex</label><input style="font-size:13px;padding:7px 10px;width:105px;border:.5px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:monospace;" type="text" id="inp-hex" value="${AC}" oninput="onHI(this.value)" maxlength="7"></div>
-      <div style="display:flex;align-items:center;gap:8px;"><label style="font-size:11px;color:var(--text2);min-width:26px;">RGB</label><div style="display:flex;gap:5px;">${['r','g','b'].map((ch,i)=>`<input style="width:46px;font-size:12px;padding:7px 5px;text-align:center;border:.5px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:monospace;" type="number" id="inp-${ch}" min="0" max="255" value="${h2r(AC)[ch]}" oninput="onRI()">`).join('')}</div></div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><div id="pswatch" style="width:52px;height:52px;border-radius:var(--radius);border:.5px solid var(--border);background:${AC};transition:background .1s;"></div><div style="font-size:10px;color:var(--text3);">Preview</div></div>
-  </div>
-  <div style="display:flex;gap:10px;margin-bottom:20px;">
-    <div id="mode-quick" style="flex:1;padding:13px 15px;border:.5px solid ${mode==='quick'?AC:'var(--border)'};border-radius:var(--radius);cursor:pointer;background:${mode==='quick'?AC+'12':'var(--bg)'};" onclick="setMode('quick')">
-      <div style="font-size:13px;font-weight:500;color:${mode==='quick'?AC:'var(--text)'};">Quick mode <span style="font-size:11px;font-weight:400;opacity:.7;">~15 min</span></div>
-      <div style="font-size:12px;color:var(--text2);margin-top:3px;">Essential structure — users, ATS, stages, actions, integrations</div>
-    </div>
-    <div id="mode-full" style="flex:1;padding:13px 15px;border:.5px solid ${mode==='full'?AC:'var(--border)'};border-radius:var(--radius);cursor:pointer;background:${mode==='full'?AC+'12':'var(--bg)'};" onclick="setMode('full')">
-      <div style="font-size:13px;font-weight:500;color:${mode==='full'?AC:'var(--text)'};">Full mode <span style="font-size:11px;font-weight:400;opacity:.7;">~45 min</span></div>
-      <div style="font-size:12px;color:var(--text2);margin-top:3px;">Adds SLAs, compliance, approvals, onboarding handoff, terminology</div>
-    </div>
-  </div>
-  ${emailSavePanel()}
-  ${fnav('ns','Start mapping →', !D.setup.trackName)}
-  `);
-  // Re-highlight selected track
-  document.querySelectorAll('.track-opt').forEach(el => {
-    el.style.borderColor = el.classList.contains('sel') ? AC : '';
-    el.style.background = el.classList.contains('sel') ? AC+'12' : '';
-  });
+  var trackCards=[
+    {name:'Salaried / professional',short:'Salaried',icon:'💼',desc:'Professional & corporate roles',bg:'rgba(13,115,119,.08)',color:'#0D7377'},
+    {name:'Hourly / hourly-temp',short:'Hourly',icon:'⏱',desc:'Frontline, temp & hourly staff',bg:'rgba(24,95,165,.08)',color:'#185FA5'},
+    {name:'High volume / seasonal',short:'High volume',icon:'📈',desc:'Seasonal or rapid hiring bursts',bg:'rgba(59,109,17,.08)',color:'#3B6D11'},
+    {name:'Executive / leadership',short:'Executive',icon:'★',desc:'Senior leadership & C-suite',bg:'rgba(99,56,6,.08)',color:'#633806'},
+    {name:'Internal transfer / promotion',short:'Internal',icon:'↑',desc:'Transfers & internal promotions',bg:'rgba(83,74,183,.08)',color:'#534AB7'},
+    {name:'Corporate / office',short:'Corporate',icon:'🏢',desc:'Office & support functions',bg:'rgba(95,94,90,.08)',color:'#5f5e5a'},
+  ];
+  var gridHtml=trackCards.map(function(t){
+    var isSel=D.setup.trackName===t.name;
+    return '<div class="track-card '+(isSel?'sel':'')+'" data-track="'+t.name+'" onclick="selTrack(this.getAttribute(\'data-track\'))">'
+      +'<div class="track-card-icon" style="background:'+t.bg+';color:'+t.color+'">'+t.icon+'</div>'
+      +'<div class="track-card-name">'+t.short+'</div>'
+      +'<div class="track-card-desc">'+t.desc+'</div>'
+      +'</div>';
+  }).join('');
+
+  qc(qstep('Setup')
+    +'<div style="margin-bottom:var(--space-lg);">'
+    +'<label style="font-size:12px;font-weight:500;color:var(--text2);display:block;margin-bottom:6px;">Organization name <span style="font-weight:400;color:var(--text3);">(optional)</span></label>'
+    +'<input class="mini" type="text" id="inp-orgname" placeholder="e.g. Acme Corp, City of Denver, Memorial Health..." value="'+(D.setup.orgName||'')+'" oninput="D.setup.orgName=this.value;syncHdr()" style="max-width:380px;">'
+    +'<div style="font-size:11px;color:var(--text3);margin-top:5px;">Appears on your process map and SOP document.</div>'
+    +'</div>'
+    +qheading('Which hiring track are you mapping?')
+    +qsubhead('Each session maps one process from open req to hire. Pick your track — you can run separate sessions for others.')
+    +qseclabel('Select a track')
+    +'<div class="track-grid" id="track-grid">'+gridHtml+'</div>'
+    +'<input class="mini" type="text" id="inp-track" placeholder="Don\'t see yours? Type it below — e.g. Campus, Union, Contract-to-perm" value="'+(D.setup.trackName||'')+'" oninput="D.setup.trackName=this.value;syncHdr();checkSetupReady()" style="margin-bottom:var(--space-lg);">'
+    +qdivider()
+    +qseclabel('Choose your depth')
+    +'<div class="mode-grid" style="margin-bottom:var(--space-lg);">'
+    +'<div class="mode-card '+(mode==='quick'?'sel':'')+'" id="mode-quick" onclick="setMode(\'quick\')">'
+    +'<div class="mode-card-title">Core structure <span class="mode-card-badge">~15 min</span></div>'
+    +'<div class="mode-card-desc">Build the essentials — users, ATS, stages, actions, and integrations.</div>'
+    +'</div>'
+    +'<div class="mode-card '+(mode==='full'?'sel':'')+'" id="mode-full" onclick="setMode(\'full\')">'
+    +'<div class="mode-card-title">Complete playbook <span class="mode-card-badge">~45 min</span></div>'
+    +'<div class="mode-card-desc">Adds SLAs, compliance, approvals, and handoff docs for a full SOP.</div>'
+    +'</div>'
+    +'</div>'
+    +qdivider()
+    +qseclabel('Brand accent color')
+    +'<div style="display:flex;gap:12px;align-items:center;margin-bottom:var(--space-lg);">'
+    +'<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><input type="color" id="color-wheel" value="'+AC+'" oninput="onWC(this.value)" style="width:38px;height:38px;border:.5px solid var(--border);border-radius:var(--radius);cursor:pointer;padding:2px;background:var(--bg);"><span style="font-size:10px;color:var(--text3);">Wheel</span></div>'
+    +'<input style="font-size:13px;padding:9px 11px;width:110px;border:.5px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:monospace;" type="text" id="inp-hex" value="'+AC+'" oninput="onHI(this.value)" maxlength="7" placeholder="#000000">'
+    +'<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><div id="pswatch" style="width:38px;height:38px;border-radius:var(--radius);border:.5px solid var(--border);background:'+AC+';transition:background .1s;"></div><span style="font-size:10px;color:var(--text3);">Preview</span></div>'
+    +'<span style="font-size:12px;color:var(--text2);">Appears on your map and SOP</span>'
+    +'</div>'
+    +fnav('ns','Start mapping', !D.setup.trackName)
+  );
+  highlightTrackCards();
 }
 
 window.selTrack=function(t){
   D.setup.trackName=t;
-  document.querySelectorAll('.track-opt').forEach(el=>{
-    const isSel=el.textContent.trim()===t;
-    el.classList.toggle('sel',isSel);
-    el.style.borderColor=isSel?AC:'';
-    el.style.background=isSel?AC+'12':'';
-  });
   const inp=document.getElementById('inp-track');if(inp)inp.value=t;
+  highlightTrackCards();
   syncHdr();checkSetupReady();
+};
+window.highlightTrackCards=function(){
+  document.querySelectorAll('.track-card').forEach(function(el){
+    var isSel=el.getAttribute('data-track')===D.setup.trackName;
+    el.classList.toggle('sel',isSel);
+  });
 };
 window.checkSetupReady=function(){
   const btn=document.querySelector('.nbtn');
@@ -1028,40 +1203,97 @@ window.onHI=function(v){if(v&&!v.startsWith('#')){v='#'+v.replace('#','');const 
 window.onRI=function(){const r=parseInt(document.getElementById('inp-r')?.value)||0;const g=parseInt(document.getElementById('inp-g')?.value)||0;const b=parseInt(document.getElementById('inp-b')?.value)||0;const hex='#'+[r,g,b].map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('');onHI(hex);};
 
 function rUsers(){
-  qc(`${sl('System users')}${qt('Who uses your ATS or recruiting platform?')}${qh('Each person you select becomes a swimlane in your process map. In many ATS platforms including iCIMS, Workday, and Greenhouse, these roles also correspond to your login groups or permission groups which control what each user can see and do in the system.')}
-  ${olEditable(USERS,D.users.selected,true,'tUser','users','rUsers')}${ca('inp-user','aUser',D.users.custom)}
-  ${emailSavePanel()}
-  ${fnav('ns','Continue',D.users.selected.length===0&&D.users.custom.length===0)}`);
+  qc(qstep('System users')
+    +qheading('Who participates in hiring decisions?')
+    +qsubhead('Select everyone involved in your hiring process. Each person becomes a swimlane on your process map.')
+    +olEditable(USERS,D.users.selected,true,'tUser','users','rUsers')
+    +ca('inp-user','aUser',D.users.custom)
+    +fnav('ns','Continue',D.users.selected.length===0&&D.users.custom.length===0));
 }
 window.tUser=function(v){markInteraction();msel(D.users.selected,v);rUsers();};
 window.aUser=function(){const i=document.getElementById('inp-user');const v=i.value.trim();if(v&&!D.users.custom.includes(v)){D.users.custom.push(v);i.value='';}rUsers();};
 
 function rOrg(){
-  const types=[{id:'corp',label:'Corporate / enterprise'},{id:'health',label:'Healthcare / hospital system'},{id:'retail',label:'Retail / high volume hourly'},{id:'gov',label:'Government / public sector'},{id:'nonprofit',label:'Nonprofit'},{id:'staffing',label:'Staffing / RPO'},{id:'tech',label:'Technology / SaaS'},{id:'mfg',label:'Manufacturing / distribution'}];
-  qc(`${sl('Organization')}${qt('What type of organization is this?')}${qh('Helps determine relevant compliance requirements and role types.')}${ol(types,D.org.type,true,'tOrg')}${fnav('ns','Continue',false)}`);
+  const types=[{id:'corp',label:'Corporate / enterprise'},{id:'health',label:'Healthcare / hospital system'},{id:'retail',label:'Retail / high volume hourly'},{id:'gov',label:'Government / public sector'},{id:'nonprofit',label:'Nonprofit'},{id:'staffing',label:'Staffing / RPO'},{id:'tech',label:'Technology / SaaS'},{id:'mfg',label:'Manufacturing / distribution'},{id:'pharma',label:'Pharma / biotech / life sciences'},{id:'finance',label:'Financial services / insurance'},{id:'edu',label:'Education / higher ed'},{id:'other',label:'Other'}];
+  if(!D.org.custom) D.org.custom='';
+  var showCustom = D.org.type.includes('other');
+  var customHtml = showCustom
+    ? '<div style="margin-top:10px;"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">Please specify your industry</label><input class="mini" type="text" placeholder="e.g. Hospitality, Legal services, Media..." value="'+(D.org.custom||'')+'" oninput="D.org.custom=this.value" style="max-width:360px;"></div>'
+    : '';
+  qc(qstep('Organization')
+    +qheading('What type of organization is this?')
+    +qsubhead('Helps surface the right compliance requirements and role types for your map. Select all that apply.')
+    +ol(types,D.org.type,true,'tOrg')
+    +customHtml
+    +fnav('ns','Continue',false));
 }
 window.tOrg=function(v){markInteraction();msel(D.org.type,v);rOrg();};
 
 function rAts(){
-  const el=document.getElementById('main');
+  var el=document.getElementById('main');
   if(!D.ats.selectedPlatform){
-    el.innerHTML=`<div class="qcard">${sl('ATS & technology')}${qt('Which ATS are you using?')}${qh("We'll offer to pre-populate common stages.")}${ol(ATS_P,D.ats.platform?[D.ats.platform]:[],false,'sATS')}${fnav('atsN1','Continue',!D.ats.platform)}</div>`;
+    var cardGrid=ATS_P.map(function(p){
+      var isSel=D.ats.platform===p.id;
+      return '<div class="track-card '+(isSel?'sel':'')+'" data-ats="'+p.id+'" data-ats-click="1">'
+        +'<div class="track-card-icon" style="background:'+(isSel?AC+'18':'var(--bg3)')+';font-size:15px;">'+p.icon+'</div>'
+        +'<div class="track-card-name">'+p.label+'</div>'
+        +'<div class="track-card-desc">'+p.desc+'</div>'
+        +'</div>';
+    }).join('');
+    var isOtherSel=D.ats.platform==='other';
+    var customHtml=isOtherSel
+      ? '<div style="margin-top:var(--space-md);"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Which platform are you using?</label>'
+        +'<input class="mini" type="text" id="ats-custom-inp" placeholder="e.g. Eightfold, Phenom, Rippling, Breezy..." value="'+(D.ats.customPlatform||'')+'" oninput="D.ats.customPlatform=this.value;atsCheckReady()" style="max-width:380px;"></div>'
+      : '';
+    var canCont=D.ats.platform && !(D.ats.platform==='other' && !D.ats.customPlatform);
+    el.innerHTML='<div class="qcard">'
+      +qstep('ATS & technology')
+      +qheading('Which ATS are you using?')
+      +qsubhead('Select your platform — we\'ll offer to pre-populate common stages so you can get started faster.')
+      +'<div class="track-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));">'+cardGrid+'</div>'
+      +customHtml
+      +'<div class="fnav" style="margin-top:var(--space-lg);padding-top:var(--space-lg);border-top:.5px solid var(--border);">'
+      +'<button class="bbtn" onclick="ps()">← Back</button>'
+      +'<button class="nbtn" id="ats-cont-btn" onclick="atsN1()" style="background:'+AC+'" '+(canCont?'':'disabled')+'>Continue →</button>'
+      +'</div>'
+      +'</div>';
   }else{
-    const stages=ATS_ST[D.ats.platform]||ATS_ST.default;
-    el.innerHTML=`<div class="qcard">${sl('ATS & technology')}${qt('Pre-populate default stages or bins?')}${qh('These are the default bins or stages for your selected ATS. In iCIMS these are called Bins. Use them as a starting point or define your own.')}
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;">${stages.map(s=>`<span style="padding:4px 10px;border-radius:20px;font-size:11px;background:${AC}12;border:.5px solid ${AC}50;color:${AC}">${s}</span>`).join('<span style="color:var(--text3);font-size:12px;">→</span>')}</div>
-    <div class="opts">
-      <div class="opt ${D.ats.wantsPrepopulate===true?'sel':''}" onclick="accPre(true)"><span class="rad"><span class="radd"></span></span><div class="ol">Yes — use these as a starting point</div></div>
-      <div class="opt ${D.ats.wantsPrepopulate===false?'sel':''}" onclick="accPre(false)"><span class="rad"><span class="radd"></span></span><div class="ol">No — I'll define my stages from scratch</div></div>
-    </div>
-    <div class="fnav"><button class="bbtn" onclick="D.ats.selectedPlatform=false;rAts()">← Back</button><span class="qctr">${cs+1} of ${activeSecs.length}</span><button class="nbtn" onclick="ns()" style="background:${AC}" ${D.ats.wantsPrepopulate===null?'disabled':''}>Continue →</button></div>
-    </div>`;
+    var selP=ATS_P.find(function(p){return p.id===D.ats.platform;});
+    var platLabel=D.ats.platform==='other'?(D.ats.customPlatform||'your ATS'):(selP?selP.label:'your ATS');
+    var stages=ATS_ST[D.ats.platform]||ATS_ST.default;
+    var stagePills=stages.map(function(s){
+      return '<span style="padding:4px 10px;border-radius:20px;font-size:11px;background:'+AC+'12;border:.5px solid '+AC+'50;color:'+AC+'">'+s+'</span>';
+    }).join('<span style="color:var(--text3);font-size:12px;margin:0 2px;">→</span>');
+    var yesClass=D.ats.wantsPrepopulate===true?'sel':'';
+    var noClass=D.ats.wantsPrepopulate===false?'sel':'';
+    var disDone=D.ats.wantsPrepopulate===null?'disabled':'';
+    el.innerHTML='<div class="qcard">'
+      +qstep('ATS & technology')
+      +qheading('Use '+platLabel+' defaults as a starting point?')
+      +qsubhead('These are the default stages for '+platLabel+'. Keep them, adjust them, or start from scratch.')
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;">'+stagePills+'</div>'
+      +'<div class="opts">'
+      +'<div class="opt '+yesClass+'" onclick="accPre(true)"><span class="rad"><span class="radd"></span></span><div class="ol">Yes — use these as a starting point</div></div>'
+      +'<div class="opt '+noClass+'" onclick="accPre(false)"><span class="rad"><span class="radd"></span></span><div class="ol">No — I\'ll define my stages from scratch</div></div>'
+      +'</div>'
+      +'<div class="fnav" style="margin-top:var(--space-lg);padding-top:var(--space-lg);border-top:.5px solid var(--border);">'
+      +'<button class="bbtn" onclick="D.ats.selectedPlatform=false;rAts()">← Back</button>'
+      +'<button class="nbtn" onclick="ns()" style="background:'+AC+'" '+disDone+'>Continue →</button>'
+      +'</div>'
+      +'</div>';
   }
 }
-window.sATS=function(v){D.ats.platform=v;rAts();};
+window.sATS=function(v){
+  D.ats.platform=v;
+  if(v!=='other') D.ats.customPlatform='';
+  rAts();
+};
+window.atsCheckReady=function(){
+  var btn=document.getElementById('ats-cont-btn');
+  if(btn) btn.disabled=!(D.ats.platform==='other'&&D.ats.customPlatform.trim());
+};
 window.atsN1=function(){D.ats.selectedPlatform=true;rAts();};
 window.accPre=function(v){D.ats.wantsPrepopulate=v;if(v)D.ats.stages=[...(ATS_ST[D.ats.platform]||ATS_ST.default)];else D.ats.stages=[];rAts();};
-
 function rStages(){
   // Step 7: Define statuses within each stage
   // Stages are locked in from ATS section
@@ -1075,7 +1307,7 @@ function rStages(){
     if (!D.statuses[s.id]) D.statuses[s.id] = { label: s.label, selected: [], custom: [], open: false };
   });
 
-  var cards = stages.map(function(s) {
+  function buildStageCards(stages) { return stages.map(function(s) {
     var st = D.statuses[s.id];
     var suggestions = getStatusSuggestions(s.label);
     var count = st.selected.length + st.custom.length;
@@ -1085,7 +1317,6 @@ function rStages(){
       var isSel = st.selected.includes(sug);
       return '<span class="status-pill' + (isSel ? ' sel' : '') + '" '
         + 'data-stage="' + s.id + '" data-status="' + sug.replace(/"/g,'&quot;') + '" '
-        + 'onclick="toggleStatus(this)"'
         + 'style="display:inline-block;padding:5px 12px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;margin:3px;'
         + (isSel ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
         + '">' + sug + '</span>';
@@ -1093,12 +1324,12 @@ function rStages(){
 
     var customTags = st.custom.map(function(tag) {
       return '<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--bg2);border:.5px solid var(--border);border-radius:20px;font-size:12px;">'
-        + tag + '<span style="cursor:pointer;color:var(--text3);" data-stage="' + s.id + '" data-tag="' + tag.replace(/"/g,'&quot;') + '" onclick="removeCustomStatus(this)">×</span></span>';
+        + tag + '<span style="cursor:pointer;color:var(--text3);" data-remove-status="1" data-stage="' + s.id + '" data-tag="' + tag.replace(/"/g,'&quot;') + '">×</span></span>';
     }).join('');
 
     return '<div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;">'
       + '<div style="padding:12px 16px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;" '
-      + 'data-stage="' + s.id + '" onclick="toggleStageCard(this)">'
+      + 'data-stage="' + s.id + '" data-stage-click="1">'
       + '<div style="display:flex;align-items:center;gap:10px;">'
       + '<span style="width:7px;height:7px;border-radius:50%;background:' + (count > 0 ? '#3B6D11' : 'var(--border2)') + ';flex-shrink:0;"></span>'
       + '<span style="font-size:14px;font-weight:500;">' + s.label + '</span>'
@@ -1117,17 +1348,20 @@ function rStages(){
         + (st.custom.length ? '<div style="display:flex;flex-wrap:wrap;gap:6px;">' + customTags + '</div>' : '')
         + '</div>' : '')
       + '</div>';
-  }).join('');
+  }).join(''); }
 
+  var cards = buildStageCards(stages);
   var allCount = stages.reduce(function(sum, s) {
     return sum + (D.statuses[s.id] ? D.statuses[s.id].selected.length + D.statuses[s.id].custom.length : 0);
   }, 0);
 
-  qc(sl('Stages & statuses')
-    + qt('Define the statuses within each stage')
-    + qh('Expand each stage to select or add the statuses that candidates move through inside that bin. These become the actionable steps on your process map. You will assign owners and define rounds for each status in the next step.')
+  // Auto-open first stage if none are open yet
+  var anyOpen = stages.some(function(s){ return D.statuses[s.id] && D.statuses[s.id].open; });
+  if (!anyOpen && stages.length > 0) { D.statuses[stages[0].id].open = true; cards = buildStageCards(stages); }
+  qc(qstep('Stages & statuses')
+    + qheading('What happens inside each stage?')
+    + qsubhead('Select the statuses candidates move through within each stage. Expand a stage to choose.')
     + cards
-    + emailSavePanel()
     + fnav('ns', 'Continue', allCount === 0));
 }
 
@@ -1235,14 +1469,14 @@ function rSubprocess(){
         var isSel = sp.owner && sp.owner.includes(r);
         return '<span style="padding:4px 10px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;'
           + (isSel ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
-          + '" data-sid="' + st.id + '" data-role="' + r.replace(/"/g,'&quot;') + '" onclick="toggleStatusOwner(this)">' + r + '</span>';
+          + '" data-action="toggleStatusOwner" data-sid="' + st.id + '" data-role="' + r.replace(/"/g,'&quot;') + '">' + r + '</span>';
       }).join('');
 
       var outcomePills = [{k:'advance',l:'Advance'},{k:'approve',l:'Approve'},{k:'reject',l:'Reject / Decline'},{k:'hold',l:'Hold'}].map(function(o) {
         var isSel = sp.outcomes && sp.outcomes.includes(o.k);
         return '<span style="padding:4px 10px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;'
           + (isSel ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
-          + '" data-sid="' + st.id + '" data-outcome="' + o.k + '" onclick="toggleStatusOutcome(this)">' + o.l + '</span>';
+          + '" data-action="toggleStatusOutcome" data-sid="' + st.id + '" data-outcome="' + o.k + '">' + o.l + '</span>';
       }).join('');
 
       return '<div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;">'
@@ -1269,10 +1503,10 @@ function rSubprocess(){
           + '<div style="display:flex;gap:8px;">'
           + '<span style="padding:6px 14px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;'
           + (sp.hasRounds ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
-          + '" data-sid="' + st.id + '" data-val="true" onclick="toggleHasRounds(this)">Yes — define rounds</span>'
+          + '" data-action="toggleHasRounds" data-sid="' + st.id + '" data-val="true">Yes — define rounds</span>'
           + '<span style="padding:6px 14px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;'
           + (!sp.hasRounds ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
-          + '" data-sid="' + st.id + '" data-val="false" onclick="toggleHasRounds(this)">No — single step</span>'
+          + '" data-action="toggleHasRounds" data-sid="' + st.id + '" data-val="false">No — single step</span>'
           + '</div>'
           + (sp.hasRounds ? buildRounds(st.id, roles) : '')
           + '</div>'
@@ -1286,11 +1520,10 @@ function rSubprocess(){
       + '</div>';
   }).join('');
 
-  qc(sl('Sub-processes & owners')
-    + qt('Assign owners and define rounds for each status')
-    + qh('For each status, specify who owns the action, what the possible outcomes are, and whether it involves multiple rounds (like interview rounds or multi-step approvals). Expand any status to configure it.')
+  qc(qstep('Owners & rounds')
+    + qheading('Who owns each step, and what can happen next?')
+    + qsubhead('For each status, assign an owner, set outcomes, and define rounds where applicable. Expand any card to configure.')
     + cards
-    + emailSavePanel()
     + fnav('ns','Continue',false));
 }
 
@@ -1341,7 +1574,7 @@ function buildRounds(sid, roles){
       var isSel = r.conductors && r.conductors.includes(role);
       return '<span style="padding:4px 10px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;margin:2px;'
         + (isSel ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
-        + '" data-sid="' + sid + '" data-ri="' + ri + '" data-role="' + role.replace(/"/g,'&quot;') + '" onclick="toggleRoundConductor(this)">' + role + '</span>';
+        + '" data-action="toggleRoundConductor" data-sid="' + sid + '" data-ri="' + ri + '" data-role="' + role.replace(/"/g,'&quot;') + '">' + role + '</span>';
     }).join('');
 
     html += '<div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;">'
@@ -1415,66 +1648,273 @@ window.delRound=function(sid,ri){if(D.subprocess[sid]){D.subprocess[sid].rounds.
 function mkRound(n){return{id:'r'+Date.now()+n,name:'Round '+n,types:[],formats:[],conductors:[],schedMethod:[],condition:'',open:true};}
 
 function rActions(){
-  const stages=getStageList();const roles=getAllRoles();
-  stages.forEach(s=>{if(!D.actions[s.id])D.actions[s.id]={label:s.label,decisionOwners:[],outcomes:[],rejectOwner:[],rejectNote:'',open:false};});
-  const cards=stages.map(s=>{
-    const a=D.actions[s.id];const complete=a.decisionOwners.length>0||a.outcomes.length>0;
-    return`<div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;">
-      <div style="padding:12px 16px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleAct('${s.id}')">
-        <div style="font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;"><span style="width:7px;height:7px;border-radius:50%;background:${complete?'#3B6D11':'var(--border2)'};"></span>${s.label}${complete?`<span style="padding:2px 8px;border-radius:20px;font-size:11px;background:${AC}12;border:.5px solid ${AC}40;color:${AC}">Configured</span>`:''}</div>
-        <span style="font-size:11px;color:var(--text3);">${a.open?'▲':'▼'}</span>
-      </div>
-      ${a.open?`<div style="padding:14px;border-top:.5px solid var(--border);display:flex;flex-direction:column;gap:12px;">
-        <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;"><div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Decision owner</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${roles.map(r=>`<span style="padding:5px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;${a.decisionOwners.includes(r)?`background:${AC}12;border-color:${AC};color:${AC}`:'background:var(--bg);border-color:var(--border);color:var(--text);'}" onclick="togAR('${s.id}','decisionOwners','${r.replace(/'/g,"\\'")}')">${r}</span>`).join('')}</div></div>
-        <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;"><div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Outcomes</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${buildOutcomePills(s.id,a)}</div></div>
-      </div>`:''}
-    </div>`;
+  var stages = getStageList();
+  var roles = getAllRoles();
+  var allStatuses = [];
+  stages.forEach(function(s) {
+    var st = D.statuses[s.id];
+    if (!st) return;
+    var statusList = [].concat(st.selected || [], st.custom || []);
+    statusList.forEach(function(statusName) {
+      var statusId = s.id + '__' + statusName.replace(/[^a-zA-Z0-9]/g,'_');
+      if (!D.subprocess[statusId]) {
+        D.subprocess[statusId] = { label:statusName, stageLabel:s.label, stageId:s.id, owner:[], outcomes:[], hasRounds:false, rounds:[], open:false };
+      }
+      allStatuses.push({ id:statusId, label:statusName, stageLabel:s.label, stageId:s.id });
+    });
+  });
+  if (!allStatuses.length) {
+    qc(qstep('Actions')
+      + qheading('No statuses defined yet')
+      + qsubhead('Go back to Step 7 and define statuses within your stages first — then return here to assign owners and outcomes.')
+      + fnav('ns','Continue',false));
+    return;
+  }
+  var stageGroups = {};
+  allStatuses.forEach(function(st) {
+    if (!stageGroups[st.stageId]) stageGroups[st.stageId] = { label:st.stageLabel, statuses:[] };
+    stageGroups[st.stageId].statuses.push(st);
+  });
+  var cards = Object.keys(stageGroups).map(function(stageId) {
+    var group = stageGroups[stageId];
+    var rows = group.statuses.map(function(st) {
+      var sp = D.subprocess[st.id];
+      var configured = (sp.owner && sp.owner.length > 0) || (sp.outcomes && sp.outcomes.length > 0);
+      var ownerPills = roles.map(function(r) {
+        var isSel = sp.owner && sp.owner.includes(r);
+        return '<span style="display:inline-block;padding:4px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;margin:2px;'
+          + (isSel ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
+          + '" data-action="toggleStatusOwner" data-sid="'+st.id+'" data-role="'+r.replace(/"/g,'&quot;')+'">'+r+'</span>';
+      }).join('');
+      var outcomePills = [{k:'advance',l:'Advance'},{k:'approve',l:'Approve'},{k:'reject',l:'Reject'},{k:'hold',l:'Hold'}].map(function(o) {
+        var isSel = sp.outcomes && sp.outcomes.includes(o.k);
+        return '<span style="display:inline-block;padding:4px 11px;border-radius:20px;font-size:12px;border:.5px solid;cursor:pointer;margin:2px;'
+          + (isSel ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
+          + '" data-action="toggleStatusOutcome" data-sid="'+st.id+'" data-outcome="'+o.k+'">'+o.l+'</span>';
+      }).join('');
+      return '<div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;">'
+        + '<div style="padding:10px 16px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;" data-sid="'+st.id+'" onclick="toggleActCard(this)">'
+        + '<div style="display:flex;align-items:center;gap:8px;">'
+        + '<span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'+(configured?'#3B6D11':'var(--border2)')+'"></span>'
+        + '<span style="font-size:13px;font-weight:500;">'+st.label+'</span>'
+        + (configured ? '<span style="padding:1px 7px;border-radius:20px;font-size:11px;background:'+AC+'12;border:.5px solid '+AC+'40;color:'+AC+'">configured</span>' : '<span style="font-size:11px;color:var(--text3);">click to configure</span>')
+        + '</div>'
+        + '<span style="font-size:11px;color:var(--text3);">'+(sp.open?'▲':'▼')+'</span>'
+        + '</div>'
+        + (sp.open
+          ? '<div style="padding:14px;border-top:.5px solid var(--border);display:flex;flex-direction:column;gap:12px;">'
+            + '<div style="background:var(--bg2);border-radius:var(--radius);padding:12px;">'
+            + '<div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Who owns this action?</div>'
+            + '<div style="display:flex;flex-wrap:wrap;">'+ownerPills+'</div>'
+            + '</div>'
+            + '<div style="background:var(--bg2);border-radius:var(--radius);padding:12px;">'
+            + '<div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Possible outcomes</div>'
+            + '<div style="display:flex;flex-wrap:wrap;">'+outcomePills+'</div>'
+            + '</div>'
+            + '</div>'
+          : '')
+        + '</div>';
+    }).join('');
+    return '<div style="margin-bottom:18px;">'
+      + '<div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:'+AC+';margin-bottom:8px;padding:0 2px;">'+group.label+'</div>'
+      + rows + '</div>';
   }).join('');
-  qc(`${sl('Actions')}${qt('Who owns each action at every stage?')}${qh('Assign decision owners and outcomes per stage. These appear as action nodes in your swimlane map.')}${cards}${emailSavePanel()}${fnav('ns','Continue',false)}`);
+  qc(qstep('Actions')
+    + qheading('Confirm owners and outcomes per status')
+    + qsubhead('Review who owns each action and what outcomes are possible. These drive the decision nodes on your map.')
+    + cards
+    + fnav('ns','Continue',false));
 }
-window.toggleAct=function(sid){markInteraction();D.actions[sid].open=!D.actions[sid].open;rActions();};
-window.togAR=function(sid,field,role){const a=D.actions[sid];if(!Array.isArray(a[field]))a[field]=[];msel(a[field],role);rActions();};
-window.togOut=function(sid,o){markInteraction();msel(D.actions[sid].outcomes,o);rActions();};
-
+window.toggleActCard = function(hdr) {
+  var sid = hdr.getAttribute('data-sid');
+  if (D.subprocess[sid]) { D.subprocess[sid].open = !D.subprocess[sid].open; rActions(); }
+};
+window.toggleAct=function(sid){markInteraction();if(D.subprocess[sid]){D.subprocess[sid].open=!D.subprocess[sid].open;rActions();}};
+window.togAR=function(sid,field,role){if(!D.subprocess[sid]) return;var a=D.subprocess[sid];if(!Array.isArray(a[field]))a[field]=[];msel(a[field],role);markInteraction();rActions();};
+window.togOut=function(sid,o){markInteraction();if(D.subprocess[sid]){msel(D.subprocess[sid].outcomes,o);}rActions();};
 function rIntegrations(){
-  qc(`${sl('Integrations')}${qt('What tools are connected to your ATS?')}${qh('These become integration touchpoints on your swimlane map.')}${olEditable(INTEGS,D.integrations.selected,true,'tInteg','integrations','rIntegrations')}${ca('inp-integ','aInteg',D.integrations.custom)}${emailSavePanel()}${fnav('ns','Continue',false)}`);
+  qc(qstep('Integrations')
+    +qheading('Which tools connect to your ATS?')
+    +qsubhead('Select every integration in your stack. These become touchpoints on your swimlane map.')
+    +olEditable(INTEGS,D.integrations.selected,true,'tInteg','integrations','rIntegrations')
+    +ca('inp-integ','aInteg',D.integrations.custom)
+    +fnav('ns','Continue',false));
 }
 window.tInteg=function(v){markInteraction();msel(D.integrations.selected,v);rIntegrations();};
 window.aInteg=function(){const i=document.getElementById('inp-integ');const v=i.value.trim();if(v&&!D.integrations.custom.includes(v)){D.integrations.custom.push(v);i.value='';}rIntegrations();};
 
 function rTerms(){
   const fields=[{key:'req',label:'Job opening',ph:'Requisition'},{key:'candidate',label:'Applicants',ph:'Candidate'},{key:'disposition',label:'Rejection',ph:'Disposition'},{key:'screen',label:'First interaction',ph:'Phone screen'},{key:'offer',label:'Offer stage',ph:'Offer'},{key:'hm',label:'Department manager',ph:'Hiring manager'}];
-  qc(`${sl('Terminology')}${qt('What terms does your organization use?')}${qh('Your map will use your language throughout.')}
-  <div style="display:flex;flex-direction:column;gap:12px;">${fields.map(f=>`<div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">${f.label}</label><input class="mini" type="text" placeholder="${f.ph}" value="${D.terms[f.key]}" oninput="D.terms['${f.key}']=this.value"></div>`).join('')}</div>${fnav('ns','Continue',false)}`);
+  qc(qstep('Terminology')
+    +qheading('What terms does your organization use?')
+    +qsubhead('Your map and SOP will use your language throughout. Leave any blank to use the default.')
+    +'<div style="display:flex;flex-direction:column;gap:12px;">'+fields.map(f=>'<div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">'+f.label+'</label><input class="mini" type="text" placeholder="'+f.ph+'" value="'+D.terms[f.key]+'" oninput="D.terms[\''+f.key+'\']=this.value"></div>').join('')+'</div>'
+    +fnav('ns','Continue',false));
 }
 function rBranching(){
-  qc(`${sl('Branching')}${qt('Does your process have conditional paths?')}${qh('Describe if/then logic — separate from per-round conditions.')}
-  <div id="br">${(D.branching.rules||[]).map((r,i)=>`<div style="display:flex;gap:8px;margin-bottom:8px;"><input class="mini" type="text" value="${r}" oninput="D.branching.rules[${i}]=this.value" placeholder="If… then…"><button style="padding:8px 10px;background:transparent;border:.5px solid var(--border);border-radius:var(--radius);cursor:pointer;color:var(--text2);" onclick="delBR(${i})">×</button></div>`).join('')}</div>
-  <button onclick="addBR()" style="padding:9px 16px;background:transparent;border:.5px solid var(--border);border-radius:var(--radius);font-size:13px;cursor:pointer;color:var(--text);font-family:var(--font);">+ Add rule</button>
-  ${fnav('ns','Continue (skip if none)',false)}`);
+  // Step 11 (Full mode): Entrance Criteria
+  // Define prerequisite conditions that must be met before a status/stage can be entered
+  var stages = getStageList();
+  var allStatuses = [];
+  stages.forEach(function(s) {
+    var st = D.statuses[s.id];
+    if (st) {
+      [].concat(st.selected||[], st.custom||[]).forEach(function(name) {
+        allStatuses.push({ stageLabel:s.label, name:name, key:s.id+'__'+name.replace(/[^a-zA-Z0-9]/g,'_') });
+      });
+    }
+  });
+  // Also offer stage-level criteria if no statuses defined
+  var targets = allStatuses.length ? allStatuses : stages.map(function(s){ return { stageLabel:s.label, name:s.label, key:s.id }; });
+  if (!D.branching.criteria) D.branching.criteria = {};
+
+  // Common entrance criteria suggestions
+  var SUGGESTIONS = [
+    'Application must be complete and reviewed',
+    'Assessment must be submitted and scored',
+    'Phone screen must be completed',
+    'Background check must be initiated',
+    'Offer letter must be signed',
+    'Reference check must be complete',
+    'Hiring manager approval required',
+    'Compensation approval required',
+    'I-9 documentation must be on file',
+  ];
+
+  var cards = targets.map(function(t) {
+    var crit = D.branching.criteria[t.key] || { rules:[], open:false };
+    if (!D.branching.criteria[t.key]) D.branching.criteria[t.key] = crit;
+    var hasCrit = crit.rules && crit.rules.length > 0;
+    var sugg = SUGGESTIONS.map(function(s) {
+      var isAdded = crit.rules && crit.rules.indexOf(s) > -1;
+      return '<span style="display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;border:.5px solid;cursor:pointer;margin:2px;'
+        + (isAdded ? 'background:'+AC+';color:#fff;border-color:'+AC : 'background:var(--bg);border-color:var(--border);color:var(--text)')
+        + '" data-key="'+t.key+'" data-sugg="'+s.replace(/"/g,'&quot;')+'" onclick="toggleCritSugg(this)">'+s+'</span>';
+    }).join('');
+    var customRows = (crit.rules||[]).filter(function(r){ return SUGGESTIONS.indexOf(r)<0; }).map(function(r,ri) {
+      return '<div style="display:flex;gap:8px;margin-bottom:6px;">'
+        + '<input class="mini" type="text" value="'+r.replace(/"/g,'&quot;')+'" style="flex:1;" data-key="'+t.key+'" data-ri="'+ri+'" oninput="updateCritRule(this)">'
+        + '<button style="padding:7px 10px;background:transparent;border:.5px solid var(--border);border-radius:var(--radius);cursor:pointer;color:var(--text2);" data-key="'+t.key+'" data-rule="'+r.replace(/"/g,'&quot;')+'" onclick="delCritRule(this)">×</button>'
+        + '</div>';
+    }).join('');
+    return '<div style="border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;">'
+      + '<div style="padding:10px 16px;background:var(--bg2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;" data-key="'+t.key+'" onclick="toggleCritCard(this)">'
+      + '<div style="display:flex;align-items:center;gap:8px;min-width:0;">'
+      + '<span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'+(hasCrit?'#3B6D11':'var(--border2)')+'"></span>'
+      + '<span style="font-size:11px;color:var(--text3);margin-right:4px;">'+t.stageLabel+' ›</span>'
+      + '<span style="font-size:13px;font-weight:500;">'+t.name+'</span>'
+      + (hasCrit ? '<span style="padding:1px 7px;border-radius:20px;font-size:11px;background:'+AC+'12;border:.5px solid '+AC+'40;color:'+AC+'">'+crit.rules.length+' rule'+(crit.rules.length!==1?'s':'')+'</span>' : '')
+      + '</div>'
+      + '<span style="font-size:11px;color:var(--text3);">'+(crit.open?'▲':'▼')+'</span>'
+      + '</div>'
+      + (crit.open
+        ? '<div style="padding:14px;border-top:.5px solid var(--border);">'
+          + '<div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Common prerequisites — select all that apply</div>'
+          + '<div style="margin-bottom:14px;">'+sugg+'</div>'
+          + '<div style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Custom requirement</div>'
+          + customRows
+          + '<div style="display:flex;gap:8px;margin-top:6px;">'
+          + '<input class="mini" type="text" id="crit-inp-'+t.key+'" placeholder="e.g. Must complete assessment before advancing..." style="flex:1;">'
+          + '<button style="padding:9px 16px;background:'+AC+';color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-size:13px;font-family:var(--font);" data-key="'+t.key+'" onclick="addCritRule(this)">Add</button>'
+          + '</div>'
+          + '</div>'
+        : '')
+      + '</div>';
+  }).join('');
+
+  var noTargets = targets.length === 0
+    ? '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">No stages or statuses defined yet. Complete Steps 7–8 first.</div>'
+    : '';
+
+  qc(qstep('Entrance criteria')
+    + qheading('What must be true before each step can begin?')
+    + qsubhead('Define prerequisite conditions for key statuses — e.g. "assessment must be complete before screen" or "application must be reviewed before offer stage." Skip any that have no prerequisites.')
+    + (noTargets || cards)
+    + fnav('ns','Continue',false));
 }
-window.addBR=function(){D.branching.rules.push('');rBranching();};
+window.toggleCritCard = function(hdr) {
+  var key = hdr.getAttribute('data-key');
+  if (!D.branching.criteria[key]) D.branching.criteria[key] = { rules:[], open:false };
+  D.branching.criteria[key].open = !D.branching.criteria[key].open;
+  rBranching();
+};
+window.toggleCritSugg = function(el) {
+  markInteraction();
+  var key = el.getAttribute('data-key');
+  var sugg = el.getAttribute('data-sugg');
+  if (!D.branching.criteria[key]) D.branching.criteria[key] = { rules:[], open:true };
+  var idx = D.branching.criteria[key].rules.indexOf(sugg);
+  if (idx > -1) D.branching.criteria[key].rules.splice(idx,1);
+  else D.branching.criteria[key].rules.push(sugg);
+  rBranching();
+};
+window.addCritRule = function(btn) {
+  var key = btn.getAttribute('data-key');
+  var inp = document.getElementById('crit-inp-'+key);
+  if (!inp || !inp.value.trim()) return;
+  if (!D.branching.criteria[key]) D.branching.criteria[key] = { rules:[], open:true };
+  D.branching.criteria[key].rules.push(inp.value.trim());
+  inp.value = '';
+  markInteraction();
+  rBranching();
+};
+window.delCritRule = function(btn) {
+  var key = btn.getAttribute('data-key');
+  var rule = btn.getAttribute('data-rule');
+  if (!D.branching.criteria[key]) return;
+  var idx = D.branching.criteria[key].rules.indexOf(rule);
+  if (idx > -1) D.branching.criteria[key].rules.splice(idx,1);
+  markInteraction();
+  rBranching();
+};
+window.updateCritRule = function(inp) {
+  var key = inp.getAttribute('data-key');
+  var ri = parseInt(inp.getAttribute('data-ri'));
+  if (!D.branching.criteria[key]) return;
+  var customOnly = (D.branching.criteria[key].rules||[]).filter(function(r){
+    var SUGGESTIONS=['Application must be complete and reviewed','Assessment must be submitted and scored','Phone screen must be completed','Background check must be initiated','Offer letter must be signed','Reference check must be complete','Hiring manager approval required','Compensation approval required','I-9 documentation must be on file'];
+    return SUGGESTIONS.indexOf(r)<0;
+  });
+  customOnly[ri] = inp.value;
+};
+window.addBR=function(){if(!D.branching.rules)D.branching.rules=[];D.branching.rules.push('');rBranching();};
 window.delBR=function(i){D.branching.rules.splice(i,1);rBranching();};
 function rSla(){
   const stages=getStageList().map(s=>s.label);
-  qc(`${sl('SLAs')}${qt('How long should a candidate spend in each stage?')}${qh('Maximum business days before action is required.')}
-  <div>${stages.map(s=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--border);"><span style="flex:1;font-size:14px;">${s}</span><input class="mini" style="width:65px;text-align:center;" type="number" min="0" max="90" placeholder="—" value="${D.sla.values[s]||''}" oninput="D.sla.values['${s}']=this.value"><span style="font-size:12px;color:var(--text2);">days</span></div>`).join('')}</div>
-  ${fnav('ns','Continue',false)}`);
+  var rows=stages.map(s=>'<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--border);"><span style="flex:1;font-size:14px;font-weight:500;">'+s+'</span><input class="mini" style="width:65px;text-align:center;" type="number" min="0" max="90" placeholder="—" value="'+(D.sla.values[s]||'')+'" oninput="D.sla.values[\''+s+'\' ]=this.value"><span style="font-size:12px;color:var(--text2);">days</span></div>').join('');
+  qc(qstep('SLAs')
+    +qheading('How long should each stage take?')
+    +qsubhead('Set the maximum business days before action is required at each stage.')
+    +'<div>'+rows+'</div>'
+    +fnav('ns','Continue',false));
 }
 function rCompliance(){
   const opts=[{id:'ofccp',label:'OFCCP / affirmative action'},{id:'eeo',label:'EEO data collection'},{id:'adverse',label:'Adverse action notices'},{id:'pay',label:'Pay transparency'},{id:'gdpr',label:'GDPR / data privacy'},{id:'i9',label:'I-9 / E-Verify'},{id:'drug_dot',label:'DOT / drug testing'}];
-  qc(`${sl('Compliance')}${qt('Which compliance requirements apply?')}${qh('Flagged on your map and noted in your SOP.')}${ol(opts,D.compliance.selected,true,'tComp')}${fnav('ns','Continue',false)}`);
+  qc(qstep('Compliance')
+    +qheading('Which compliance requirements apply?')
+    +qsubhead('These will be flagged on your map and noted in the SOP. Select all that apply.')
+    +ol(opts,D.compliance.selected,true,'tComp')
+    +fnav('ns','Continue',false));
 }
 window.tComp=function(v){markInteraction();msel(D.compliance.selected,v);rCompliance();};
 function rApprovals(){
   const checks=[{key:'req',label:'Requisition approval before posting'},{key:'offer',label:'Offer approval before extending'},{key:'supComp',label:'Supplemental / exception comp approval'},{key:'audit',label:'Offer audit / QC review'}];
-  qc(`${sl('Approvals')}${qt('What approval steps exist?')}${qh('These become decision nodes on your map.')}
-  <div class="opts">${checks.map(c=>`<div class="opt ${D.approvals[c.key]?'sel':''}" onclick="D.approvals['${c.key}']=!D.approvals['${c.key}'];rApprovals()"><span class="chk"><span class="chkm">✓</span></span><div class="ol">${c.label}</div></div>`).join('')}</div>
-  ${fnav('ns','Continue',false)}`);
+  var optsHtml='<div class="opts">'+checks.map(function(c){
+    return '<div class="opt '+(D.approvals[c.key]?'sel':'')+'" onclick="D.approvals[\''+c.key+'\']= !D.approvals[\''+c.key+'\'];rApprovals()"><span class="chk"><span class="chkm">&#10003;</span></span><div class="ol">'+c.label+'</div></div>';
+  }).join('')+'</div>';
+  qc(qstep('Approvals')
+    +qheading('Which approvals are required?')
+    +qsubhead('These become decision nodes on your map. Select all that apply.')
+    +optsHtml
+    +fnav('ns','Continue',false));
 }
 function rOnboarding(){
   const tasks=[{id:'bg',label:'Background check complete'},{id:'offer_signed',label:'Offer letter signed'},{id:'i9',label:'I-9 initiated'},{id:'it',label:'IT setup sent'},{id:'hris',label:'HRIS record created'},{id:'forms',label:'New hire forms sent'}];
-  qc(`${sl('Onboarding handoff')}${qt('Where does TA end and HR / onboarding begin?')}${qh('Select tasks that trigger the handoff boundary.')}${ol(tasks,D.onboarding.tasks,true,'tOnboard')}${fnav('ns','Continue to Review',false)}`);
+  qc(qstep('Handoff')
+    +qheading('Where does TA hand off to HR or onboarding?')
+    +qsubhead('Select the tasks that mark the boundary. These appear at the end of your process map.')
+    +ol(tasks,D.onboarding.tasks,true,'tOnboard')
+    +fnav('ns','Continue to Review',false));
 }
 window.tOnboard=function(v){markInteraction();msel(D.onboarding.tasks,v);rOnboarding();};
 
@@ -1489,7 +1929,7 @@ function rReview(){
   document.getElementById('main').innerHTML=`
     <div style="margin-bottom:16px;"><div style="font-size:18px;font-weight:500;margin-bottom:4px;">Review your process map</div><div style="font-size:13px;color:var(--text2);">Check everything and edit before generating. Click any section header to go back.</div></div>
 
-    ${sumSec('Process track & setup',activeSecs.indexOf('setup'),[['Track',D.setup.trackName||'—'],['Mode',mode==='quick'?'Quick':'Full'],['Brand color',`<span style="display:inline-flex;align-items:center;gap:7px;"><span style="width:14px;height:14px;border-radius:3px;background:${AC};display:inline-block;"></span>${AC}</span>`]])}
+    ${sumSec('Process track & setup',activeSecs.indexOf('setup'),[['Organization',D.setup.orgName||'—'],['Track',D.setup.trackName||'—'],['Mode',mode==='quick'?'Quick':'Full'],['Brand color',`<span style="display:inline-flex;align-items:center;gap:7px;"><span style="width:14px;height:14px;border-radius:3px;background:${AC};display:inline-block;"></span>${AC}</span>`]])}
     ${sumSec('Swimlane users',activeSecs.indexOf('users'),[],userLabels.map(chip).join('')||'None')}
     ${sumSec('Candidate stages',activeSecs.indexOf('stages'),[],stageList.map(s=>chip(s.label)).join('')||'None')}
     ${spList.length?sumSec('Sub-processes',activeSecs.indexOf('subprocess'),[],spList.map(s=>`<div style="padding:5px 0;border-bottom:.5px solid var(--border);font-size:12px;"><strong>${s.label}</strong> — ${D.subprocess[s.id].rounds.length} round${D.subprocess[s.id].rounds.length!==1?'s':''}: ${D.subprocess[s.id].rounds.map(r=>r.name).join(' → ')}</div>`).join('')):''}
@@ -1531,14 +1971,19 @@ function sumSec(title,sIdx,rows,chipHtml){
 
 // generateOutput replaced below
 
-const RS={setup:rSetup,org:rOrg,users:rUsers,terms:rTerms,ats:rAts,reqflow:()=>{
-  // Simplified reqflow inline
-  qc(`${sl('Requisition flow')}${qt('How are job requisitions opened?')}${qh('This determines the first action on your map.')}
-  ${olEditable(REQ_OPEN,D.reqflow.reqOpenMethod,true,'tReqO','reqflow','rReqFlow')}
-  <div style="margin-top:14px;"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">Notes (optional)</label><input class="mini" type="text" placeholder="e.g. HM submits Google Form, recruiter converts to ATS req" value="${D.reqflow.reqOpenNote||''}" oninput="D.reqflow.reqOpenNote=this.value"></div>
-  ${emailSavePanel()}${fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0)}`);
-},stages:rStages,subprocess:rSubprocess,actions:rActions,integrations:rIntegrations,branching:rBranching,sla:rSla,compliance:rCompliance,approvals:rApprovals,onboarding:rOnboarding};
-window.tReqO=function(v){markInteraction();msel(D.reqflow.reqOpenMethod,v);if(window.rReqFlow)rReqFlow();else if(RS.reqflow)RS.reqflow()();};
+// ── REQFLOW RENDERER ─────────────────────────────────────────────────────────
+function rReqFlow() {
+  qc(qstep('Req flow')
+    +qheading('How are job requisitions opened?')
+    +qsubhead('This determines the first action on your process map. Select all that apply.')
+    +olEditable(REQ_OPEN,D.reqflow.reqOpenMethod,true,'tReqO','reqflow','rReqFlow')
+    +'<div style="margin-top:var(--space-md);"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">Notes (optional)</label><input class="mini" type="text" placeholder="e.g. HM submits Google Form, recruiter converts to ATS req" value="'+(D.reqflow.reqOpenNote||'')+'" oninput="D.reqflow.reqOpenNote=this.value"></div>'
+    +fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0));
+}
+window.rReqFlow = rReqFlow;
+
+const RS={setup:rSetup,org:rOrg,users:rUsers,terms:rTerms,ats:rAts,reqflow:rReqFlow,stages:rStages,subprocess:rSubprocess,actions:rActions,integrations:rIntegrations,branching:rBranching,sla:rSla,compliance:rCompliance,approvals:rApprovals,onboarding:rOnboarding};
+window.tReqO=function(v){markInteraction();msel(D.reqflow.reqOpenMethod,v);rReqFlow();};
 
 // init replaced below
 
@@ -1608,14 +2053,61 @@ window.editOutcomeLabel = function(sid, outcomeKey, defaultLabel) {
   else delete D.actions[sid].outcomeLabels[outcomeKey];
   rActions();
 };
-// ── REQFLOW NAMED FUNCTION ────────────────────────────────────────────────────
-function rReqFlow() {
-  qc(`${sl('Requisition flow')}${qt('How are job requisitions opened?')}${qh('This determines the first action on your map.')}
-  ${olEditable(REQ_OPEN,D.reqflow.reqOpenMethod,true,'tReqO','reqflow','rReqFlow')}
-  <div style="margin-top:14px;"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">Notes (optional)</label><input class="mini" type="text" placeholder="e.g. HM submits Google Form, recruiter converts to ATS req" value="${D.reqflow.reqOpenNote||''}" oninput="D.reqflow.reqOpenNote=this.value"></div>
-  ${emailSavePanel()}${fnav('ns','Continue',D.reqflow.reqOpenMethod.length===0)}`);
-}
+
 // ── BEFOREUNLOAD ──────────────────────────────────────────────────────────────
+// ── DELEGATED CLICK HANDLER ─────────────────────────────────────────────────
+document.addEventListener('click', function(e) {
+  // ── ATS platform card ──
+  var atsCard = e.target.closest('[data-ats-click]');
+  if (atsCard) { sATS(atsCard.getAttribute('data-ats')); return; }
+
+  // ── Stage accordion header (Step 7) ──
+  var stageCard = e.target.closest('[data-stage-click]');
+  if (stageCard) { toggleStageCard(stageCard); return; }
+
+  // ── Status pill (Step 7) ──
+  var statusPill = e.target.closest('.status-pill');
+  if (statusPill) { toggleStatus(statusPill); return; }
+
+  // ── Add custom status button (Step 7) ──
+  var addBtn = e.target.closest('.add-status-btn');
+  if (addBtn) { e.stopPropagation(); addCustomStatus(addBtn.getAttribute('data-stage')); return; }
+
+  // ── Remove custom status tag (Step 7) ──
+  var removeBtn = e.target.closest('[data-remove-status]');
+  if (removeBtn) { removeCustomStatus(removeBtn); return; }
+
+  // ── Outcome-edit button (Steps 8/9) ──
+  var editBtn = e.target.closest('.outcome-edit-btn');
+  if (editBtn) {
+    e.stopPropagation();
+    editOutcomeLabel(editBtn.getAttribute('data-sid'), editBtn.getAttribute('data-ok'), editBtn.getAttribute('data-lbl'));
+    return;
+  }
+
+  // ── Legacy outcome-pill class (buildOutcomePills helper) ──
+  var legacyPill = e.target.closest('.outcome-pill');
+  if (legacyPill) { togOut(legacyPill.getAttribute('data-sid'), legacyPill.getAttribute('data-ok')); return; }
+
+  // ── data-action dispatch — handles all pills in Steps 8/9/11 ──
+  var actionEl = e.target.closest('[data-action]');
+  if (!actionEl) return;
+  var action = actionEl.getAttribute('data-action');
+  var sid  = actionEl.getAttribute('data-sid');
+  var role = actionEl.getAttribute('data-role');
+  var outcome = actionEl.getAttribute('data-outcome');
+  var val  = actionEl.getAttribute('data-val');
+  var ri   = actionEl.getAttribute('data-ri');
+  var key  = actionEl.getAttribute('data-key');
+  var sugg = actionEl.getAttribute('data-sugg');
+  var rule = actionEl.getAttribute('data-rule');
+  markInteraction();
+
+  if (action === 'toggleStatusOwner')    { toggleStatusOwner(actionEl); return; }
+  if (action === 'toggleStatusOutcome')  { toggleStatusOutcome(actionEl); return; }
+  if (action === 'toggleHasRounds')      { toggleHasRounds(actionEl); return; }
+  if (action === 'toggleRoundConductor') { toggleRoundConductor(actionEl); return; }
+});
 window.addEventListener('beforeunload', function(e) {
   if (!HAS_INTERACTION || SAVE_STATUS === 'saved') return;
   e.preventDefault(); e.returnValue = 'You have unsaved progress. Leave?';
@@ -1636,7 +2128,13 @@ window.generateOutput = async function() {
   } catch(e2) {
     console.error('Generation error:',e2);
     if(btn){btn.textContent='Generate BPMN map & SOP →';btn.disabled=false;}
-    showToast('Error generating — see console',4000);
+    var msg = e2 && e2.message ? e2.message : 'Unknown error';
+    if(msg.toLowerCase().includes('docx is not defined') || msg.toLowerCase().includes('docx')) {
+      showToast('SOP library not loaded — try deploying to GitHub Pages or refreshing',6000);
+    } else {
+      showToast('Error: '+msg.slice(0,80),5000);
+    }
+    console.error('Full error:', e2);
   }
 };
 function hexToRgbArr(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];}
@@ -1662,7 +2160,7 @@ async function generatePDF() {
   doc.setTextColor(255,255,255);doc.setFontSize(24);doc.setFont('helvetica','bold');
   doc.text(D.setup.orgName||'Organization',MARGIN+14,MARGIN+30);
   doc.setFontSize(13);doc.setFont('helvetica','normal');
-  doc.text((D.setup.trackName||'Hiring process')+' · '+(ATS_P.find(p=>p.id===D.ats.platform)||{label:'ATS'}).label+' · BPMN',MARGIN+14,MARGIN+52);
+  doc.text((D.setup.trackName||'Hiring process')+' · '+(D.ats.platform==='other'?(D.ats.customPlatform||'Other ATS'):(ATS_P.find(p=>p.id===D.ats.platform)||{label:'ATS'}).label)+' · BPMN',MARGIN+14,MARGIN+52);
   doc.setFontSize(10);doc.text('36" × 24" · 300 DPI · '+new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'}),W-MARGIN-14,MARGIN+44,{align:'right'});
   PHASES.forEach((ph,idx)=>{
     const x0=px(ph.f0),x1=px(ph.f1),lt=idx%2===1;
@@ -1726,11 +2224,18 @@ async function generatePDF() {
 }
 
 async function generateDOCX() {
+  if(typeof docx === 'undefined') {
+    throw new Error('docx library not loaded. If testing locally, open via GitHub Pages instead of file://');
+  }
   const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,HeadingLevel,AlignmentType,BorderStyle,WidthType,ShadingType,LevelFormat}=docx;
   const userLabels=[...D.users.selected.map(u=>(D.users.customLabels&&D.users.customLabels[u])||(USERS.find(o=>o.id===u)||{label:u}).label),...D.users.custom];
   const stageList=getStageList();
   const integLabels=[...D.integrations.selected.map(i=>(D.integrations.customLabels&&D.integrations.customLabels[i])||(INTEGS.find(o=>o.id===i)||{label:i}).label),...D.integrations.custom];
   const BH=AC.replace('#','');
+  // Resolve ATS platform label — handles 'other' + custom entry
+  var atsLabel = D.ats.platform==='other'
+    ? (D.ats.customPlatform||'Other ATS')
+    : ((ATS_P.find(function(p){return p.id===D.ats.platform;})||{label:'ATS'}).label);
   const bd={style:BorderStyle.SINGLE,size:1,color:'CCCCCC'};
   const borders={top:bd,bottom:bd,left:bd,right:bd};
   const h1=t=>new Paragraph({heading:HeadingLevel.HEADING_1,spacing:{before:320,after:100},children:[new TextRun({text:t,bold:true,size:32,color:BH,font:'Arial'})]});
@@ -1745,31 +2250,76 @@ async function generateDOCX() {
     sections:[{properties:{page:{size:{width:12240,height:15840},margin:{top:1440,right:1440,bottom:1440,left:1440}}},children:[
       new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:720,after:120},children:[new TextRun({text:'TALENT ACQUISITION SOP',font:'Arial',size:36,bold:true,color:BH})]}),
       new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:160},children:[new TextRun({text:D.setup.orgName||'Organization',font:'Arial',size:48,bold:true})]}),
-      new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:480},children:[new TextRun({text:(D.setup.trackName||'Process')+' · '+(ATS_P.find(p=>p.id===D.ats.platform)||{label:'ATS'}).label,font:'Arial',size:22,color:'777777'})]}),
+      new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:480},children:[new TextRun({text:(D.setup.trackName||'Process')+' · '+atsLabel,font:'Arial',size:22,color:'777777'})]}),
       sp(),sp(),
       h1('1. System Users'),
-      new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2800,6560],rows:[
+      ...(userLabels.length?[new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2800,6560],rows:[
         hRow(['Role','Responsibility'],[2800,6560]),
         ...userLabels.map((u,i)=>dRow([u,'Participant in hiring process'],[2800,6560],i%2===1))
-      ]}),sp(),
+      ]})]:[body('No users defined.')]),sp(),
       h1('2. Requisition Opening'),
       body('Method: '+(D.reqflow.reqOpenMethod.map(m=>(REQ_OPEN.find(o=>o.id===m)||{label:m}).label).join(', ')||'Not specified')),sp(),
-      h1('3. Candidate Pipeline Stages'),
-      ...stageList.map(s=>{
-        const a=D.actions[s.id],sp2=D.subprocess[s.id];
-        const rows=[bul(s.label+(a&&a.decisionOwners&&a.decisionOwners.length?' — Owner: '+a.decisionOwners.join(', '):''))];
-        if(sp2&&sp2.hasSubprocess&&sp2.rounds&&sp2.rounds.length){
-          sp2.rounds.forEach((r,ri)=>rows.push(new Paragraph({numbering:{reference:'bullets',level:0},indent:{left:1080},children:[new TextRun({text:'Round '+(ri+1)+': '+r.name+(r.condition?' ('+r.condition+')':''),size:18,color:'555555',font:'Arial'})]})));
-        }
-        return rows;
+      h1('3. Candidate Pipeline Stages & Statuses'),
+      ...stageList.map(function(s){
+        var stageRows=[new Paragraph({spacing:{before:120,after:60},children:[new TextRun({text:s.label,bold:true,size:22,font:'Arial',color:BH})]})];
+        var st=D.statuses&&D.statuses[s.id];
+        var statusList=st?[].concat(st.selected||[],st.custom||[]):[];
+        statusList.forEach(function(statusName){
+          var sid=s.id+'__'+statusName.replace(/[^a-zA-Z0-9]/g,'_');
+          var sp2=D.subprocess&&D.subprocess[sid];
+          var ownerTxt=sp2&&sp2.owner&&sp2.owner.length?' — Owner: '+sp2.owner.join(', '):'';
+          var outTxt=sp2&&sp2.outcomes&&sp2.outcomes.length?' — Outcomes: '+sp2.outcomes.join(', '):'';
+          stageRows.push(bul(statusName+ownerTxt+outTxt));
+          if(sp2&&sp2.hasRounds&&sp2.rounds&&sp2.rounds.length){
+            sp2.rounds.forEach(function(r,ri){
+              stageRows.push(new Paragraph({numbering:{reference:'bullets',level:0},spacing:{before:30,after:30},indent:{left:1080},children:[new TextRun({text:'Round '+(ri+1)+': '+r.name+(r.condition?' ('+r.condition+')':''),size:18,color:'555555',font:'Arial'})]}));
+            });
+          }
+          var crit=D.branching&&D.branching.criteria&&D.branching.criteria[sid];
+          if(crit&&crit.rules&&crit.rules.length){
+            stageRows.push(new Paragraph({spacing:{before:20,after:20},indent:{left:720},children:[new TextRun({text:'Entrance requirements: '+crit.rules.length+' defined — see Section 5',size:17,color:'854F0B',font:'Arial',italics:true})]}));
+          }
+        });
+        if(!statusList.length) stageRows.push(bul(s.label+' (no statuses defined)'));
+        return stageRows;
       }).flat(),sp(),
       h1('4. Integrations'),
-      integLabels.length?new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[3000,6360],rows:[hRow(['Integration','Function'],[3000,6360]),...integLabels.map((ig,i)=>dRow([ig,'Connected to '+(ATS_P.find(p=>p.id===D.ats.platform)||{label:'ATS'}).label],[3000,6360],i%2===1))]}):body('No integrations defined.'),sp(),
-      h1('5. Document Information'),
+      integLabels.length?new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[3000,6360],rows:[hRow(['Integration','Function'],[3000,6360]),...integLabels.map((ig,i)=>dRow([ig,'Connected to '+atsLabel],[3000,6360],i%2===1))]}):body('No integrations defined.'),sp(),
+      h1('5. Entrance Criteria by Status'),
+      body('The following statuses have prerequisite conditions that must be met before a candidate can be moved into that status.'),sp(),
+      ...(function(){
+        var criteriaRows=[];
+        var hasCriteria=false;
+        stageList.forEach(function(s){
+          var st=D.statuses&&D.statuses[s.id];
+          var statusList=st?[].concat(st.selected||[],st.custom||[]):[];
+          statusList.forEach(function(statusName){
+            var sid=s.id+'__'+statusName.replace(/[^a-zA-Z0-9]/g,'_');
+            var crit=D.branching&&D.branching.criteria&&D.branching.criteria[sid];
+            if(crit&&crit.rules&&crit.rules.length){
+              hasCriteria=true;
+              criteriaRows.push(new Paragraph({spacing:{before:160,after:40},children:[
+                new TextRun({text:s.label+' › ',size:19,font:'Arial',color:'888888'}),
+                new TextRun({text:statusName,bold:true,size:20,font:'Arial',color:BH})
+              ]}));
+              crit.rules.forEach(function(rule){
+                criteriaRows.push(new Paragraph({
+                  numbering:{reference:'bullets',level:0},
+                  spacing:{before:40,after:40},
+                  children:[new TextRun({text:rule,size:19,font:'Arial'})]
+                }));
+              });
+            }
+          });
+        });
+        if(!hasCriteria) criteriaRows.push(body('No entrance criteria were defined for this process track.'));
+        return criteriaRows;
+      })(),sp(),
+      h1('6. Document Information'),
       new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[2400,6960],rows:[
         dRow(['Organization',D.setup.orgName||'—'],[2400,6960]),
         dRow(['Track',D.setup.trackName||'—'],[2400,6960],true),
-        dRow(['ATS',(ATS_P.find(p=>p.id===D.ats.platform)||{label:'—'}).label],[2400,6960]),
+        dRow(['ATS',atsLabel],[2400,6960]),
         dRow(['Generated',new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})],[2400,6960],true),
         dRow(['Tool','TA Process Mapping Tool — TASSP Playbook'],[2400,6960]),
       ]}),
