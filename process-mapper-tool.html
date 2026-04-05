@@ -8,7 +8,30 @@
 <title>TA Process Mapper — TASSP Playbook</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://unpkg.com/docx@8.5.0/build/index.js" crossorigin="anonymous"></script>
+<script>
+(function loadDocx() {
+  var CDNS = [
+    'https://unpkg.com/docx@8.5.0/build/index.js',
+    'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js',
+    'https://esm.run/docx@8.5.0'
+  ];
+  var attempt = 0;
+  function tryNext() {
+    if (attempt >= CDNS.length) {
+      window._docxLoadFailed = true;
+      return;
+    }
+    var s = document.createElement('script');
+    s.src = CDNS[attempt];
+    s.crossOrigin = 'anonymous';
+    s.onload = function() { window._docxLoadFailed = false; };
+    s.onerror = function() { attempt++; tryNext(); };
+    document.head.appendChild(s);
+    attempt++;
+  }
+  tryNext();
+})();
+</script>
 <script>
 // Helper functions are defined in the main script block below.
 </script>
@@ -1916,15 +1939,19 @@ async function generatePDF() {
 
 async function generateDOCX() {
   // Wait up to 8 seconds for docx library to load (handles slow CDN)
+  // Wait for docx library — loaded dynamically via multi-CDN fallback loader
   if(typeof docx === 'undefined') {
     var waited = 0;
-    while(typeof docx === 'undefined' && waited < 8000) {
+    while(typeof docx === 'undefined' && !window._docxLoadFailed && waited < 10000) {
       await new Promise(function(r){setTimeout(r, 200);});
       waited += 200;
     }
   }
   if(typeof docx === 'undefined') {
-    throw new Error('SOP library (docx) failed to load. Check your internet connection and try again.');
+    var msg = window._docxLoadFailed
+      ? 'Could not load SOP library from any CDN. Check your internet connection and try again.'
+      : 'SOP library timed out loading. Try refreshing the page and generating again.';
+    throw new Error(msg);
   }
   const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,HeadingLevel,AlignmentType,BorderStyle,WidthType,ShadingType,LevelFormat}=docx;
   const userLabels=[...D.users.selected.map(u=>(D.users.customLabels&&D.users.customLabels[u])||(USERS.find(o=>o.id===u)||{label:u}).label),...D.users.custom];
