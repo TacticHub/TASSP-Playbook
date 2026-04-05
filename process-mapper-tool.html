@@ -8,7 +8,7 @@
 <title>TA Process Mapper — TASSP Playbook</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js" crossorigin="anonymous"></script>
 <script>
 // Helper functions are defined in the main script block below.
 </script>
@@ -1833,7 +1833,6 @@ async function generatePDF() {
   doc.setLineDash([4,4]);PHASES.forEach(ph=>{doc.setDrawColor(210,205,218);doc.setLineWidth(.4);doc.line(px(ph.f0),MAP_Y,px(ph.f0),MAP_TOP);});doc.setLineDash([]);
   doc.setDrawColor(AR,AG,AB);doc.setLineWidth(1.2);doc.line(MAP_X,MAP_Y,MAP_X,MAP_TOP+PHASE_H);
   doc.setLineWidth(2);doc.rect(MARGIN,MAP_Y,W-2*MARGIN,MAP_H+PHASE_H,'S');
-  const colW=MAP_W/Math.max(stageList.length+1,9),TW=Math.min(colW*.82,120),TH=30;
   // Build flat status list across all stages for rendering
   var allRenderStatuses=[];
   stageList.forEach(function(stage){
@@ -1853,6 +1852,10 @@ async function generatePDF() {
     });
   });
   var renderList=allRenderStatuses.length?allRenderStatuses:stageList.map(function(s,si){return{label:s.label,stageLabel:s.label,sid:s.id,sp2:null,ownerLane:si%Math.max(userLabels.length,1),stageId:s.id};});
+  // Calculate column width based on actual number of statuses to render
+  var colCount=Math.max(renderList.length+1,9);
+  var colW=MAP_W/colCount;
+  var TW=Math.min(colW*.82,110),TH=30;
   renderList.forEach(function(status,si){
     const li=status.ownerLane,cx=MAP_X+(si+.9)*colW+colW*.35,cy=laneCY(li);
     const a=D.actions[status.stageId],sp=status.sp2,hasSP=sp&&sp.hasRounds===true;
@@ -1891,8 +1894,16 @@ async function generatePDF() {
 }
 
 async function generateDOCX() {
+  // Wait up to 8 seconds for docx library to load (handles slow CDN)
   if(typeof docx === 'undefined') {
-    throw new Error('docx library not loaded. If testing locally, open via GitHub Pages instead of file://');
+    var waited = 0;
+    while(typeof docx === 'undefined' && waited < 8000) {
+      await new Promise(function(r){setTimeout(r, 200);});
+      waited += 200;
+    }
+  }
+  if(typeof docx === 'undefined') {
+    throw new Error('SOP library (docx) failed to load. Check your internet connection and try again.');
   }
   const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,HeadingLevel,AlignmentType,BorderStyle,WidthType,ShadingType,LevelFormat}=docx;
   const userLabels=[...D.users.selected.map(u=>(D.users.customLabels&&D.users.customLabels[u])||(USERS.find(o=>o.id===u)||{label:u}).label),...D.users.custom];
