@@ -22009,21 +22009,55 @@ async function generatePDF() {
         doc.rect(nCX - TW/2 - 8, nCY - 3, 6, 6, 'F');   // arrowhead
       }
     }
-    if(a&&a.outcomes&&a.outcomes.length){
-      const dx=cx+TW/2+28,dw=18,dh=13;
-      doc.setFillColor(225,240,252);doc.setDrawColor(24,95,165);doc.setLineWidth(.9);doc.rect(dx-dw/2,cy-dh/2,dw,dh,'FD');
-      doc.setTextColor(4,44,83);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('?',dx,cy+2.5,{align:'center'});
-      if(a.outcomes.includes('advance')||a.outcomes.includes('approve')){doc.setDrawColor(30,120,70);doc.setLineWidth(1.3);doc.line(dx+dw/2+2,cy,dx+dw/2+22,cy);doc.setTextColor(30,120,70);doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.text('Yes',dx+dw/2+12,cy-5,{align:'center'});}
-      if(a.outcomes.includes('reject')){doc.setDrawColor(170,35,25);doc.setLineWidth(1.3);doc.line(dx,cy+dh/2+2,dx,cy+dh/2+20);doc.setTextColor(170,35,25);doc.setFontSize(7.5);doc.text('No',dx+5,cy+dh/2+15);}
+    // Outcomes come from D.subprocess (status-level) not D.actions (stage-level)
+    var statusOutcomes = (sp && sp.outcomes) ? sp.outcomes : (a && a.outcomes ? a.outcomes : []);
+    if(statusOutcomes.length){
+      var dx=cx+TW/2+28,dw=18,dh=13;
+      // Decision diamond
+      doc.setFillColor(225,240,252);doc.setDrawColor(24,95,165);doc.setLineWidth(.9);
+      doc.rect(dx-dw/2,cy-dh/2,dw,dh,'FD');
+      doc.setTextColor(4,44,83);doc.setFontSize(7);doc.setFont('helvetica','bold');
+      doc.text('?',dx,cy+2.5,{align:'center'});
+      // Advance / Approve — green arrow pointing right
+      if(statusOutcomes.includes('advance')||statusOutcomes.includes('approve')){
+        doc.setDrawColor(30,120,70);doc.setLineWidth(1.3);
+        doc.line(dx+dw/2+2,cy,dx+dw/2+22,cy);
+        doc.setFillColor(30,120,70);
+        doc.rect(dx+dw/2+16,cy-3,6,6,'F');
+        doc.setTextColor(30,120,70);doc.setFontSize(7);doc.setFont('helvetica','bold');
+        doc.text('Advance',dx+dw/2+12,cy-6,{align:'center'});
+      }
+      // Reject — red arrow pointing down with terminated endpoint box
+      if(statusOutcomes.includes('reject')){
+        var rejLen=32;
+        doc.setDrawColor(170,35,25);doc.setLineWidth(1.3);
+        doc.line(dx,cy+dh/2+1,dx,cy+dh/2+rejLen);
+        // Termination box (filled red rectangle = rejected/disposed)
+        doc.setFillColor(170,35,25);
+        doc.rect(dx-7,cy+dh/2+rejLen,14,8,'F');
+        doc.setTextColor(255,255,255);doc.setFontSize(5.5);doc.setFont('helvetica','bold');
+        doc.text('X',dx,cy+dh/2+rejLen+6,{align:'center'});
+        // Label
+        doc.setTextColor(170,35,25);doc.setFontSize(6.5);doc.setFont('helvetica','normal');
+        doc.text('Reject',dx+10,cy+dh/2+rejLen-2);
+      }
+      // Hold — orange dot indicator (no arrow, status-specific)
+      if(statusOutcomes.includes('hold')){
+        doc.setFillColor(186,117,23);
+        doc.circle(dx+dw/2+8,cy-dh/2-6,4,'F');
+        doc.setTextColor(186,117,23);doc.setFontSize(6);doc.setFont('helvetica','normal');
+        doc.text('Hold',dx+dw/2+14,cy-dh/2-4);
+      }
     }
   });
   const legY=H-MARGIN-FOOTER_H-LEGEND_H-2;
   doc.setFillColor(248,247,250);doc.setDrawColor(200,195,210);doc.setLineWidth(.5);doc.rect(MARGIN,legY,W-2*MARGIN,LEGEND_H,'FD');
-  [{lbl:'Task',fr:[255,255,255],sr:[AR,AG,AB]},{lbl:'Decision',fr:[225,240,252],sr:[24,95,165]},{lbl:'Approved →',fr:[30,120,70],sr:[30,120,70],arr:true},{lbl:'Rejected →',fr:[170,35,25],sr:[170,35,25],arr:true},{lbl:'[+] Sub-process',fr:[255,255,255],sr:[AR,AG,AB],dash:true}].forEach((item,i)=>{
+  [{lbl:'Task',fr:[255,255,255],sr:[AR,AG,AB]},{lbl:'Decision ?',fr:[225,240,252],sr:[24,95,165]},{lbl:'Advance →',fr:[30,120,70],sr:[30,120,70],arr:true},{lbl:'Reject ↓ X',fr:[170,35,25],sr:[170,35,25],rej:true},{lbl:'[+] Sub-process',fr:[255,255,255],sr:[AR,AG,AB],dash:true}].forEach((item,i)=>{
     const lx=MARGIN+i*(W-2*MARGIN)/5+(W-2*MARGIN)/10,ly=legY+LEGEND_H/2-2;
     doc.setFillColor(...item.fr);doc.setDrawColor(...item.sr);doc.setLineWidth(.8);
     if(item.dash)doc.setLineDash([3,2]);else doc.setLineDash([]);
-    if(item.arr){doc.setDrawColor(...item.sr);doc.setLineWidth(1.5);doc.line(lx-14,ly,lx+6,ly);doc.setFillColor(...item.fr);doc.rect(lx+6,ly-3,8,6,'F');}
+    if(item.arr){doc.setDrawColor(...item.sr);doc.setLineWidth(1.5);doc.line(lx-14,ly,lx+6,ly);doc.setFillColor(...item.sr);doc.rect(lx+6,ly-3,6,6,'F');}
+    else if(item.rej){doc.setDrawColor(...item.sr);doc.setLineWidth(1.3);doc.line(lx,ly-8,lx,ly+4);doc.setFillColor(...item.sr);doc.rect(lx-5,ly+4,10,6,'F');doc.setTextColor(255,255,255);doc.setFontSize(5.5);doc.setFont('helvetica','bold');doc.text('X',lx,ly+9,{align:'center'});}
     else doc.rect(lx-14,ly-7,28,14,'FD');
     doc.setLineDash([]);doc.setTextColor(80,72,92);doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.text(item.lbl,lx,legY+LEGEND_H-3,{align:'center'});
   });
