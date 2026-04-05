@@ -20764,22 +20764,30 @@ function ns(){
     markInteraction();
     const prevSec=activeSecs[cs];
     cs++;
-    saveSection(prevSec); // save the section we just left
+    saveSection(prevSec);
+    window._scrollReset = true;
     render();
-    document.getElementById('shell').scrollIntoView({behavior:'smooth',block:'start'});
+    window.scrollTo(0, 0);
   }
 }
-function ps(){if(cs>0){cs--;render();}}
+function ps(){if(cs>0){window._scrollReset=true;cs--;render();window.scrollTo(0,0);}}
 window.ps=ps;window.ns=ns;
 function jmp(i){if(i<cs){cs=i;render();}}
 window.jmp=jmp;
 function msel(arr,v){const i=arr.indexOf(v);if(i>-1)arr.splice(i,1);else arr.push(v);}
 
 function qc(h){
-  document.getElementById('main').innerHTML=`<div class="qcard">${h}</div>`;
-  // Show persistent save footer after step 1
+  // Preserve scroll position during same-step re-renders (pill clicks, card toggles)
+  var prevScroll = window.scrollY || window.pageYOffset || 0;
+  var mainEl = document.getElementById('main');
+  if(mainEl) mainEl.innerHTML='<div class="qcard">'+h+'</div>';
   var sf=document.getElementById('save-footer');
   if(sf) sf.style.display = cs > 0 ? 'flex' : 'none';
+  // Restore scroll unless ns()/ps() set the reset flag
+  if(!window._scrollReset) {
+    requestAnimationFrame(function(){ window.scrollTo(0, prevScroll); });
+  }
+  window._scrollReset = false;
 }
 function sl(t){return`<div class="qlabel" style="color:${AC}">${t}</div>`;}
 function qt(t){return`<div class="qtext">${t}</div>`;}
