@@ -20374,12 +20374,18 @@ var __async = (__this, __arguments, generator) => {
   <div class="snav" id="snav"></div>
   <div class="main" id="main"></div>
   <div class="save-footer" id="save-footer" style="display:none;">
-    <span class="save-footer-label">Save &amp; resume later:</span>
+    <span class="save-footer-label">Your progress saves automatically. Get a resume link:</span>
     <div class="save-footer-row">
       <input type="email" id="save-footer-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')submitFooterEmail()">
       <button class="save-footer-btn" onclick="submitFooterEmail()">Send link</button>
     </div>
-    <span class="save-footer-success" id="save-footer-success">&#10003; Resume link sent</span>
+    <div id="save-footer-link-box" style="display:none;flex:1;max-width:400px;">
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="save-footer-link-val" readonly style="flex:1;font-size:11px;padding:5px 9px;border:.5px solid var(--border);border-radius:var(--radius);background:var(--bg2);color:var(--text2);font-family:monospace;">
+        <button class="save-footer-btn" onclick="copyFooterLink()" style="white-space:nowrap;">Copy link</button>
+      </div>
+    </div>
+    <span class="save-footer-success" id="save-footer-success" style="display:none;">&#10003; Link sent to your email</span>
   </div>
 </div>
 <div id="toast"></div>
@@ -20439,7 +20445,7 @@ async function initSession() {
     .from('sessions')
     .select('id, org_name, track_name, mode, accent_color, current_section, status')
     .eq('resume_token', RESUME_TOKEN)
-    .single();
+    .maybeSingle();
 
   if (existing) {
     SESSION_ID = existing.id;
@@ -20461,6 +20467,7 @@ async function initSession() {
     }
     if (existing.accent_color) applyAC(existing.accent_color);
     if (existing.org_name) D.setup.orgName = existing.org_name;
+    
     showResumeScreen(existing);
     return;
   }
@@ -20765,12 +20772,14 @@ function ns(){
     const prevSec=activeSecs[cs];
     cs++;
     saveSection(prevSec);
+    // Cancel any pending scroll restore from last re-render before advancing
+    if(window._scrollRAF){ cancelAnimationFrame(window._scrollRAF); window._scrollRAF=null; }
     window._scrollReset = true;
     render();
     window.scrollTo(0, 0);
   }
 }
-function ps(){if(cs>0){window._scrollReset=true;cs--;render();window.scrollTo(0,0);}}
+function ps(){if(cs>0){if(window._scrollRAF){cancelAnimationFrame(window._scrollRAF);window._scrollRAF=null;}window._scrollReset=true;cs--;render();window.scrollTo(0,0);}}
 window.ps=ps;window.ns=ns;
 function jmp(i){if(i<cs){cs=i;render();}}
 window.jmp=jmp;
@@ -20783,11 +20792,17 @@ function qc(h){
   if(mainEl) mainEl.innerHTML='<div class="qcard">'+h+'</div>';
   var sf=document.getElementById('save-footer');
   if(sf) sf.style.display = cs > 0 ? 'flex' : 'none';
-  // Restore scroll unless ns()/ps() set the reset flag
+  // Cancel any queued scroll restoration from a previous render
+  if(window._scrollRAF) { cancelAnimationFrame(window._scrollRAF); window._scrollRAF = null; }
+  // Restore scroll only for same-step re-renders, not step advances
   if(!window._scrollReset) {
-    requestAnimationFrame(function(){ window.scrollTo(0, prevScroll); });
+    window._scrollRAF = requestAnimationFrame(function(){
+      if(!window._scrollReset) window.scrollTo(0, prevScroll);
+      window._scrollRAF = null;
+    });
+  } else {
+    window._scrollReset = false;
   }
-  window._scrollReset = false;
 }
 function sl(t){return`<div class="qlabel" style="color:${AC}">${t}</div>`;}
 function qt(t){return`<div class="qtext">${t}</div>`;}
@@ -20840,10 +20855,26 @@ window.submitFooterEmail = async function() {
   var inp = document.getElementById('save-footer-email');
   if (!inp || !inp.value.trim()) return;
   var email = inp.value.trim();
-  var ok = await saveEmail(email);
+  await saveEmail(email);
   var succ = document.getElementById('save-footer-success');
-  if (succ) succ.style.display = 'block';
-  showToast('Resume link sent — check your inbox');
+  if (succ) succ.style.display = 'inline';
+  showFooterLink();
+  showToast('Resume link ready — copy it below');
+};
+window.showFooterLink = function() {
+  var resumeURL = 'https://tacticHub.github.io/TASSP-Playbook/process-mapper-tool.html?token=' + RESUME_TOKEN;
+  var box = document.getElementById('save-footer-link-box');
+  var val = document.getElementById('save-footer-link-val');
+  var emailRow = document.querySelector('.save-footer-row');
+  if (box && val) {
+    val.value = resumeURL;
+    box.style.display = 'flex';
+    if (emailRow) emailRow.style.display = 'none';
+  }
+};
+window.copyFooterLink = function() {
+  var val = document.getElementById('save-footer-link-val');
+  if (val) navigator.clipboard.writeText(val.value).then(function(){ showToast('Resume link copied!'); });
 };
 window.submitEmail = async function() {
   const inp = document.getElementById('save-email-inp');
