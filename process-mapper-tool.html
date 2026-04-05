@@ -8,7 +8,7 @@
 <title>TA Process Mapper — TASSP Playbook</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.js" crossorigin="anonymous"></script>
 <script>
 // Helper functions are defined in the main script block below.
 </script>
@@ -1866,9 +1866,30 @@ async function generatePDF() {
     doc.setTextColor(DR,DG,DB);doc.setFontSize(8);doc.setFont('helvetica',hasSP?'bold':'normal');
     const ll=doc.splitTextToSize(status.label,TW-12),lh2=10,ly=cy-(ll.length-1)*lh2/2+2;
     ll.forEach((ln,li2)=>doc.text(ln,cx,ly+li2*lh2,{align:'center'}));
-    // Draw arrow to next status in the same swimlane
-    var nsi=renderList.findIndex(function(s,idx){return idx>si&&s.ownerLane===li;});
-    if(nsi>-1){const nCX=MAP_X+(nsi+.9)*colW+colW*.35;doc.setDrawColor(160,148,172);doc.setLineWidth(.8);doc.line(cx+TW/2+1,cy,nCX-TW/2-8,cy);doc.setFillColor(160,148,172);doc.rect(nCX-TW/2-8,cy-3,6,6,'F');}
+    // Draw connector to next status (same lane = horizontal, diff lane = elbow)
+    var nsi = si + 1 < renderList.length ? si + 1 : -1;
+    if(nsi > -1) {
+      var nst = renderList[nsi];
+      var nCX = MAP_X + (nsi + .9) * colW + colW * .35;
+      var nLi = nst.ownerLane;
+      var nCY = laneCY(nLi);
+      doc.setDrawColor(160,148,172);
+      doc.setLineWidth(.8);
+      if(nLi === li) {
+        // Same lane: straight horizontal arrow
+        doc.line(cx + TW/2 + 1, cy, nCX - TW/2 - 8, cy);
+        doc.setFillColor(160,148,172);
+        doc.rect(nCX - TW/2 - 8, cy - 3, 6, 6, 'F');
+      } else {
+        // Different lane: elbow connector (right from source, down/up, left to target)
+        var midX = cx + TW/2 + 16;
+        doc.line(cx + TW/2 + 1, cy, midX, cy);          // horizontal right
+        doc.line(midX, cy, midX, nCY);                   // vertical
+        doc.line(midX, nCY, nCX - TW/2 - 8, nCY);       // horizontal to target
+        doc.setFillColor(160,148,172);
+        doc.rect(nCX - TW/2 - 8, nCY - 3, 6, 6, 'F');   // arrowhead
+      }
+    }
     if(a&&a.outcomes&&a.outcomes.length){
       const dx=cx+TW/2+28,dw=18,dh=13;
       doc.setFillColor(225,240,252);doc.setDrawColor(24,95,165);doc.setLineWidth(.9);doc.rect(dx-dw/2,cy-dh/2,dw,dh,'FD');
