@@ -1834,17 +1834,37 @@ async function generatePDF() {
   doc.setDrawColor(AR,AG,AB);doc.setLineWidth(1.2);doc.line(MAP_X,MAP_Y,MAP_X,MAP_TOP+PHASE_H);
   doc.setLineWidth(2);doc.rect(MARGIN,MAP_Y,W-2*MARGIN,MAP_H+PHASE_H,'S');
   const colW=MAP_W/Math.max(stageList.length+1,9),TW=Math.min(colW*.82,120),TH=30;
-  stageList.forEach((stage,si)=>{
-    const li=si%Math.max(userLabels.length,1),cx=MAP_X+(si+.9)*colW+colW*.35,cy=laneCY(li);
-    const a=D.actions[stage.id],sp=D.subprocess[stage.id],hasSP=sp&&sp.hasSubprocess===true;
+  // Build flat status list across all stages for rendering
+  var allRenderStatuses=[];
+  stageList.forEach(function(stage){
+    var st=D.statuses&&D.statuses[stage.id];
+    var statusList=st?[].concat(st.selected||[],st.custom||[]):[stage.label];
+    if(!statusList.length) statusList=[stage.label];
+    statusList.forEach(function(statusName){
+      var sid=stage.id+'__'+statusName.replace(/[^a-zA-Z0-9]/g,'_');
+      var sp2=D.subprocess&&D.subprocess[sid];
+      // Find lane index from owner; default to cycling if no owner set
+      var ownerLane=0;
+      if(sp2&&sp2.owner&&sp2.owner.length){
+        var ownerIdx=userLabels.indexOf(sp2.owner[0]);
+        ownerLane=ownerIdx>-1?ownerIdx:0;
+      }
+      allRenderStatuses.push({label:statusName,stageLabel:stage.label,sid:sid,sp2:sp2,ownerLane:ownerLane,stageId:stage.id});
+    });
+  });
+  var renderList=allRenderStatuses.length?allRenderStatuses:stageList.map(function(s,si){return{label:s.label,stageLabel:s.label,sid:s.id,sp2:null,ownerLane:si%Math.max(userLabels.length,1),stageId:s.id};});
+  renderList.forEach(function(status,si){
+    const li=status.ownerLane,cx=MAP_X+(si+.9)*colW+colW*.35,cy=laneCY(li);
+    const a=D.actions[status.stageId],sp=status.sp2,hasSP=sp&&sp.hasRounds===true;
     doc.setFillColor(255,255,255);doc.setDrawColor(AR,AG,AB);doc.setLineWidth(hasSP?1.8:1);
     if(hasSP)doc.setLineDash([5,2]);else doc.setLineDash([]);
     doc.rect(cx-TW/2,cy-TH/2,TW,TH,'FD');doc.setLineDash([]);
     if(hasSP){doc.setFillColor(AR,AG,AB);doc.rect(cx-TW/2+3,cy-TH/2+3,18,11,'F');doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.text('[+]',cx-TW/2+12,cy-TH/2+11,{align:'center'});}
     doc.setTextColor(DR,DG,DB);doc.setFontSize(8);doc.setFont('helvetica',hasSP?'bold':'normal');
-    const ll=doc.splitTextToSize(stage.label,TW-12),lh2=10,ly=cy-(ll.length-1)*lh2/2+2;
+    const ll=doc.splitTextToSize(status.label,TW-12),lh2=10,ly=cy-(ll.length-1)*lh2/2+2;
     ll.forEach((ln,li2)=>doc.text(ln,cx,ly+li2*lh2,{align:'center'}));
-    const nsi=stageList.findIndex((s,idx)=>idx>si&&(idx%Math.max(userLabels.length,1))===li);
+    // Draw arrow to next status in the same swimlane
+    var nsi=renderList.findIndex(function(s,idx){return idx>si&&s.ownerLane===li;});
     if(nsi>-1){const nCX=MAP_X+(nsi+.9)*colW+colW*.35;doc.setDrawColor(160,148,172);doc.setLineWidth(.8);doc.line(cx+TW/2+1,cy,nCX-TW/2-8,cy);doc.setFillColor(160,148,172);doc.rect(nCX-TW/2-8,cy-3,6,6,'F');}
     if(a&&a.outcomes&&a.outcomes.length){
       const dx=cx+TW/2+28,dw=18,dh=13;
@@ -1914,8 +1934,8 @@ async function generateDOCX() {
         statusList.forEach(function(statusName){
           var sid=s.id+'__'+statusName.replace(/[^a-zA-Z0-9]/g,'_');
           var sp2=D.subprocess&&D.subprocess[sid];
-          var ownerTxt=sp2&&sp2.owner&&sp2.owner.length?' — Owner: '+sp2.owner.join(', '):'';
-          var outTxt=sp2&&sp2.outcomes&&sp2.outcomes.length?' — Outcomes: '+sp2.outcomes.join(', '):'';
+          var ownerTxt=sp2&&sp2.owner&&sp2.owner.length?' - Owner: '+sp2.owner.join(', '):'';
+          var outTxt=sp2&&sp2.outcomes&&sp2.outcomes.length?' - Outcomes: '+sp2.outcomes.join(', '):'';
           stageRows.push(bul(statusName+ownerTxt+outTxt));
           if(sp2&&sp2.hasRounds&&sp2.rounds&&sp2.rounds.length){
             sp2.rounds.forEach(function(r,ri){
@@ -1924,7 +1944,7 @@ async function generateDOCX() {
           }
           var crit=D.branching&&D.branching.criteria&&D.branching.criteria[sid];
           if(crit&&crit.rules&&crit.rules.length){
-            stageRows.push(new Paragraph({spacing:{before:20,after:20},indent:{left:720},children:[new TextRun({text:'Entrance requirements: '+crit.rules.length+' defined — see Section 5',size:17,color:'854F0B',font:'Arial',italics:true})]}));
+            stageRows.push(new Paragraph({spacing:{before:20,after:20},indent:{left:720},children:[new TextRun({text:'Entrance requirements: '+crit.rules.length+' defined - see Section 5',size:17,color:'854F0B',font:'Arial',italics:true})]}));
           }
         });
         if(!statusList.length) stageRows.push(bul(s.label+' (no statuses defined)'));
@@ -1946,7 +1966,7 @@ async function generateDOCX() {
             if(crit&&crit.rules&&crit.rules.length){
               hasCriteria=true;
               criteriaRows.push(new Paragraph({spacing:{before:160,after:40},children:[
-                new TextRun({text:s.label+' › ',size:19,font:'Arial',color:'888888'}),
+                new TextRun({text:s.label+' > ',size:19,font:'Arial',color:'888888'}),
                 new TextRun({text:statusName,bold:true,size:20,font:'Arial',color:BH})
               ]}));
               crit.rules.forEach(function(rule){
