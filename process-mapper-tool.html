@@ -20134,8 +20134,8 @@ var __async = (__this, __arguments, generator) => {
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --ac: #0D7377;
-    --ac-bg: rgba(13,115,119,0.06);
+    --ac: #4A8FA8;
+    --ac-bg: rgba(74,143,168,0.06);
     --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --bg: #ffffff;
     --bg2: #f8f7f4;
@@ -20332,27 +20332,65 @@ var __async = (__this, __arguments, generator) => {
      NAV — matches TASSP-Playbook dark theme
      ══════════════════════════════════════════════════════ -->
 <style>
-  #site-nav{position:sticky;top:0;z-index:200;background:rgba(14,14,15,0.94);backdrop-filter:blur(12px);border-bottom:0.5px solid rgba(255,255,255,0.08);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:52px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
-  .snav-brand{display:flex;align-items:center;gap:9px;text-decoration:none;font-size:15px;color:#f0ede8;font-weight:500;}
-  .snav-dot{width:7px;height:7px;border-radius:50%;background:#e74c3c;}
-  .snav-links{display:flex;align-items:center;gap:4px;}
-  .snav-links a{padding:6px 12px;color:#9e9b94;text-decoration:none;font-size:13px;border-radius:7px;transition:all .15s;}
-  .snav-links a:hover{color:#f0ede8;background:rgba(255,255,255,0.06);}
-  .snav-links a.back{color:#9e9b94;font-size:13px;}
+  a{color:inherit;text-decoration:none;}
+  /* ── SITE NAV ── */
+  #site-nav{position:sticky;top:1rem;z-index:300;display:flex;align-items:center;justify-content:space-between;width:min(1240px,calc(100% - 3rem));margin:1.5rem auto 0;padding:0.65rem 2rem;min-height:64px;background:rgba(15,36,64,0.98);backdrop-filter:blur(16px);border:1px solid rgba(74,143,168,0.18);border-radius:10px;font-family:'Space Grotesk',sans-serif;}
+  .snav-brand{display:flex;align-items:center;text-decoration:none;}
+  .snav-brand-text{font-family:'Space Grotesk',sans-serif;font-size:1.35rem;font-weight:700;letter-spacing:-0.02em;color:#F0F4F8;line-height:1;white-space:nowrap;}
+  .snav-hash{color:#4A8FA8;}
+  .snav-center{display:flex;gap:2.35rem;align-items:center;margin-left:2.5rem;}
+  .snav-center a{position:relative;font-size:0.78rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#A8C4D8;text-decoration:none;transition:color 0.2s;}
+  .snav-center a:hover{color:#FFFFFF;}
+  .snav-center a.active{color:#A8C4D8;}
+  .snav-center a.active::after{content:'';position:absolute;left:0;right:0;bottom:-0.45rem;height:2px;border-radius:2px;background:#4A8FA8;opacity:0.8;}
+  .snav-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+  .snav-cta{padding:0.6rem 1.2rem;background:#4A8FA8;color:#FFFFFF;font-family:'Space Grotesk',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;border-radius:3px;transition:background 0.2s;}
+  .snav-cta:hover{background:#5DAFC8;}
+  .snav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:0.5rem;background:none;border:none;}
+  .snav-hamburger span{display:block;width:22px;height:1.5px;background:#A8C4D8;transition:all 0.25s;border-radius:2px;}
+  .snav-hamburger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg);}
+  .snav-hamburger.open span:nth-child(2){opacity:0;}
+  .snav-hamburger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg);}
+  .snav-mobile-menu{display:none;position:fixed;top:88px;left:1rem;right:1rem;background:rgba(15,36,64,0.99);backdrop-filter:blur(20px);border:1px solid rgba(74,143,168,0.18);border-radius:10px;padding:1.5rem;z-index:299;flex-direction:column;gap:0;}
+  .snav-mobile-menu a{display:block;padding:0.9rem 0;font-size:0.85rem;font-weight:400;letter-spacing:0.08em;text-transform:uppercase;color:#A8C4D8;text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.04);transition:color 0.2s;font-family:'Space Grotesk',sans-serif;}
+  .snav-mobile-menu a:last-child{border-bottom:none;}
+  .snav-mobile-menu a:hover,.snav-mobile-menu a.active{color:#4A8FA8;}
+  .snav-mobile-menu .snav-cta-mobile{margin-top:1.25rem;display:inline-block;padding:0.75rem 1.5rem;background:#4A8FA8;color:#FFFFFF;font-size:0.78rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;border-radius:3px;border-bottom:none;}
+  .snav-mobile-menu.open{display:flex;}
+  @media(max-width:900px){#site-nav{width:calc(100% - 2rem);margin:0.75rem auto 0;padding:0.65rem 1.25rem;}.snav-center{display:none;}.snav-hamburger{display:flex;}}
+  /* ── SITE FOOTER ── */
+  #site-footer{padding:2rem 5rem;background:#0F2440;border-top:1px solid rgba(74,143,168,0.18);display:flex;align-items:center;justify-content:space-between;font-family:'Space Grotesk',sans-serif;}
+  .sfooter-brand{font-family:'Space Grotesk',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.06em;color:#2C5F8A;}
+  .sfooter-nav{display:flex;gap:2rem;}
+  .sfooter-nav a{font-family:'Space Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:#2C5F8A;text-decoration:none;transition:color 0.2s;}
+  .sfooter-nav a:hover{color:#4A8FA8;}
+  @media(max-width:900px){#site-footer{padding:2rem 1.5rem;flex-direction:column;gap:1.5rem;text-align:center;}.sfooter-nav{flex-wrap:wrap;justify-content:center;gap:1rem;}}
   #shell{padding-top:0;}
-  .opt-edit-btn { background:none;border:none;cursor:pointer;padding:2px 5px;color:var(--text3);font-size:12px;border-radius:3px;margin-left:4px;opacity:0;transition:opacity .12s; }
-  .opt.sel .opt-edit-btn { opacity:1; }
-  .opt.sel:hover .opt-edit-btn { color:var(--ac); }
-  .opt-edit-btn:hover { color:var(--ac)!important; }
-  .opt-label-wrap { display:flex;align-items:center;flex:1; }
-  .opt-inline-input { font-size:14px;font-family:var(--font);border:none;border-bottom:1.5px solid var(--ac);background:transparent;color:var(--text);padding:0 2px;width:100%;outline:none; }
-  .opt-custom-badge { font-size:10px;padding:1px 5px;background:var(--ac-bg);border:0.5px solid var(--ac);border-radius:3px;color:var(--ac);margin-left:5px; }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet">
 <div id="site-nav">
-  <a class="snav-brand" href="index.html"><span class="snav-dot"></span>TASSP Playbook</a>
-  <div class="snav-links">
-    <a href="process-mapper.html" class="back">← Back to Process Mapper</a>
+  <a class="snav-brand" href="index.html">
+    <span class="snav-brand-text"><span class="snav-hash">#</span>TASSP</span>
+  </a>
+  <div class="snav-center">
+    <a href="index.html">Home</a>
+    <a href="library.html">Strategy Library</a>
+    <a href="onboarding.html">Admin Onboarding</a>
+    <a href="process-mapper.html" class="active">Process Mapper <span style="font-size:0.65em;letter-spacing:0.1em;opacity:0.7">(BETA)</span></a>
   </div>
+  <div class="snav-right">
+    <a class="snav-cta" href="index.html#signup">Get Updates</a>
+    <button class="snav-hamburger" id="snav-hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</div>
+<div class="snav-mobile-menu" id="snav-mobile-menu">
+  <a href="index.html">Home</a>
+  <a href="library.html">Strategy Library</a>
+  <a href="onboarding.html">Admin Onboarding</a>
+  <a href="process-mapper.html" class="active">Process Mapper (BETA)</a>
+  <a href="index.html#signup" class="snav-cta-mobile">Get Updates</a>
 </div>
 <div id="shell">
   <div class="header" id="hdr">
@@ -20388,6 +20426,35 @@ var __async = (__this, __arguments, generator) => {
     <span class="save-footer-success" id="save-footer-success" style="display:none;">&#10003; Link sent to your email</span>
   </div>
 </div>
+<footer id="site-footer">
+  <div class="sfooter-brand"><span style="color:#4A8FA8;">#</span>TASSP</div>
+  <nav class="sfooter-nav">
+    <a href="index.html">Home</a>
+    <a href="library.html">Strategy Library</a>
+    <a href="onboarding.html">Admin Onboarding</a>
+    <a href="process-mapper.html">Process Mapper</a>
+    <a href="index.html#signup">Get Updates</a>
+    <a href="https://tassp.pro" style="color:#4A8FA8;">tassp.pro</a>
+  </nav>
+</footer>
+<script>
+  (function(){
+    var hamburger = document.getElementById('snav-hamburger');
+    var mobileMenu = document.getElementById('snav-mobile-menu');
+    hamburger.addEventListener('click', function(){
+      var open = mobileMenu.classList.toggle('open');
+      hamburger.classList.toggle('open', open);
+      document.body.style.overflow = open ? 'hidden' : '';
+    });
+    mobileMenu.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click', function(){
+        mobileMenu.classList.remove('open');
+        hamburger.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+  })();
+</script>
 <div id="toast"></div>
 
 <script>
@@ -20656,7 +20723,7 @@ window.copyResumeLink = function(url) {
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERVIEW ENGINE (abbreviated — same logic as v4, now with save hooks)
 // ─────────────────────────────────────────────────────────────────────────────
-let AC = '#0D7377'; let mode = 'quick'; let cs = 0;
+let AC = '#4A8FA8'; let mode = 'quick'; let cs = 0;
 const QSECS = ['setup','org','users','ats','reqflow','stages','subprocess','actions','integrations','review'];
 const ASECS = ['setup','org','users','terms','ats','reqflow','stages','subprocess','actions','integrations','branching','sla','compliance','approvals','onboarding','review'];
 let activeSecs = [...QSECS];
@@ -20726,7 +20793,7 @@ const FORMATS=[{id:'virtual',label:'Virtual'},{id:'inperson',label:'In-person'},
 const SCHED=[{id:'selfschedule',label:'Candidate self-schedules'},{id:'coordinator',label:'Coordinator schedules'},{id:'automated',label:'Automated (scheduling tool)'},{id:'recruiter',label:'Recruiter schedules manually'}];
 
 let D={
-  setup:{orgName:'',trackName:'',accentColor:'#0D7377',useCases:[],mode:'quick'},
+  setup:{orgName:'',trackName:'',accentColor:'#4A8FA8',useCases:[],mode:'quick'},
   org:{type:[]},users:{selected:[],custom:[],customLabels:{}},
   terms:{req:'Requisition',candidate:'Candidate',disposition:'Disposition',screen:'Phone screen',offer:'Offer',hm:'Hiring manager'},
   ats:{platform:'',customPlatform:'',selectedPlatform:false,wantsPrepopulate:null,stages:[]},
@@ -20927,7 +20994,7 @@ function getStageList(){
 
 function rSetup(){
   var trackCards=[
-    {name:'Salaried / professional',short:'Salaried',icon:'💼',desc:'Professional & corporate roles',bg:'rgba(13,115,119,.08)',color:'#0D7377'},
+    {name:'Salaried / professional',short:'Salaried',icon:'💼',desc:'Professional & corporate roles',bg:'rgba(74,143,168,.08)',color:'#4A8FA8'},
     {name:'Hourly / hourly-temp',short:'Hourly',icon:'⏱',desc:'Frontline, temp & hourly staff',bg:'rgba(24,95,165,.08)',color:'#185FA5'},
     {name:'High volume / seasonal',short:'High volume',icon:'📈',desc:'Seasonal or rapid hiring bursts',bg:'rgba(59,109,17,.08)',color:'#3B6D11'},
     {name:'Executive / leadership',short:'Executive',icon:'★',desc:'Senior leadership & C-suite',bg:'rgba(99,56,6,.08)',color:'#633806'},
