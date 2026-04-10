@@ -26,19 +26,24 @@
     body { background:var(--ink); color:var(--paper); font-family:'Space Grotesk',sans-serif; font-weight:300; line-height:1.65; overflow-x:hidden; }
 
     /* ── NAV ── */
-    nav { position:fixed; top:0; left:0; right:0; z-index:300; display:flex; align-items:center; justify-content:space-between; padding:0 3rem; height:64px; background:rgba(15,36,64,0.96); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
+     nav { position:fixed; top:0; left:0; right:0; z-index:300; display:flex; align-items:center; justify-content:space-between; padding:0 3rem; height:64px; background:rgba(15,36,64,0.96); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
+    nav { position:sticky; top:1rem; z-index:300; display:flex; align-items:center; justify-content:space-between; width:min(1240px, calc(100% - 3rem)); margin:1.5rem auto 0; padding:0.65rem 2rem; min-height:64px; background:rgba(15,36,64,0.98); backdrop-filter:blur(16px); border:1px solid var(--border); border-radius:10px; }
     .nav-brand { display:flex; align-items:center; gap:0.75rem; text-decoration:none; }
     .nav-brand-text { font-family:'Space Grotesk',sans-serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.02em; color:var(--paper); line-height:1; }
     .nav-hash { color:var(--gold); }
     .nav-center { display:flex; gap:2rem; position:absolute; left:50%; transform:translateX(-50%); }
     .nav-center a { font-size:0.78rem; font-weight:400; letter-spacing:0.08em; text-transform:uppercase; color:var(--white); text-decoration:none; transition:color 0.2s; }
+    .nav-center { display:flex; gap:2rem; }
+    .nav-center a { font-size:0.78rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--fog); text-decoration:none; transition:color 0.2s; }
     .nav-center a:hover, .nav-center a.active { color:var(--white); }
     .nav-right { display:flex; align-items:center; gap:1rem; }
     .nav-cta { padding:0.45rem 1.1rem; background:var(--gold); color:var(--white); font-size:0.75rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; text-decoration:none; border-radius:3px; transition:background 0.2s; }
+    .nav-cta { padding:0.6rem 1.2rem; background:var(--gold); color:var(--white); font-size:0.75rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; text-decoration:none; border-radius:3px; transition:background 0.2s; }
     .nav-cta:hover { background:var(--gold2); }
 
     /* ── HERO ── */
-    .hero { min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:10rem 5rem 6rem; position:relative; overflow:hidden; background:var(--ink); }
+      .hero { min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:10rem 5rem 6rem; position:relative; overflow:hidden; background:var(--ink); }
+    .hero { min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:7rem 5rem 6rem; position:relative; overflow:hidden; background:var(--ink); }
     .hero-bg { position:absolute; inset:0; pointer-events:none; }
     .hero-bg-grid {
       position:absolute; inset:0;
@@ -208,12 +213,13 @@
     .phase-preview-desc { font-size:0.78rem; color:var(--muted); line-height:1.55; }
 
     /* ── HAMBURGER NAV ── */
-    .nav-hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:0.5rem; background:none; border:none; }
+   .nav-hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:0.5rem; background:none; border:none; }
     .nav-hamburger span { display:block; width:22px; height:1.5px; background:var(--fog); transition:all 0.25s; border-radius:2px; }
     .nav-hamburger.open span:nth-child(1) { transform:translateY(6.5px) rotate(45deg); }
     .nav-hamburger.open span:nth-child(2) { opacity:0; }
     .nav-hamburger.open span:nth-child(3) { transform:translateY(-6.5px) rotate(-45deg); }
     .nav-mobile-menu { display:none; position:fixed; top:64px; left:0; right:0; background:rgba(15,36,64,0.99); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); padding:1.5rem; z-index:299; flex-direction:column; gap:0; }
+    .nav-mobile-menu { display:none; position:fixed; top:88px; left:1rem; right:1rem; background:rgba(15,36,64,0.99); backdrop-filter:blur(20px); border:1px solid var(--border); border-radius:10px; padding:1.5rem; z-index:299; flex-direction:column; gap:0; }
     .nav-mobile-menu a { display:block; padding:0.9rem 0; font-size:0.85rem; font-weight:400; letter-spacing:0.08em; text-transform:uppercase; color:var(--fog); text-decoration:none; border-bottom:1px solid rgba(255,255,255,0.04); transition:color 0.2s; }
     .nav-mobile-menu a:last-child { border-bottom:none; }
     .nav-mobile-menu a:hover, .nav-mobile-menu a.active { color:var(--gold); }
@@ -222,12 +228,15 @@
 
     @media(max-width:900px) {
       /* Nav */
-      nav { padding:0 1.25rem; }
+       nav { padding:0 1.25rem; }
+      nav { top:0.75rem; width:calc(100% - 2rem); margin:0.75rem auto 0; padding:0.55rem 1.1rem; min-height:64px; }
       .nav-center { display:none; }
       .nav-hamburger { display:flex; }
+      .nav-cta { display:none; }
 
       /* Hero */
-      .hero { padding:7rem 1.5rem 4rem; min-height:auto; }
+     .hero { padding:7rem 1.5rem 4rem; min-height:auto; }
+      .hero { padding:5.5rem 1.5rem 4rem; min-height:auto; }
       .hero-title { font-size:clamp(2.2rem,8vw,3.2rem); line-height:1.08; }
       .hero-sub { font-size:1rem; margin-top:1.25rem; }
       .hero-actions { flex-direction:column; align-items:flex-start; gap:0.75rem; margin-top:2rem; }
@@ -304,6 +313,7 @@
 <div aria-hidden="true" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;display:flex;align-items:center;justify-content:center;overflow:hidden;">
   <span style="font-family:'Space Grotesk',sans-serif;font-size:clamp(80px,18vw,200px);font-weight:700;color:rgba(255,255,255,0.06);letter-spacing:0.15em;text-transform:uppercase;transform:rotate(-35deg);white-space:nowrap;user-select:none;-webkit-user-select:none;">DRAFT</span>
 </div>
+
 
 <!-- NAV -->
 <nav>
