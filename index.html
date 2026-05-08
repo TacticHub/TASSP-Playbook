@@ -26,20 +26,26 @@
     body { background:var(--ink); color:var(--paper); font-family:'Space Grotesk',sans-serif; font-weight:300; line-height:1.65; overflow-x:hidden; }
 
     /* ── NAV ── */
+   nav { position:fixed; top:0; left:0; right:0; z-index:300; display:flex; align-items:center; justify-content:space-between; padding:0 3rem; height:64px; background:rgba(15,36,64,0.96); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
     nav { position:sticky; top:1rem; z-index:300; display:flex; align-items:center; justify-content:space-between; width:min(1240px, calc(100% - 3rem)); margin:1.5rem auto 0; padding:0.65rem 2rem; min-height:64px; background:rgba(15,36,64,0.98); backdrop-filter:blur(16px); border:1px solid var(--border); border-radius:10px; }
     .nav-brand { display:flex; align-items:center; gap:0.75rem; text-decoration:none; }
     .nav-brand-text { font-family:'Space Grotesk',sans-serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.02em; color:var(--paper); line-height:1; }
     .nav-hash { color:var(--gold); }
+    .nav-center { display:flex; gap:2rem; position:absolute; left:50%; transform:translateX(-50%); }
+    .nav-center a { font-size:0.78rem; font-weight:400; letter-spacing:0.08em; text-transform:uppercase; color:var(--white); text-decoration:none; transition:color 0.2s; }
+    .nav-center a:hover, .nav-center a.active { color:var(--white); }
     .nav-center { display:flex; gap:2.35rem; align-items:center; margin-left:2.5rem; }
     .nav-center a { position:relative; font-size:0.78rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--fog); text-decoration:none; transition:color 0.2s; }
     .nav-center a:hover { color:var(--white); }
     .nav-center a.active { color:var(--fog); }
     .nav-center a.active::after { content:''; position:absolute; left:0; right:0; bottom:-0.45rem; height:2px; border-radius:2px; background:var(--gold); opacity:0.8; }
     .nav-right { display:flex; align-items:center; gap:1rem; }
+    .nav-cta { padding:0.45rem 1.1rem; background:var(--gold); color:var(--white); font-size:0.75rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; text-decoration:none; border-radius:3px; transition:background 0.2s; }
     .nav-cta { padding:0.6rem 1.2rem; background:var(--gold); color:var(--white); font-size:0.75rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; text-decoration:none; border-radius:3px; transition:background 0.2s; }
     .nav-cta:hover { background:var(--gold2); }
 
     /* ── HERO ── */
+     .hero { min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:10rem 5rem 6rem; position:relative; overflow:hidden; background:var(--ink); }
     .hero { min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:7rem 5rem 6rem; position:relative; overflow:hidden; background:var(--ink); }
     .hero-bg { position:absolute; inset:0; pointer-events:none; }
     .hero-bg-grid {
@@ -215,6 +221,7 @@
     .nav-hamburger.open span:nth-child(1) { transform:translateY(6.5px) rotate(45deg); }
     .nav-hamburger.open span:nth-child(2) { opacity:0; }
     .nav-hamburger.open span:nth-child(3) { transform:translateY(-6.5px) rotate(-45deg); }
+    .nav-mobile-menu { display:none; position:fixed; top:64px; left:0; right:0; background:rgba(15,36,64,0.99); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); padding:1.5rem; z-index:299; flex-direction:column; gap:0; }
     .nav-mobile-menu { display:none; position:fixed; top:88px; left:1rem; right:1rem; background:rgba(15,36,64,0.99); backdrop-filter:blur(20px); border:1px solid var(--border); border-radius:10px; padding:1.5rem; z-index:299; flex-direction:column; gap:0; }
     .nav-mobile-menu a { display:block; padding:0.9rem 0; font-size:0.85rem; font-weight:400; letter-spacing:0.08em; text-transform:uppercase; color:var(--fog); text-decoration:none; border-bottom:1px solid rgba(255,255,255,0.04); transition:color 0.2s; }
     .nav-mobile-menu a:last-child { border-bottom:none; }
@@ -320,8 +327,9 @@
   <div class="nav-center">
     <a href="index.html" class="active">Home</a>
     <a href="library.html">Strategy Library</a>
+    <a href="metrics.html">TA Metrics</a>
     <a href="onboarding.html">Admin Onboarding</a>
-    <a href="process-mapper.html">Process Mapper <span style="font-size:0.65em;letter-spacing:0.1em;opacity:0.7">(BETA)</a>
+    <a href="process-mapper.html">Process Mapper</a>
    
   </div>
   <div class="nav-right">
@@ -336,8 +344,9 @@
 <div class="nav-mobile-menu" id="nav-mobile-menu">
   <a href="index.html" class="active">Home</a>
   <a href="library.html">Strategy Library</a>
-  <a href="onboarding.html">Admin Onboarding</a>
-  <a href="process-mapper.html">Process Mapper (BETA)</a>
+  <a href="metrics.html">TA Metrics</a>
+    <a href="onboarding.html">Admin Onboarding</a>
+  <a href="process-mapper.html">Process Mapper</a>
   
   <a href="#signup" class="nav-cta-mobile">Get Updates</a>
 </div>
@@ -745,7 +754,7 @@
     <div class="section-eyebrow">Stay Connected</div>
     <h2 class="section-title">New Strategies, Delivered to You</h2>
     <p class="section-sub">Strategies across every stage of the hiring funnel — delivered to your inbox when they drop and added to the library. Free to start. Built to grow with you.</p>
-    <!-- Kit signup form to be added here -->
+    <script async data-uid="4c29a1ae50" src="https://the-tassp-playbook.kit.com/4c29a1ae50/index.js"></script>
     <div class="signup-note">No noise. Unsubscribe any time.</div>
   </div>
 </section>
@@ -756,8 +765,9 @@
   <nav class="footer-nav">
     <a href="index.html">Home</a>
     <a href="library.html">Strategy Library</a>
+    <a href="metrics.html">TA Metrics</a>
     <a href="onboarding.html">Admin Onboarding</a>
-    <a href="process-mapper.html">Process Mapper <span style="font-size:0.65em;letter-spacing:0.1em;opacity:0.7">(BETA)</a>
+    <a href="process-mapper.html">Process Mapper</a>
     <a href="#signup">Get Updates</a>
     <a href="https://tassp.pro" style="color:var(--gold);">tassp.pro</a>
   </nav>
