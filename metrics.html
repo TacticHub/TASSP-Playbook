@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TA Metrics & Outcomes — TASSP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --depth:   #0F2440;
+    --steel:   #1A3A5C;
+    --slate:   #2C5F8A;
+    --horizon: #4A8FA8;
+    --mist:    #D4E8F0;
+    --white:   #F0F4F8;
+    --text:    #CBD5E0;
+    --subtext: #8BA5BF;
+    --border:  rgba(74,143,168,0.18);
+    --card-bg: rgba(26,58,92,0.45);
+    --card-hover: rgba(44,95,138,0.35);
+    --glow:    rgba(74,143,168,0.12);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--depth);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  /* ── NAV ── */
+  .nav-wrapper {
+    position: sticky;
+    top: 16px;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    padding: 0 20px;
+  }
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    background: rgba(15,36,64,0.88);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 24px;
+    width: 100%;
+    max-width: 960px;
+  }
+  .nav-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.05rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .nav-logo .hash { color: var(--horizon); }
+  .nav-logo .wordmark { color: var(--white); }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--subtext);
+    padding: 5px 10px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+  }
+  .nav-links a:hover,
+  .nav-links a.active { color: var(--white); background: rgba(74,143,168,0.12); }
+  .nav-links a.active { color: var(--horizon); }
+  .nav-cta {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--depth) !important;
+    background: var(--horizon) !important;
+    padding: 7px 14px !important;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: opacity 0.2s !important;
+  }
+  .nav-cta:hover { opacity: 0.85 !important; background: var(--horizon) !important; }
+
+  /* ── HERO ── */
+  .hero {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 80px 24px 48px;
+    text-align: center;
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 60px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse at center, rgba(74,143,168,0.13) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    color: var(--horizon);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.15;
+    margin-bottom: 20px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--horizon);
+  }
+  .hero-sub {
+    font-size: 1.05rem;
+    color: var(--subtext);
+    max-width: 560px;
+    margin: 0 auto 40px;
+    line-height: 1.7;
+  }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    max-width: 960px;
+    margin: 0 auto 48px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .filter-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--subtext);
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+  .filter-btn {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--subtext);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover { color: var(--white); border-color: var(--horizon); }
+  .filter-btn.active {
+    color: var(--depth);
+    background: var(--horizon);
+    border-color: var(--horizon);
+    font-weight: 600;
+  }
+
+  /* ── METRIC COUNT ── */
+  .metrics-count {
+    max-width: 960px;
+    margin: 0 auto 24px;
+    padding: 0 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--subtext);
+    letter-spacing: 0.05em;
+  }
+  .metrics-count span { color: var(--horizon); font-weight: 700; }
+
+  /* ── METRICS GRID ── */
+  .metrics-grid {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ── METRIC CARD ── */
+  .metric-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    cursor: pointer;
+  }
+  .metric-card:hover {
+    border-color: rgba(74,143,168,0.45);
+    box-shadow: 0 0 28px var(--glow);
+  }
+  .metric-card.hidden { display: none; }
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 28px 28px 20px;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.25s;
+  }
+  .metric-card.open .card-header {
+    border-bottom-color: var(--border);
+  }
+
+  .metric-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: rgba(74,143,168,0.14);
+    border: 1px solid rgba(74,143,168,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .card-title-group { flex: 1; }
+
+  .metric-category {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--horizon);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .metric-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.25;
+    margin-bottom: 6px;
+  }
+
+  .metric-tagline {
+    font-size: 0.88rem;
+    color: var(--subtext);
+    line-height: 1.5;
+  }
+
+  .card-toggle {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: rgba(74,143,168,0.1);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 4px;
+    transition: background 0.2s, transform 0.3s;
+    color: var(--horizon);
+    font-size: 0.9rem;
+  }
+  .metric-card.open .card-toggle {
+    transform: rotate(45deg);
+    background: rgba(74,143,168,0.2);
+  }
+
+  /* ── CARD BODY ── */
+  .card-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.45s ease;
+  }
+  .metric-card.open .card-body {
+    max-height: 1200px;
+  }
+  .card-body-inner {
+    padding: 24px 28px 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+
+  /* Left col: definition + measurement */
+  .col-definition h3, .col-strategies h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    color: var(--horizon);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .definition-text {
+    font-size: 0.9rem;
+    color: var(--text);
+    line-height: 1.65;
+    margin-bottom: 20px;
+  }
+
+  .measurement-block {
+    background: rgba(15,36,64,0.5);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .measurement-block .meas-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--subtext);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .meas-variant {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .meas-variant:last-child { margin-bottom: 0; }
+  .meas-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--horizon);
+    flex-shrink: 0;
+    margin-top: 7px;
+  }
+  .meas-variant-text {
+    font-size: 0.83rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .meas-variant-text strong {
+    color: var(--white);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 1px;
+  }
+
+  /* Right col: strategies */
+  .strategy-links { display: flex; flex-direction: column; gap: 10px; }
+
+  .strategy-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(15,36,64,0.5);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 15px;
+    transition: border-color 0.2s, background 0.2s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .strategy-link:hover {
+    border-color: rgba(74,143,168,0.5);
+    background: rgba(74,143,168,0.08);
+  }
+  .strategy-link-icon {
+    width: 32px; height: 32px;
+    border-radius: 7px;
+    background: rgba(74,143,168,0.12);
+    border: 1px solid rgba(74,143,168,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .strategy-link-info { flex: 1; min-width: 0; }
+  .strategy-link-cat {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--subtext);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .strategy-link-title {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .strategy-link-impact {
+    font-size: 0.72rem;
+    color: var(--subtext);
+    line-height: 1.4;
+    margin-top: 2px;
+  }
+  .strategy-link-arrow {
+    color: var(--horizon);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  .col-strategies .view-all-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    color: var(--horizon);
+    text-transform: uppercase;
+    transition: gap 0.2s;
+  }
+  .col-strategies .view-all-link:hover { gap: 9px; }
+
+  /* ── IMPACT BADGE ── */
+  .impact-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    color: var(--horizon);
+    background: rgba(74,143,168,0.1);
+    border: 1px solid rgba(74,143,168,0.2);
+    border-radius: 20px;
+    padding: 3px 10px;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 24px;
+  }
+  .footer-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .footer-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .footer-logo .hash { color: var(--horizon); }
+  .footer-logo .wordmark { color: var(--white); }
+  .footer-links {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+    flex-wrap: wrap;
+  }
+  .footer-links a {
+    font-size: 0.8rem;
+    color: var(--subtext);
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--white); }
+  .footer-copy {
+    font-size: 0.75rem;
+    color: var(--subtext);
+  }
+  .footer-domain {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--horizon);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 680px) {
+    .card-body-inner { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    .hero { padding: 60px 20px 36px; }
+    .metrics-grid { padding: 0 16px 60px; }
+    .filter-bar { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav-wrapper">
+  <nav>
+    <a href="index.html" class="nav-logo"><span class="hash">#</span><span class="wordmark">TASSP</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="library.html">Strategy Library</a></li>
+      <li><a href="metrics.html" class="active">TA Metrics</a></li>
+      <li><a href="onboarding.html">Admin Onboarding</a></li>
+      <li><a href="process-mapper.html">Process Mapper <span style="font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--horizon);background:rgba(74,143,168,0.12);border:1px solid rgba(74,143,168,0.2);border-radius:4px;padding:1px 5px;">BETA</span></a></li>
+    </ul>
+    <a href="index.html#signup" class="nav-cta">Get Updates</a>
+  </nav>
+</div>
+
+<!-- HERO -->
+<header class="hero">
+  <p class="hero-label">Intelligence Layer</p>
+  <h1>TA Metrics &amp; <em>Outcomes</em></h1>
+  <p class="hero-sub">Every metric in your talent acquisition process — how organizations define it, how to measure it, and which strategies move the needle.</p>
+</header>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <span class="filter-label">Filter:</span>
+  <button class="filter-btn active" data-filter="all">All Metrics</button>
+  <button class="filter-btn" data-filter="velocity">Hiring Velocity</button>
+  <button class="filter-btn" data-filter="productivity">Productivity</button>
+  <button class="filter-btn" data-filter="cost">Cost &amp; Spend</button>
+  <button class="filter-btn" data-filter="quality">Quality &amp; Retention</button>
+  <button class="filter-btn" data-filter="compliance">Compliance</button>
+</div>
+
+<div class="metrics-count" id="metrics-count"><span id="shown-count">12</span> metrics</div>
+
+<!-- METRICS GRID -->
+<main class="metrics-grid" id="metrics-grid">
+
+  <!-- 1. TIME TO FILL -->
+  <article class="metric-card" data-category="velocity" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">⏱</div>
+      <div class="card-title-group">
+        <div class="metric-category">Hiring Velocity</div>
+        <div class="metric-title">Time to Fill</div>
+        <div class="metric-tagline">How long it takes to move from approved requisition to accepted offer</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">Time to Fill is the most widely tracked hiring velocity metric. It captures the total elapsed calendar days from the point a role is approved (or posted) to the point a candidate accepts an offer. This metric reflects the efficiency of your entire TA pipeline — sourcing, screening, interviewing, and offer stages all roll up here.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Job Approval → Offer Accepted</strong>
+                Most conservative. Captures internal approval delays and full process duration.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Job Posted → Offer Accepted</strong>
+                Common alternative. Excludes pre-posting admin time; focuses on candidate-facing activity.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>First Application Received → Offer Accepted</strong>
+                Pipeline-focused. Best for benchmarking sourcing quality and application volume impact.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html#interview-structure" target="_self">
+              <div class="strategy-link-icon">🎯</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Interview</div>
+                <div class="strategy-link-title">Structured Interview Architecture</div>
+                <div class="strategy-link-impact">Standardizing interview stages eliminates scheduling chaos and reduces multi-round delays</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#scheduling-automation" target="_self">
+              <div class="strategy-link-icon">📅</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Engagement</div>
+                <div class="strategy-link-title">Scheduling Automation</div>
+                <div class="strategy-link-impact">Eliminating back-and-forth scheduling can shave 3–7 days off average TTF alone</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#pipeline-conversion" target="_self">
+              <div class="strategy-link-icon">📊</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Metrics &amp; KPIs</div>
+                <div class="strategy-link-title">Pipeline Conversion Analysis</div>
+                <div class="strategy-link-impact">Identifying stage-level drop-off reveals exactly where time is lost in your process</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies →</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 2. TIME TO HIRE -->
+  <article class="metric-card" data-category="velocity" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">🏁</div>
+      <div class="card-title-group">
+        <div class="metric-category">Hiring Velocity</div>
+        <div class="metric-title">Time to Hire</div>
+        <div class="metric-tagline">How long it takes a candidate to move through your process from first contact to offer acceptance</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">Often confused with Time to Fill, Time to Hire is candidate-centric rather than requisition-centric. It measures the candidate's experience of speed — from the moment they first engage with your process (applied, sourced, or referred) to when they sign. This metric helps identify where candidate friction lives.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Application Submitted → Offer Accepted</strong>
+                Standard definition. Reflects total candidate journey duration.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>First Recruiter Contact → Offer Accepted</strong>
+                Used in sourced/pipeline hires. Better for proactive recruiting measurement.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Recruiter Screen Completed → Offer Accepted</strong>
+                Downstream-focused. Strips out application processing lag; measures pure process speed.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html#candidate-communication" target="_self">
+              <div class="strategy-link-icon">💬</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Candidate Experience</div>
+                <div class="strategy-link-title">Communication Cadence Design</div>
+                <div class="strategy-link-impact">Consistent, automated touchpoints reduce candidate drop-off and keep momentum</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#screen-frameworks" target="_self">
+              <div class="strategy-link-icon">🔍</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Engagement</div>
+                <div class="strategy-link-title">Screening Frameworks</div>
+                <div class="strategy-link-impact">Structured screens accelerate disposition decisions and reduce rescheduling</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#offer-workflow" target="_self">
+              <div class="strategy-link-icon">📋</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Offer</div>
+                <div class="strategy-link-title">Offer Workflow Automation</div>
+                <div class="strategy-link-impact">Removing manual steps from offer generation directly compresses the final hiring stretch</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies →</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 3. APPLICATION CONVERSION RATE -->
+  <article class="metric-card" data-category="velocity" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">🔄</div>
+      <div class="card-title-group">
+        <div class="metric-category">Hiring Velocity</div>
+        <div class="metric-title">Application Conversion Rate</div>
+        <div class="metric-tagline">The percentage of applicants who progress through each stage of your hiring funnel</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">Application Conversion Rate can be measured at each funnel stage or as an end-to-end ratio (applicants to hires). High-volume roles with low conversion rates signal sourcing or JD misalignment. Low-volume roles with low conversion signal process friction. Breaking this metric down by stage exposes exactly where your pipeline leaks.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>End-to-End: Applicants ÷ Hires</strong>
+                Overall funnel efficiency. Industry averages range from 1–3% depending on role type.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Stage-to-Stage: Applications → Phone Screen</strong>
+                Identifies screening threshold calibration issues or poor candidate fit from sourcing.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Apply Start → Apply Complete</strong>
+                Career site metric. Completion rates below 60% indicate application friction problems.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html#jd-optimization" target="_self">
+              <div class="strategy-link-icon">📝</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Recruitment Marketing</div>
+                <div class="strategy-link-title">JD Optimization</div>
+                <div class="strategy-link-impact">Restructuring job descriptions to match candidate language improves qualified apply rates</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#apply-flow" target="_self">
+              <div class="strategy-link-icon">🖥</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Career Site</div>
+                <div class="strategy-link-title">Application Flow Architecture</div>
+                <div class="strategy-link-impact">Reducing application steps and friction directly lifts completion rates</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#conversion-analysis" target="_self">
+              <div class="strategy-link-icon">📊</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Metrics &amp; KPIs</div>
+                <div class="strategy-link-title">Conversion Analysis</div>
+                <div class="strategy-link-impact">Stage-level conversion visibility lets you fix the right bottleneck rather than guessing</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies →</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 4. OFFER ACCEPTANCE RATE -->
+  <article class="metric-card" data-category="velocity" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">✅</div>
+      <div class="card-title-group">
+        <div class="metric-category">Hiring Velocity</div>
+        <div class="metric-title">Offer Acceptance Rate</div>
+        <div class="metric-tagline">The percentage of extended offers that candidates accept</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">Offer Acceptance Rate is a late-funnel signal that reflects compensation competitiveness, candidate experience quality, and recruiter alignment with hiring managers. A declining OAR often signals a comp benchmarking problem, but it can also indicate candidate hesitation built up from a poor experience earlier in the process.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Offers Accepted ÷ Offers Extended</strong>
+                Standard. Best-in-class organizations target 85–90%+ acceptance rates.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>First-Choice Offer Acceptance</strong>
+                Excludes counter-offers or reissued offers. Stricter measure of first-time accuracy.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Acceptance Rate by Source / Channel</strong>
+                Identifies which sourcing pipelines yield candidates most aligned with comp expectations.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html#offer-workflow" target="_self">
+              <div class="strategy-link-icon">📋</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Offer</div>
+                <div class="strategy-link-title">Offer Workflow Automation</div>
+                <div class="strategy-link-impact">Speed to offer matters — delays post-interview allow competing offers to land first</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#pre-board-engagement" target="_self">
+              <div class="strategy-link-icon">🤝</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Post-Offer</div>
+                <div class="strategy-link-title">Pre-Board Engagement</div>
+                <div class="strategy-link-impact">Warm engagement between offer and start date reduces reneges and counter-offer vulnerability</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#candidate-communication" target="_self">
+              <div class="strategy-link-icon">💬</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Candidate Experience</div>
+                <div class="strategy-link-title">Communication Cadence Design</div>
+                <div class="strategy-link-impact">Candidates who feel informed and valued throughout the process are more likely to accept</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies →</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 5. COST PER HIRE -->
+  <article class="metric-card" data-category="cost" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">💰</div>
+      <div class="card-title-group">
+        <div class="metric-category">Cost &amp; Spend</div>
+        <div class="metric-title">Cost Per Hire</div>
+        <div class="metric-tagline">The total investment required to successfully fill one position</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">Cost Per Hire is the SHRM-standardized formula that combines internal costs (recruiter compensation, technology, overhead) with external costs (job boards, agency fees, advertising). CPH is a critical executive metric because it connects TA investment to business value — and it's often significantly underreported when technology consolidation opportunities are missed.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>SHRM Formula: (Internal + External Costs) ÷ Total Hires</strong>
+                Industry standard. Internal = recruiter time, tech stack, overhead. External = boards, agencies.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Direct Spend CPH: External Costs Only ÷ Hires</strong>
+                Simplified version. Used when internal cost allocation is not available.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>CPH by Role Type or Department</strong>
+                Segmented view. Surfaces which requisitions disproportionately consume budget.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html#cost-per-hire-model" target="_self">
+              <div class="strategy-link-icon">📊</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Metrics &amp; KPIs</div>
+                <div class="strategy-link-title">Cost-Per-Hire Model</div>
+                <div class="strategy-link-impact">Building a complete CPH model exposes hidden spend and creates a baseline for reduction tracking</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#talent-communities" target="_self">
+              <div class="strategy-link-icon">👥</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Recruitment Marketing</div>
+                <div class="strategy-link-title">Talent Communities</div>
+                <div class="strategy-link-impact">Building internal pipelines reduces dependency on expensive external job boards</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#crm-campaigns" target="_self">
+              <div class="strategy-link-icon">📣</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Recruitment Marketing</div>
+                <div class="strategy-link-title">CRM Campaigns</div>
+                <div class="strategy-link-impact">Re-engaging silver medalists and warm talent avoids cold-sourcing costs for repeat roles</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies →</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 6. STAFFING AGENCY DEPENDENCY -->
+  <article class="metric-card" data-category="cost" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">🏢</div>
+      <div class="card-title-group">
+        <div class="metric-category">Cost &amp; Spend</div>
+        <div class="metric-title">Agency &amp; Third-Party Spend</div>
+        <div class="metric-tagline">The proportion of hires and budget flowing through external sourcing vendors</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">Staffing agency fees typically run 15–25% of first-year salary — making agency dependency one of the highest-cost levers in TA. Tracking this metric reveals whether your internal sourcing capability is keeping pace with demand, and which roles or departments are consistently bypassing the internal process. Reducing agency reliance by even 10% can generate significant annual savings.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Agency Hires ÷ Total Hires (%)</strong>
+                Dependency ratio. Tracks whether internal sourcing is scaling with volume.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Total Agency Spend ($) per Period</strong>
+                Absolute spend tracking. Essential for budget forecasting and reduction goal-setting.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Job Board Spend by Source Performance</strong>
+                ROI view. Spend-per-qualified-applicant by channel identifies which boards to deprioritize.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html#talent-communities" target="_self">
+              <div class="strategy-link-icon">👥</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Recruitment Marketing</div>
+                <div class="strategy-link-title">Talent Communities</div>
+                <div class="strategy-link-impact">A maintained pipeline of warm candidates reduces the volume of roles that need agency support</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#crm-campaigns" target="_self">
+              <div class="strategy-link-icon">📣</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Recruitment Marketing</div>
+                <div class="strategy-link-title">CRM Campaigns</div>
+                <div class="strategy-link-impact">Proactive talent marketing reduces the urgency-driven reach to agencies for hard-to-fill roles</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#conversion-analysis" target="_self">
+              <div class="strategy-link-icon">📊</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Metrics &amp; KPIs</div>
+                <div class="strategy-link-title">Conversion Analysis</div>
+                <div class="strategy-link-impact">Source-of-hire data helps redirect spend from underperforming boards to higher-ROI channels</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies →</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 7. RECRUITER PRODUCTIVITY -->
+  <article class="metric-card" data-category="productivity" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">⚡</div>
+      <div class="card-title-group">
+        <div class="metric-category">Productivity</div>
+        <div class="metric-title">Recruiter Productivity</div>
+        <div class="metric-tagline">How effectively recruiters convert time investment into qualified pipeline and hires</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">Recruiter Productivity spans multiple sub-metrics: hires per recruiter, time spent per hire stage, and the ratio of strategic to administrative work. Research consistently shows recruiters spend 30–60% of their time on administrative tasks that can be automated — scheduling, status emails, posting management, and reporting. Measuring this creates the business case for technology investment.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Hires Per Recruiter Per Quarter</strong>
+                Output metric. Industry benchmark varies by role complexity; typically 10–25 hires/quarter for corporate recruiting.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Time-on-Task Breakdown by Activity Type</strong>
+                Process metric. Tracks hours spent on scheduling, screening, communication, reporting, etc.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Requisition Load Per Recruiter</strong>
+                Capacity metric. Indicates whether teams are under-resourced or whether process automation is needed.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html#scheduling-automation" target="_self">
+              <div class="strategy-link-icon">📅</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Engagement</div>
+                <div class="strategy-link-title">Scheduling Automation</div>
+                <div class="strategy-link-impact">Eliminating manual scheduling is the single fastest way to recapture recruiter hours</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#candidate-communication" target="_self">
+              <div class="strategy-link-icon">💬</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Candidate Experience</div>
+                <div class="strategy-link-title">Communication Cadence Design</div>
+                <div class="strategy-link-impact">Templated, automated candidate comms reduce inbound "where am I in the process?" inquiries</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#metrics-framework" target="_self">
+              <div class="strategy-link-icon">📊</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Metrics &amp; KPIs</div>
+                <div class="strategy-link-title">Metrics Framework</div>
+                <div class="strategy-link-impact">Automated reporting eliminates manual data pulls and gives recruiters time back for strategic work</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies →</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 8. SOURCE OF HIRE -->
+  <article class="metric-card" data-category="productivity" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">🔎</div>
+      <div class="card-title-group">
+        <div class="metric-category">Productivity</div>
+        <div class="metric-title">Source of Hire Effectiveness</div>
+        <div class="metric-tagline">Which channels deliver the best candidates — and at what cost</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">Source of Hire tracks the origin channel of every hire — organic career site, job boards, referrals, CRM pipelines, agencies, social, and more. Most organizations know their source of application, but the high-value insight is source of <em>hire</em>: which channels produce candidates who actually get offers and start. This drives sourcing strategy and budget allocation decisions.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Hires by Source Channel (%)</strong>
+                Primary view. Breaks down what percentage of filled roles came from each channel.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Cost Per Qualified Applicant by Source</strong>
+                ROI view. Spend divided by qualified candidates (not all applicants) from that channel.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Source-to-Hire Conversion Rate</strong>
+                Funnel view. Tracks how efficiently each source converts to interviews, offers, and hires.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html#conversion-architecture" target="_self">
+              <div class="strategy-link-icon">🏗</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Career Site</div>
+                <div class="strategy-link-title">Conversion Architecture</div>
+                <div class="strategy-link-impact">Career site optimization improves organic source performance and reduces paid channel dependency</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#crm-campaigns" target="_self">
+              <div class="strategy-link-icon">📣</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Recruitment Marketing</div>
+                <div class="strategy-link-title">CRM Campaigns</div>
+                <div class="strategy-link-impact">CRM sourcing is consistently one of the highest-converting and lowest-cost channels when managed well</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#nurture-sequences" target="_self">
+              <div class="strategy-link-icon">🌱</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Recruitment Marketing</div>
+                <div class="strategy-link-title">Nurture Sequences</div>
+                <div class="strategy-link-impact">Warming talent community members converts a passive source into a reliable, high-quality pipeline</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies →</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 9. QUALITY OF HIRE -->
+  <article class="metric-card" data-category="quality" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">🌟</div>
+      <div class="card-title-group">
+        <div class="metric-category">Quality &amp; Retention</div>
+        <div class="metric-title">Quality of Hire</div>
+        <div class="metric-tagline">A composite score measuring how well new hires perform and contribute after joining</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">Quality of Hire is the most strategically important TA metric — and the hardest to measure. It connects talent acquisition decisions to downstream business outcomes. A strong QoH framework creates a feedback loop between TA and hiring managers, turning anecdotal performance judgments into structured data that improves future hiring decisions.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Hiring Manager Satisfaction Survey (30/60/90-day)</strong>
+                Most common. Structured rating of new hire performance at key post-hire milestones.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Composite Score: Performance + Retention + Ramp Time</strong>
+                Advanced model. Weighted average of performance rating, tenure at 12 months, and time to full productivity.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Quality by Source Channel</strong>
+                Strategic view. Identifies which sourcing channels produce highest-performing hires over time.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html#scorecard-design" target="_self">
+              <div class="strategy-link-icon">📋</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Interview</div>
+                <div class="strategy-link-title">Scorecard Design</div>
+                <div class="strategy-link-impact">Structured scorecards align interviewers on what "great" looks like and reduce bias in selection</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#quality-of-hire-loop" target="_self">
+              <div class="strategy-link-icon">🔁</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Post-Offer</div>
+                <div class="strategy-link-title">Quality-of-Hire Feedback Loop</div>
+                <div class="strategy-link-impact">Closing the loop between post-hire performance and TA decisions directly improves future quality</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#assessments" target="_self">
+              <div class="strategy-link-icon">🧪</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Engagement</div>
+                <div class="strategy-link-title">Assessment Integration</div>
+                <div class="strategy-link-impact">Validated assessments predict job performance more reliably than unstructured interviews alone</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies →</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 10. FIRST-YEAR TURNOVER -->
+  <article class="metric-card" data-category="quality" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">🚪</div>
+      <div class="card-title-group">
+        <div class="metric-category">Quality &amp; Retention</div>
+        <div class="metric-title">First-Year Turnover</div>
+        <div class="metric-tagline">The percentage of new hires who leave within their first 12 months</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">First-year turnover is a critical TA accountability metric because it reveals whether hiring decisions and onboarding experiences are setting employees up for long-term success. High first-year turnover is expensive — replacement costs typically run 50–200% of annual salary when you factor in recruiting, training, and lost productivity. It often signals misalignment in role expectations set during the hiring process.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Employees Who Left Within 12 Months ÷ Total Hires in Period</strong>
+                Standard formula. Measured on a rolling or cohort basis.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>90-Day Turnover Rate</strong>
+                Early warning signal. Very high 90-day exits indicate onboarding or role expectation failures.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>First-Year Turnover by Source / Recruiter / Role Type</strong>
+                Diagnostic view. Surfaces patterns that point to specific sourcing or process problems.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html#pre-board-engagement" target="_self">
+              <div class="strategy-link-icon">🤝</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Post-Offer</div>
+                <div class="strategy-link-title">Pre-Board Engagement</div>
+                <div class="strategy-link-impact">The period between offer and start date is when most reneges and early-exit risk originates</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#quality-of-hire-loop" target="_self">
+              <div class="strategy-link-icon">🔁</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Post-Offer</div>
+                <div class="strategy-link-title">Quality-of-Hire Feedback Loop</div>
+                <div class="strategy-link-impact">Structured 90-day check-ins create early intervention opportunities before turnover becomes a statistic</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#interview-structure" target="_self">
+              <div class="strategy-link-icon">🎯</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Interview</div>
+                <div class="strategy-link-title">Structured Interview Architecture</div>
+                <div class="strategy-link-impact">Consistent evaluation of culture fit and realistic job expectations reduces regrettable early attrition</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies →</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 11. CANDIDATE EXPERIENCE SCORE -->
+  <article class="metric-card" data-category="quality" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">💡</div>
+      <div class="card-title-group">
+        <div class="metric-category">Quality &amp; Retention</div>
+        <div class="metric-title">Candidate Experience Score</div>
+        <div class="metric-tagline">How candidates rate their overall experience with your hiring process</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">Candidate Experience Score is both a quality metric and a brand metric. Candidates who have poor experiences — even if not hired — share those experiences publicly on Glassdoor, LinkedIn, and with their networks. Measuring CX creates accountability for the experience you're delivering at every touchpoint and provides the diagnostic data to fix specific failure points.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Post-Process NPS or CSAT Survey</strong>
+                Sent to all candidates — hired and not hired. Measures likelihood to recommend or reapply.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Stage-Specific Feedback Surveys</strong>
+                Targeted surveys after application, interview, or offer. Pinpoints where experience breaks down.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Glassdoor / External Review Monitoring</strong>
+                Passive signal. Tracks employer brand health from unfiltered candidate feedback.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html#candidate-communication" target="_self">
+              <div class="strategy-link-icon">💬</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Candidate Experience</div>
+                <div class="strategy-link-title">Communication Cadence Design</div>
+                <div class="strategy-link-impact">Consistent, timely communication is the single highest-impact CX driver across all candidate segments</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#rejection-architecture" target="_self">
+              <div class="strategy-link-icon">🔔</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Candidate Experience</div>
+                <div class="strategy-link-title">Rejection Architecture</div>
+                <div class="strategy-link-impact">How you decline candidates matters as much as how you engage them — ghosting destroys NPS scores</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#cx-surveys" target="_self">
+              <div class="strategy-link-icon">📋</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Candidate Experience</div>
+                <div class="strategy-link-title">CX Surveys</div>
+                <div class="strategy-link-impact">Structured feedback collection creates the data loop that makes CX improvement measurable over time</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies →</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 12. COMPLIANCE READINESS -->
+  <article class="metric-card" data-category="compliance" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">🛡</div>
+      <div class="card-title-group">
+        <div class="metric-category">Compliance</div>
+        <div class="metric-title">Compliance &amp; Audit Readiness</div>
+        <div class="metric-tagline">How consistently your process meets regulatory requirements and withstands audit scrutiny</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">Compliance in TA spans OFCCP/EEO documentation, disposition tracking, adverse impact analysis, and data retention. Most organizations only discover compliance gaps during an audit — by which point remediation is expensive and reputational risk is real. Proactively measuring compliance posture turns it from a reactive fire drill into a managed, auditable process.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Disposition Rate Completeness (%)</strong>
+                All applicants properly dispositioned in ATS. Incomplete records are the most common OFCCP finding.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Time-to-Compliance Report Generation</strong>
+                Process metric. Hours required to pull audit-ready EEO/disposition reports on demand.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Adverse Impact Analysis Score</strong>
+                Statistical review of selection rates by protected class at each funnel stage.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html#metrics-framework" target="_self">
+              <div class="strategy-link-icon">📊</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Metrics &amp; KPIs</div>
+                <div class="strategy-link-title">Metrics Framework</div>
+                <div class="strategy-link-impact">A structured reporting framework ensures compliance data is always current, not assembled at crisis time</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#screen-frameworks" target="_self">
+              <div class="strategy-link-icon">🔍</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Engagement</div>
+                <div class="strategy-link-title">Screening Frameworks</div>
+                <div class="strategy-link-impact">Standardized screening criteria ensure defensible, documented disposition decisions at every stage</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+            <a class="strategy-link" href="library.html#bgc-automation" target="_self">
+              <div class="strategy-link-icon">✅</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Post-Offer</div>
+                <div class="strategy-link-title">BGC Automation</div>
+                <div class="strategy-link-impact">Automated background check workflows reduce manual handling and create consistent, auditable records</div>
+              </div>
+              <div class="strategy-link-arrow">→</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies →</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo"><span class="hash">#</span><span class="wordmark">TASSP</span></div>
+    <ul class="footer-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="library.html">Strategy Library</a></li>
+      <li><a href="metrics.html">TA Metrics</a></li>
+      <li><a href="onboarding.html">Admin Onboarding</a></li>
+      <li><a href="process-mapper.html">Process Mapper</a></li>
+      <li><a href="index.html#signup">Get Updates</a></li>
+    </ul>
+    <div class="footer-copy">
+      <div class="footer-domain">tassp.pro</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function toggleCard(card) {
+    card.classList.toggle('open');
+  }
+
+  // Filter logic
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      const filter = this.dataset.filter;
+      const cards = document.querySelectorAll('.metric-card');
+      let shown = 0;
+      cards.forEach(card => {
+        if (filter === 'all' || card.dataset.category === filter) {
+          card.classList.remove('hidden');
+          shown++;
+        } else {
+          card.classList.add('hidden');
+          card.classList.remove('open');
+        }
+      });
+      document.getElementById('shown-count').textContent = shown;
+    });
+  });
+</script>
+</body>
+</html>
