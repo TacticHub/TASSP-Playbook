@@ -102,19 +102,16 @@
 
   /* ── HERO ── */
   .hero {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 80px 24px 48px;
+    padding: 80px 5rem 48px;
     text-align: center;
     position: relative;
   }
   .hero::before {
     content: '';
     position: absolute;
-    top: 60px; left: 50%;
-    transform: translateX(-50%);
-    width: 600px; height: 300px;
-    background: radial-gradient(ellipse at center, rgba(74,143,168,0.13) 0%, transparent 70%);
+    top: 60px; left: 0; right: 0;
+    height: 300px;
+    background: radial-gradient(ellipse at 50% 50%, rgba(74,143,168,0.13) 0%, transparent 70%);
     pointer-events: none;
   }
   .hero-label {
@@ -146,9 +143,8 @@
 
   /* ── FILTER BAR ── */
   .filter-bar {
-    max-width: 960px;
-    margin: 0 auto 48px;
-    padding: 0 24px;
+    margin-bottom: 48px;
+    padding: 0 5rem;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -184,9 +180,8 @@
 
   /* ── METRIC COUNT ── */
   .metrics-count {
-    max-width: 960px;
-    margin: 0 auto 24px;
-    padding: 0 24px;
+    margin-bottom: 24px;
+    padding: 0 5rem;
     font-family: 'Space Mono', monospace;
     font-size: 0.72rem;
     color: var(--subtext);
@@ -196,9 +191,7 @@
 
   /* ── METRICS GRID ── */
   .metrics-grid {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 0 24px 80px;
+    padding: 0 5rem 80px;
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -459,8 +452,6 @@
     padding: 40px 24px;
   }
   .footer-inner {
-    max-width: 960px;
-    margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -500,9 +491,9 @@
   @media (max-width: 680px) {
     .card-body-inner { grid-template-columns: 1fr; }
     .nav-links { display: none; }
-    .hero { padding: 60px 20px 36px; }
-    .metrics-grid { padding: 0 16px 60px; }
-    .filter-bar { padding: 0 16px; }
+    .hero { padding: 60px 1.5rem 36px; }
+    .metrics-grid { padding: 0 1.5rem 60px; }
+    .filter-bar { padding: 0 1.5rem; }
   }
 </style>
 </head>
@@ -590,7 +581,7 @@
         <div class="col-strategies">
           <h3>Top Strategies to Improve This Metric</h3>
           <div class="strategy-links">
-            <a class="strategy-link" href="library.html#interview-structure" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li7" target="_blank">
               <div class="strategy-link-icon">🎯</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Interview</div>
@@ -599,7 +590,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#scheduling-automation" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li7" target="_blank">
               <div class="strategy-link-icon">📅</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Engagement</div>
@@ -608,7 +599,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#pipeline-conversion" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li14" target="_blank">
               <div class="strategy-link-icon">📊</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Metrics &amp; KPIs</div>
@@ -668,7 +659,7 @@
         <div class="col-strategies">
           <h3>Top Strategies to Improve This Metric</h3>
           <div class="strategy-links">
-            <a class="strategy-link" href="library.html#candidate-communication" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li18" target="_blank">
               <div class="strategy-link-icon">💬</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Candidate Experience</div>
@@ -677,7 +668,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#screen-frameworks" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li22" target="_blank">
               <div class="strategy-link-icon">🔍</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Engagement</div>
@@ -686,7 +677,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#offer-workflow" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li20" target="_blank">
               <div class="strategy-link-icon">📋</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Offer</div>
@@ -746,7 +737,7 @@
         <div class="col-strategies">
           <h3>Top Strategies to Improve This Metric</h3>
           <div class="strategy-links">
-            <a class="strategy-link" href="library.html#jd-optimization" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li13" target="_blank">
               <div class="strategy-link-icon">📝</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Recruitment Marketing</div>
@@ -755,7 +746,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#apply-flow" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li21" target="_blank">
               <div class="strategy-link-icon">🖥</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Career Site</div>
@@ -764,7 +755,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#conversion-analysis" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li8" target="_blank">
               <div class="strategy-link-icon">📊</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Metrics &amp; KPIs</div>
@@ -824,7 +815,7 @@
         <div class="col-strategies">
           <h3>Top Strategies to Improve This Metric</h3>
           <div class="strategy-links">
-            <a class="strategy-link" href="library.html#offer-workflow" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li20" target="_blank">
               <div class="strategy-link-icon">📋</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Offer</div>
@@ -833,7 +824,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#pre-board-engagement" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li1" target="_blank">
               <div class="strategy-link-icon">🤝</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Post-Offer</div>
@@ -842,7 +833,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#candidate-communication" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li18" target="_blank">
               <div class="strategy-link-icon">💬</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Candidate Experience</div>
@@ -902,7 +893,7 @@
         <div class="col-strategies">
           <h3>Top Strategies to Improve This Metric</h3>
           <div class="strategy-links">
-            <a class="strategy-link" href="library.html#cost-per-hire-model" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li15" target="_blank">
               <div class="strategy-link-icon">📊</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Metrics &amp; KPIs</div>
@@ -911,7 +902,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#talent-communities" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li3" target="_blank">
               <div class="strategy-link-icon">👥</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Recruitment Marketing</div>
@@ -920,7 +911,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#crm-campaigns" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li25" target="_blank">
               <div class="strategy-link-icon">📣</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Recruitment Marketing</div>
@@ -980,7 +971,7 @@
         <div class="col-strategies">
           <h3>Top Strategies to Improve This Metric</h3>
           <div class="strategy-links">
-            <a class="strategy-link" href="library.html#talent-communities" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li3" target="_blank">
               <div class="strategy-link-icon">👥</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Recruitment Marketing</div>
@@ -989,7 +980,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#crm-campaigns" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li25" target="_blank">
               <div class="strategy-link-icon">📣</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Recruitment Marketing</div>
@@ -998,7 +989,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#conversion-analysis" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li8" target="_blank">
               <div class="strategy-link-icon">📊</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Metrics &amp; KPIs</div>
@@ -1058,7 +1049,7 @@
         <div class="col-strategies">
           <h3>Top Strategies to Improve This Metric</h3>
           <div class="strategy-links">
-            <a class="strategy-link" href="library.html#scheduling-automation" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li7" target="_blank">
               <div class="strategy-link-icon">📅</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Engagement</div>
@@ -1067,7 +1058,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#candidate-communication" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li18" target="_blank">
               <div class="strategy-link-icon">💬</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Candidate Experience</div>
@@ -1076,7 +1067,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#metrics-framework" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li12" target="_blank">
               <div class="strategy-link-icon">📊</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Metrics &amp; KPIs</div>
@@ -1136,7 +1127,7 @@
         <div class="col-strategies">
           <h3>Top Strategies to Improve This Metric</h3>
           <div class="strategy-links">
-            <a class="strategy-link" href="library.html#conversion-architecture" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li21" target="_blank">
               <div class="strategy-link-icon">🏗</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Career Site</div>
@@ -1145,7 +1136,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#crm-campaigns" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li25" target="_blank">
               <div class="strategy-link-icon">📣</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Recruitment Marketing</div>
@@ -1154,7 +1145,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#nurture-sequences" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li17" target="_blank">
               <div class="strategy-link-icon">🌱</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Recruitment Marketing</div>
@@ -1214,7 +1205,7 @@
         <div class="col-strategies">
           <h3>Top Strategies to Improve This Metric</h3>
           <div class="strategy-links">
-            <a class="strategy-link" href="library.html#scorecard-design" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li19" target="_blank">
               <div class="strategy-link-icon">📋</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Interview</div>
@@ -1223,7 +1214,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#quality-of-hire-loop" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li15" target="_blank">
               <div class="strategy-link-icon">🔁</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Post-Offer</div>
@@ -1232,7 +1223,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#assessments" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li4" target="_blank">
               <div class="strategy-link-icon">🧪</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Engagement</div>
@@ -1292,7 +1283,7 @@
         <div class="col-strategies">
           <h3>Top Strategies to Improve This Metric</h3>
           <div class="strategy-links">
-            <a class="strategy-link" href="library.html#pre-board-engagement" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li1" target="_blank">
               <div class="strategy-link-icon">🤝</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Post-Offer</div>
@@ -1301,7 +1292,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#quality-of-hire-loop" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li15" target="_blank">
               <div class="strategy-link-icon">🔁</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Post-Offer</div>
@@ -1310,7 +1301,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#interview-structure" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li7" target="_blank">
               <div class="strategy-link-icon">🎯</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Interview</div>
@@ -1370,7 +1361,7 @@
         <div class="col-strategies">
           <h3>Top Strategies to Improve This Metric</h3>
           <div class="strategy-links">
-            <a class="strategy-link" href="library.html#candidate-communication" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li18" target="_blank">
               <div class="strategy-link-icon">💬</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Candidate Experience</div>
@@ -1379,7 +1370,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#rejection-architecture" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li4" target="_blank">
               <div class="strategy-link-icon">🔔</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Candidate Experience</div>
@@ -1388,7 +1379,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#cx-surveys" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li8" target="_blank">
               <div class="strategy-link-icon">📋</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Candidate Experience</div>
@@ -1448,7 +1439,7 @@
         <div class="col-strategies">
           <h3>Top Strategies to Improve This Metric</h3>
           <div class="strategy-links">
-            <a class="strategy-link" href="library.html#metrics-framework" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li12" target="_blank">
               <div class="strategy-link-icon">📊</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Metrics &amp; KPIs</div>
@@ -1457,7 +1448,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#screen-frameworks" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li22" target="_blank">
               <div class="strategy-link-icon">🔍</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Engagement</div>
@@ -1466,7 +1457,7 @@
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
-            <a class="strategy-link" href="library.html#bgc-automation" target="_self">
+            <a class="strategy-link" href="library.html?strategy=li1" target="_blank">
               <div class="strategy-link-icon">✅</div>
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Post-Offer</div>
