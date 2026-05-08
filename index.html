@@ -26,21 +26,16 @@
     body { background:var(--ink); color:var(--paper); font-family:'Space Grotesk',sans-serif; font-weight:300; line-height:1.65; overflow-x:hidden; }
 
     /* ── NAV ── */
-   nav { position:fixed; top:0; left:0; right:0; z-index:300; display:flex; align-items:center; justify-content:space-between; padding:0 3rem; height:64px; background:rgba(15,36,64,0.96); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
     nav { position:sticky; top:1rem; z-index:300; display:flex; align-items:center; justify-content:space-between; width:min(1240px, calc(100% - 3rem)); margin:1.5rem auto 0; padding:0.65rem 2rem; min-height:64px; background:rgba(15,36,64,0.98); backdrop-filter:blur(16px); border:1px solid var(--border); border-radius:10px; }
     .nav-brand { display:flex; align-items:center; gap:0.75rem; text-decoration:none; }
     .nav-brand-text { font-family:'Space Grotesk',sans-serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.02em; color:var(--paper); line-height:1; }
     .nav-hash { color:var(--gold); }
-    .nav-center { display:flex; gap:2rem; position:absolute; left:50%; transform:translateX(-50%); }
-    .nav-center a { font-size:0.78rem; font-weight:400; letter-spacing:0.08em; text-transform:uppercase; color:var(--white); text-decoration:none; transition:color 0.2s; }
-    .nav-center a:hover, .nav-center a.active { color:var(--white); }
-    .nav-center { display:flex; gap:2.35rem; align-items:center; margin-left:2.5rem; }
-    .nav-center a { position:relative; font-size:0.78rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--fog); text-decoration:none; transition:color 0.2s; }
+    .nav-center { display:flex; gap:1.5rem; align-items:center; margin-left:1.5rem; }
+    .nav-center a { position:relative; font-size:0.78rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--fog); text-decoration:none; transition:color 0.2s; white-space:nowrap; }
     .nav-center a:hover { color:var(--white); }
     .nav-center a.active { color:var(--fog); }
     .nav-center a.active::after { content:''; position:absolute; left:0; right:0; bottom:-0.45rem; height:2px; border-radius:2px; background:var(--gold); opacity:0.8; }
     .nav-right { display:flex; align-items:center; gap:1rem; }
-    .nav-cta { padding:0.45rem 1.1rem; background:var(--gold); color:var(--white); font-size:0.75rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; text-decoration:none; border-radius:3px; transition:background 0.2s; }
     .nav-cta { padding:0.6rem 1.2rem; background:var(--gold); color:var(--white); font-size:0.75rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; text-decoration:none; border-radius:3px; transition:background 0.2s; }
     .nav-cta:hover { background:var(--gold2); }
 

@@ -3,548 +3,196 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TA Metrics & Outcomes — TASSP</title>
+<title>TA Metrics &amp; Outcomes | TASSP</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
-    --depth:   #0F2440;
-    --steel:   #1A3A5C;
-    --slate:   #2C5F8A;
-    --horizon: #4A8FA8;
-    --mist:    #D4E8F0;
-    --white:   #F0F4F8;
-    --text:    #CBD5E0;
-    --subtext: #8BA5BF;
-    --border:  rgba(74,143,168,0.18);
-    --card-bg: rgba(26,58,92,0.45);
-    --card-hover: rgba(44,95,138,0.35);
-    --glow:    rgba(74,143,168,0.12);
+    --ink:#0F2440; --ink2:#0a1a2e; --ink3:#142338;
+    --charcoal:#1A3A5C; --steel:#2C5F8A; --muted:#6B8FAD;
+    --fog:#A8C4D8; --paper:#F0F4F8; --white:#FFFFFF;
+    --gold:#4A8FA8; --gold2:#5DAFC8; --red:#8B3A3A;
+    --border:rgba(74,143,168,0.18);
+    --glow:rgba(74,143,168,0.06);
   }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--depth);
-    color: var(--text);
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  a { color: inherit; text-decoration: none; }
+  html { scroll-behavior:smooth; }
+  *, *::before, *::after { box-sizing:border-box; }
+  body { background:var(--ink); color:var(--paper); font-family:'Space Grotesk',sans-serif; font-weight:300; line-height:1.65; overflow-x:hidden; }
+  a { color:inherit; text-decoration:none; }
 
   /* ── NAV ── */
-  .nav-wrapper {
-    position: sticky;
-    top: 16px;
-    z-index: 100;
-    display: flex;
-    justify-content: center;
-    padding: 0 20px;
-  }
-  nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    background: rgba(15,36,64,0.88);
-    backdrop-filter: blur(16px);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 24px;
-    width: 100%;
-    max-width: 960px;
-  }
-  .nav-logo {
-    font-family: 'Space Mono', monospace;
-    font-size: 1.05rem;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-  .nav-logo .hash { color: var(--horizon); }
-  .nav-logo .wordmark { color: var(--white); }
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    list-style: none;
-  }
-  .nav-links a {
-    font-size: 0.82rem;
-    font-weight: 500;
-    color: var(--subtext);
-    padding: 5px 10px;
-    border-radius: 6px;
-    transition: color 0.2s, background 0.2s;
-    white-space: nowrap;
-  }
-  .nav-links a:hover,
-  .nav-links a.active { color: var(--white); background: rgba(74,143,168,0.12); }
-  .nav-links a.active { color: var(--horizon); }
-  .nav-cta {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--depth) !important;
-    background: var(--horizon) !important;
-    padding: 7px 14px !important;
-    border-radius: 6px;
-    white-space: nowrap;
-    transition: opacity 0.2s !important;
-  }
-  .nav-cta:hover { opacity: 0.85 !important; background: var(--horizon) !important; }
+  nav { position:sticky; top:1rem; z-index:300; display:flex; align-items:center; justify-content:space-between; width:min(1240px, calc(100% - 3rem)); margin:1.5rem auto 0; padding:0.65rem 2rem; min-height:64px; background:rgba(15,36,64,0.98); backdrop-filter:blur(16px); border:1px solid var(--border); border-radius:10px; }
+  .nav-brand { display:flex; align-items:center; gap:0.75rem; text-decoration:none; }
+  .nav-brand-text { font-family:'Space Grotesk',sans-serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.02em; color:var(--paper); line-height:1; }
+  .nav-hash { color:var(--gold); }
+  .nav-center { display:flex; gap:1.5rem; align-items:center; margin-left:1.5rem; }
+  .nav-center a { position:relative; font-size:0.78rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--fog); text-decoration:none; transition:color 0.2s; white-space:nowrap; }
+  .nav-center a:hover { color:var(--white); }
+  .nav-center a.active { color:var(--fog); }
+  .nav-center a.active::after { content:''; position:absolute; left:0; right:0; bottom:-0.45rem; height:2px; border-radius:2px; background:var(--gold); opacity:0.8; }
+  .nav-right { display:flex; align-items:center; gap:1rem; }
+  .nav-cta { padding:0.6rem 1.2rem; background:var(--gold); color:var(--white); font-size:0.75rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; text-decoration:none; border-radius:3px; transition:background 0.2s; }
+  .nav-cta:hover { background:var(--gold2); }
+  .nav-hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:0.5rem; background:none; border:none; }
+  .nav-hamburger span { display:block; width:22px; height:1.5px; background:var(--fog); transition:all 0.25s; border-radius:2px; }
+  .nav-hamburger.open span:nth-child(1) { transform:translateY(6.5px) rotate(45deg); }
+  .nav-hamburger.open span:nth-child(2) { opacity:0; }
+  .nav-hamburger.open span:nth-child(3) { transform:translateY(-6.5px) rotate(-45deg); }
 
-  /* ── HERO ── */
-  .hero {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 80px 24px 48px;
-    text-align: center;
-    position: relative;
-  }
-  .hero::before {
-    content: '';
-    position: absolute;
-    top: 60px; left: 50%;
-    transform: translateX(-50%);
-    width: 600px; height: 300px;
-    background: radial-gradient(ellipse at center, rgba(74,143,168,0.13) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .hero-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.14em;
-    color: var(--horizon);
-    text-transform: uppercase;
-    margin-bottom: 16px;
-  }
-  .hero h1 {
-    font-size: clamp(2rem, 5vw, 3.2rem);
-    font-weight: 700;
-    color: var(--white);
-    line-height: 1.15;
-    margin-bottom: 20px;
-  }
-  .hero h1 em {
-    font-style: normal;
-    color: var(--horizon);
-  }
-  .hero-sub {
-    font-size: 1.05rem;
-    color: var(--subtext);
-    max-width: 560px;
-    margin: 0 auto 40px;
-    line-height: 1.7;
-  }
+  /* ── MOBILE MENU ── */
+  .nav-mobile-menu { display:none; flex-direction:column; position:fixed; top:0; left:0; right:0; bottom:0; z-index:200; background:var(--ink2); padding:6rem 2.5rem 3rem; gap:0; }
+  .nav-mobile-menu.open { display:flex; }
+  .nav-mobile-menu a { font-size:1.1rem; font-weight:500; letter-spacing:0.05em; color:var(--fog); text-decoration:none; padding:1rem 0; border-bottom:1px solid var(--border); transition:color 0.2s; }
+  .nav-mobile-menu a:hover { color:var(--white); }
+  .nav-mobile-menu .nav-cta-mobile { margin-top:1.25rem; display:inline-block; padding:0.75rem 1.5rem; background:var(--gold); color:var(--white); font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; border-radius:3px; border-bottom:none; }
 
-  /* ── FILTER BAR ── */
-  .filter-bar {
-    max-width: 960px;
-    margin: 0 auto 48px;
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .filter-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    color: var(--subtext);
-    text-transform: uppercase;
-    margin-right: 4px;
-  }
-  .filter-btn {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.78rem;
-    font-weight: 500;
-    color: var(--subtext);
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 5px 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .filter-btn:hover { color: var(--white); border-color: var(--horizon); }
-  .filter-btn.active {
-    color: var(--depth);
-    background: var(--horizon);
-    border-color: var(--horizon);
-    font-weight: 600;
-  }
+  /* ── PAGE HEADER ── */
+  .page-header { padding:9rem 5rem 3rem; background:var(--ink2); border-bottom:1px solid var(--border); position:relative; overflow:hidden; }
+  .page-header::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 80% at 80% 50%, rgba(74,143,168,0.06) 0%, transparent 70%); }
+  .hero-bg-grid { position:absolute; inset:0; background-image: linear-gradient(rgba(74,143,168,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(74,143,168,0.05) 1px, transparent 1px); background-size:60px 60px; pointer-events:none; }
+  .page-header-label { font-family:'Space Mono',monospace; font-size:0.68rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); margin-bottom:0.75rem; position:relative; z-index:1; }
+  .page-header h1 { font-family:'Space Grotesk',sans-serif; font-size:clamp(2.2rem,5vw,3.8rem); font-weight:700; line-height:1.05; letter-spacing:-0.02em; position:relative; z-index:1; }
+  .page-header p { margin-top:1rem; font-size:1rem; color:var(--muted); max-width:560px; line-height:1.75; position:relative; z-index:1; }
 
-  /* ── METRIC COUNT ── */
-  .metrics-count {
-    max-width: 960px;
-    margin: 0 auto 24px;
-    padding: 0 24px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--subtext);
-    letter-spacing: 0.05em;
-  }
-  .metrics-count span { color: var(--horizon); font-weight: 700; }
+  /* ── FILTER / COUNT BAR ── */
+  .filter-section { background:var(--ink2); padding:1.5rem 5rem 0; border-bottom:1px solid var(--border); position:sticky; top:64px; z-index:100; }
+  .filter-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding-bottom:1.25rem; }
+  .filter-label { font-family:'Space Mono',monospace; font-size:0.68rem; letter-spacing:0.12em; color:var(--muted); text-transform:uppercase; margin-right:4px; }
+  .filter-btn { font-family:'Space Grotesk',sans-serif; font-size:0.75rem; font-weight:500; color:var(--muted); background:transparent; border:1px solid var(--border); border-radius:20px; padding:5px 14px; cursor:pointer; transition:all 0.2s; }
+  .filter-btn:hover { color:var(--paper); border-color:var(--gold); }
+  .filter-btn.active { color:var(--ink); background:var(--gold); border-color:var(--gold); font-weight:600; }
+
+  /* ── MAIN ── */
+  .metrics-main { padding:3rem 5rem 5rem; background:var(--ink2); min-height:60vh; }
+  .metrics-count { font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.08em; color:var(--muted); margin-bottom:2rem; }
+  .metrics-count span { color:var(--gold); font-weight:700; }
 
   /* ── METRICS GRID ── */
-  .metrics-grid {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 0 24px 80px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
+  .metrics-grid { display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:4px; overflow:hidden; }
 
   /* ── METRIC CARD ── */
-  .metric-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    transition: border-color 0.25s, box-shadow 0.25s;
-    cursor: pointer;
-  }
-  .metric-card:hover {
-    border-color: rgba(74,143,168,0.45);
-    box-shadow: 0 0 28px var(--glow);
-  }
-  .metric-card.hidden { display: none; }
+  .metric-card { background:var(--ink2); transition:background 0.2s; }
+  .metric-card:hover { background:var(--ink3); }
+  .metric-card.hidden { display:none; }
 
-  .card-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 20px;
-    padding: 28px 28px 20px;
-    border-bottom: 1px solid transparent;
-    transition: border-color 0.25s;
-  }
-  .metric-card.open .card-header {
-    border-bottom-color: var(--border);
-  }
-
-  .metric-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    background: rgba(74,143,168,0.14);
-    border: 1px solid rgba(74,143,168,0.25);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
-  .card-title-group { flex: 1; }
-
-  .metric-category {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.12em;
-    color: var(--horizon);
-    text-transform: uppercase;
-    margin-bottom: 5px;
-  }
-
-  .metric-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--white);
-    line-height: 1.25;
-    margin-bottom: 6px;
-  }
-
-  .metric-tagline {
-    font-size: 0.88rem;
-    color: var(--subtext);
-    line-height: 1.5;
-  }
-
-  .card-toggle {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    background: rgba(74,143,168,0.1);
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    margin-top: 4px;
-    transition: background 0.2s, transform 0.3s;
-    color: var(--horizon);
-    font-size: 0.9rem;
-  }
-  .metric-card.open .card-toggle {
-    transform: rotate(45deg);
-    background: rgba(74,143,168,0.2);
-  }
+  .card-header { display:flex; align-items:flex-start; gap:1.5rem; padding:1.75rem 2rem; cursor:pointer; }
+  .metric-icon { width:40px; height:40px; border-radius:8px; background:rgba(74,143,168,0.1); border:1px solid rgba(74,143,168,0.2); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; margin-top:2px; }
+  .card-title-group { flex:1; }
+  .metric-category { font-family:'Space Mono',monospace; font-size:0.62rem; letter-spacing:0.18em; color:var(--gold); text-transform:uppercase; margin-bottom:0.4rem; }
+  .metric-title { font-family:'Space Grotesk',sans-serif; font-size:1.1rem; font-weight:700; color:var(--paper); line-height:1.25; margin-bottom:0.35rem; letter-spacing:-0.01em; }
+  .metric-tagline { font-size:0.88rem; color:var(--muted); line-height:1.55; }
+  .card-toggle { width:26px; height:26px; border-radius:4px; background:rgba(74,143,168,0.08); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:4px; color:var(--gold); font-size:1rem; transition:transform 0.3s, background 0.2s; }
+  .metric-card.open .card-toggle { transform:rotate(45deg); background:rgba(74,143,168,0.18); }
 
   /* ── CARD BODY ── */
-  .card-body {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.45s ease;
-  }
-  .metric-card.open .card-body {
-    max-height: 1200px;
-  }
-  .card-body-inner {
-    padding: 24px 28px 28px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 28px;
-  }
+  .card-body { max-height:0; overflow:hidden; transition:max-height 0.45s ease; }
+  .metric-card.open .card-body { max-height:1200px; }
+  .card-body-inner { padding:0 2rem 2rem; display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; border-top:1px solid var(--border); padding-top:1.75rem; margin:0 2rem; }
 
-  /* Left col: definition + measurement */
-  .col-definition h3, .col-strategies h3 {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.12em;
-    color: var(--horizon);
-    text-transform: uppercase;
-    margin-bottom: 14px;
-  }
+  /* ── DEFINITION COLUMN ── */
+  .col-definition h3, .col-strategies h3 { font-family:'Space Mono',monospace; font-size:0.62rem; letter-spacing:0.2em; color:var(--gold); text-transform:uppercase; margin-bottom:1rem; }
+  .definition-text { font-size:0.9rem; color:var(--muted); line-height:1.75; margin-bottom:1.5rem; font-weight:300; }
+  .measurement-block { background:var(--ink); border:1px solid var(--border); border-radius:4px; padding:1.25rem 1.5rem; }
+  .measurement-block .meas-label { font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:0.15em; color:var(--muted); text-transform:uppercase; margin-bottom:0.85rem; }
+  .meas-variant { display:flex; align-items:flex-start; gap:0.75rem; margin-bottom:0.85rem; }
+  .meas-variant:last-child { margin-bottom:0; }
+  .meas-dot { width:5px; height:5px; border-radius:50%; background:var(--gold); flex-shrink:0; margin-top:8px; }
+  .meas-variant-text { font-size:0.82rem; color:var(--muted); line-height:1.55; font-weight:300; }
+  .meas-variant-text strong { color:var(--paper); font-weight:600; display:block; margin-bottom:1px; }
 
-  .definition-text {
-    font-size: 0.9rem;
-    color: var(--text);
-    line-height: 1.65;
-    margin-bottom: 20px;
-  }
-
-  .measurement-block {
-    background: rgba(15,36,64,0.5);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-  }
-  .measurement-block .meas-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    color: var(--subtext);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-  .meas-variant {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  .meas-variant:last-child { margin-bottom: 0; }
-  .meas-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--horizon);
-    flex-shrink: 0;
-    margin-top: 7px;
-  }
-  .meas-variant-text {
-    font-size: 0.83rem;
-    color: var(--text);
-    line-height: 1.5;
-  }
-  .meas-variant-text strong {
-    color: var(--white);
-    font-weight: 600;
-    display: block;
-    margin-bottom: 1px;
-  }
-
-  /* Right col: strategies */
-  .strategy-links { display: flex; flex-direction: column; gap: 10px; }
-
-  .strategy-link {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: rgba(15,36,64,0.5);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 13px 15px;
-    transition: border-color 0.2s, background 0.2s;
-    text-decoration: none;
-    color: inherit;
-  }
-  .strategy-link:hover {
-    border-color: rgba(74,143,168,0.5);
-    background: rgba(74,143,168,0.08);
-  }
-  .strategy-link-icon {
-    width: 32px; height: 32px;
-    border-radius: 7px;
-    background: rgba(74,143,168,0.12);
-    border: 1px solid rgba(74,143,168,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
-    flex-shrink: 0;
-  }
-  .strategy-link-info { flex: 1; min-width: 0; }
-  .strategy-link-cat {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    color: var(--subtext);
-    text-transform: uppercase;
-    margin-bottom: 2px;
-  }
-  .strategy-link-title {
-    font-size: 0.83rem;
-    font-weight: 600;
-    color: var(--white);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .strategy-link-impact {
-    font-size: 0.72rem;
-    color: var(--subtext);
-    line-height: 1.4;
-    margin-top: 2px;
-  }
-  .strategy-link-arrow {
-    color: var(--horizon);
-    font-size: 0.8rem;
-    flex-shrink: 0;
-  }
-
-  .col-strategies .view-all-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 14px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.06em;
-    color: var(--horizon);
-    text-transform: uppercase;
-    transition: gap 0.2s;
-  }
-  .col-strategies .view-all-link:hover { gap: 9px; }
-
-  /* ── IMPACT BADGE ── */
-  .impact-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 0.06em;
-    color: var(--horizon);
-    background: rgba(74,143,168,0.1);
-    border: 1px solid rgba(74,143,168,0.2);
-    border-radius: 20px;
-    padding: 3px 10px;
-    margin-left: 10px;
-    vertical-align: middle;
-  }
+  /* ── STRATEGIES COLUMN ── */
+  .strategy-links { display:flex; flex-direction:column; gap:0.6rem; }
+  .strategy-link { display:flex; align-items:center; gap:0.85rem; background:var(--ink); border:1px solid var(--border); border-radius:4px; padding:0.9rem 1rem; transition:border-color 0.2s, background 0.2s; color:inherit; }
+  .strategy-link:hover { border-color:var(--gold); background:var(--ink3); }
+  .strategy-link-icon { width:30px; height:30px; border-radius:4px; background:rgba(74,143,168,0.1); border:1px solid rgba(74,143,168,0.15); display:flex; align-items:center; justify-content:center; font-size:0.8rem; flex-shrink:0; }
+  .strategy-link-info { flex:1; min-width:0; }
+  .strategy-link-cat { font-family:'Space Mono',monospace; font-size:0.58rem; letter-spacing:0.12em; color:var(--muted); text-transform:uppercase; margin-bottom:2px; }
+  .strategy-link-title { font-size:0.82rem; font-weight:600; color:var(--paper); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .strategy-link-impact { font-size:0.75rem; color:var(--muted); line-height:1.4; margin-top:2px; font-weight:300; }
+  .strategy-link-arrow { color:var(--gold); font-size:0.8rem; flex-shrink:0; opacity:0.7; }
+  .view-all-link { display:inline-flex; align-items:center; gap:6px; margin-top:1rem; font-family:'Space Mono',monospace; font-size:0.62rem; letter-spacing:0.12em; color:var(--gold); text-transform:uppercase; text-decoration:none; transition:gap 0.2s; }
+  .view-all-link:hover { gap:9px; }
 
   /* ── FOOTER ── */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 40px 24px;
-  }
-  .footer-inner {
-    max-width: 960px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-  .footer-logo {
-    font-family: 'Space Mono', monospace;
-    font-size: 1rem;
-    font-weight: 700;
-  }
-  .footer-logo .hash { color: var(--horizon); }
-  .footer-logo .wordmark { color: var(--white); }
-  .footer-links {
-    display: flex;
-    gap: 20px;
-    list-style: none;
-    flex-wrap: wrap;
-  }
-  .footer-links a {
-    font-size: 0.8rem;
-    color: var(--subtext);
-    transition: color 0.2s;
-  }
-  .footer-links a:hover { color: var(--white); }
-  .footer-copy {
-    font-size: 0.75rem;
-    color: var(--subtext);
-  }
-  .footer-domain {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--horizon);
-  }
+  footer { padding:2rem 5rem; background:var(--ink); border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .footer-brand { font-family:'Space Grotesk',sans-serif; font-size:0.9rem; font-weight:700; letter-spacing:0.06em; color:var(--steel); }
+  .footer-nav { display:flex; gap:2rem; }
+  .footer-nav a { font-family:'Space Mono',monospace; font-size:0.62rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--steel); text-decoration:none; transition:color 0.2s; }
+  .footer-nav a:hover { color:var(--gold); }
 
   /* ── RESPONSIVE ── */
-  @media (max-width: 680px) {
-    .card-body-inner { grid-template-columns: 1fr; }
-    .nav-links { display: none; }
-    .hero { padding: 60px 20px 36px; }
-    .metrics-grid { padding: 0 16px 60px; }
-    .filter-bar { padding: 0 16px; }
+  @media(max-width:900px){
+    .page-header,.filter-section,.metrics-main{padding-left:1.5rem;padding-right:1.5rem}
+    .card-body-inner{grid-template-columns:1fr;padding-left:0;padding-right:0;margin:0}
+    .card-header{padding:1.25rem 1.25rem}
+  }
+  @media(max-width:600px){
+    nav{width:calc(100% - 2rem);margin:0.75rem auto 0;padding:0.65rem 1.25rem}.nav-center{display:none}
+    .nav-hamburger{display:flex}
+    footer{padding:2rem 1.5rem;flex-direction:column;gap:1.5rem;text-align:center}
+    .footer-nav{flex-wrap:wrap;justify-content:center;gap:1rem}
   }
 </style>
 </head>
 <body>
 
 <!-- NAV -->
-<div class="nav-wrapper">
-  <nav>
-    <a href="index.html" class="nav-logo"><span class="hash">#</span><span class="wordmark">TASSP</span></a>
-    <ul class="nav-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="library.html">Strategy Library</a></li>
-      <li><a href="metrics.html" class="active">TA Metrics</a></li>
-      <li><a href="onboarding.html">Admin Onboarding</a></li>
-      <li><a href="process-mapper.html">Process Mapper <span style="font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--horizon);background:rgba(74,143,168,0.12);border:1px solid rgba(74,143,168,0.2);border-radius:4px;padding:1px 5px;">BETA</span></a></li>
-    </ul>
-    <a href="index.html#signup" class="nav-cta">Get Updates</a>
-  </nav>
+<nav>
+  <a class="nav-brand" href="index.html">
+    <span class="nav-brand-text"><span class="nav-hash">#</span>TASSP</span>
+  </a>
+  <div class="nav-center">
+    <a href="index.html">Home</a>
+    <a href="library.html">Strategy Library</a>
+    <a href="metrics.html" class="active">TA Metrics</a>
+    <a href="onboarding.html">Admin Onboarding</a>
+    <a href="process-mapper.html">Process Mapper <span style="font-size:0.65em;letter-spacing:0.1em;opacity:0.7">(BETA)</span></a>
+  </div>
+  <div class="nav-right">
+    <a class="nav-cta" href="index.html#signup">Get Updates</a>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="nav-mobile-menu" id="nav-mobile-menu">
+  <a href="index.html">Home</a>
+  <a href="library.html">Strategy Library</a>
+  <a href="metrics.html" class="active">TA Metrics</a>
+  <a href="onboarding.html">Admin Onboarding</a>
+  <a href="process-mapper.html">Process Mapper</a>
+  <a href="index.html#signup" class="nav-cta-mobile">Get Updates</a>
 </div>
 
-<!-- HERO -->
-<header class="hero">
-  <p class="hero-label">Intelligence Layer</p>
-  <h1>TA Metrics &amp; <em>Outcomes</em></h1>
-  <p class="hero-sub">Every metric in your talent acquisition process — how organizations define it, how to measure it, and which strategies move the needle.</p>
-</header>
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="hero-bg-grid"></div>
+  <div class="page-header-label">Intelligence Layer</div>
+  <h1>TA Metrics &amp; Outcomes</h1>
+  <p>Every metric in your talent acquisition process, how organizations define it, how to measure it, and which strategies move the needle.</p>
+</div>
 
 <!-- FILTER BAR -->
-<div class="filter-bar">
-  <span class="filter-label">Filter:</span>
-  <button class="filter-btn active" data-filter="all">All Metrics</button>
-  <button class="filter-btn" data-filter="velocity">Hiring Velocity</button>
-  <button class="filter-btn" data-filter="productivity">Productivity</button>
-  <button class="filter-btn" data-filter="cost">Cost &amp; Spend</button>
-  <button class="filter-btn" data-filter="quality">Quality &amp; Retention</button>
-  <button class="filter-btn" data-filter="compliance">Compliance</button>
+<div class="filter-section">
+  <div class="filter-bar">
+    <span class="filter-label">Filter:</span>
+    <button class="filter-btn active" data-filter="all">All Metrics</button>
+    <button class="filter-btn" data-filter="velocity">Hiring Velocity</button>
+    <button class="filter-btn" data-filter="productivity">Productivity</button>
+    <button class="filter-btn" data-filter="cost">Cost &amp; Spend</button>
+    <button class="filter-btn" data-filter="quality">Quality &amp; Retention</button>
+    <button class="filter-btn" data-filter="compliance">Compliance</button>
+  </div>
 </div>
 
-<div class="metrics-count" id="metrics-count"><span id="shown-count">12</span> metrics</div>
-
-<!-- METRICS GRID -->
-<main class="metrics-grid" id="metrics-grid">
+<!-- MAIN -->
+<div class="metrics-main">
+  <div class="metrics-count"><span id="shown-count">12</span> metrics</div>
+  <main class="metrics-grid" id="metrics-grid">
 
   <!-- 1. TIME TO FILL -->
   <article class="metric-card" data-category="velocity" onclick="toggleCard(this)">
@@ -561,7 +209,7 @@
       <div class="card-body-inner">
         <div class="col-definition">
           <h3>Definition &amp; Context</h3>
-          <p class="definition-text">Time to Fill is the most widely tracked hiring velocity metric. It captures the total elapsed calendar days from the point a role is approved (or posted) to the point a candidate accepts an offer. This metric reflects the efficiency of your entire TA pipeline — sourcing, screening, interviewing, and offer stages all roll up here.</p>
+          <p class="definition-text">Time to Fill is the most widely tracked hiring velocity metric. It captures the total elapsed calendar days from the point a role is approved (or posted) to the point a candidate accepts an offer. This metric reflects the efficiency of your entire TA pipeline: sourcing, screening, interviewing, and offer stages all roll up here.</p>
           <div class="measurement-block">
             <p class="meas-label">How organizations measure it</p>
             <div class="meas-variant">
@@ -639,7 +287,7 @@
       <div class="card-body-inner">
         <div class="col-definition">
           <h3>Definition &amp; Context</h3>
-          <p class="definition-text">Often confused with Time to Fill, Time to Hire is candidate-centric rather than requisition-centric. It measures the candidate's experience of speed — from the moment they first engage with your process (applied, sourced, or referred) to when they sign. This metric helps identify where candidate friction lives.</p>
+          <p class="definition-text">Often confused with Time to Fill, Time to Hire is candidate-centric rather than requisition-centric. It measures the candidate's experience of speed, measured from the moment they first engage with your process (applied, sourced, or referred) to when they sign. This metric helps identify where candidate friction lives.</p>
           <div class="measurement-block">
             <p class="meas-label">How organizations measure it</p>
             <div class="meas-variant">
@@ -829,7 +477,7 @@
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Offer</div>
                 <div class="strategy-link-title">Offer Workflow Automation</div>
-                <div class="strategy-link-impact">Speed to offer matters — delays post-interview allow competing offers to land first</div>
+                <div class="strategy-link-impact">Speed to offer matters: delays post-interview allow competing offers to land first</div>
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
@@ -873,7 +521,7 @@
       <div class="card-body-inner">
         <div class="col-definition">
           <h3>Definition &amp; Context</h3>
-          <p class="definition-text">Cost Per Hire is the SHRM-standardized formula that combines internal costs (recruiter compensation, technology, overhead) with external costs (job boards, agency fees, advertising). CPH is a critical executive metric because it connects TA investment to business value — and it's often significantly underreported when technology consolidation opportunities are missed.</p>
+          <p class="definition-text">Cost Per Hire is the SHRM-standardized formula that combines internal costs (recruiter compensation, technology, overhead) with external costs (job boards, agency fees, advertising). CPH is a critical executive metric because it connects TA investment to business value, and it's often significantly underreported when technology consolidation opportunities are missed.</p>
           <div class="measurement-block">
             <p class="meas-label">How organizations measure it</p>
             <div class="meas-variant">
@@ -951,7 +599,7 @@
       <div class="card-body-inner">
         <div class="col-definition">
           <h3>Definition &amp; Context</h3>
-          <p class="definition-text">Staffing agency fees typically run 15–25% of first-year salary — making agency dependency one of the highest-cost levers in TA. Tracking this metric reveals whether your internal sourcing capability is keeping pace with demand, and which roles or departments are consistently bypassing the internal process. Reducing agency reliance by even 10% can generate significant annual savings.</p>
+          <p class="definition-text">Staffing agency fees typically run 15–25% of first-year salary, making agency dependency one of the highest-cost levers in TA. Tracking this metric reveals whether your internal sourcing capability is keeping pace with demand, and which roles or departments are consistently bypassing the internal process. Reducing agency reliance by even 10% can generate significant annual savings.</p>
           <div class="measurement-block">
             <p class="meas-label">How organizations measure it</p>
             <div class="meas-variant">
@@ -1029,7 +677,7 @@
       <div class="card-body-inner">
         <div class="col-definition">
           <h3>Definition &amp; Context</h3>
-          <p class="definition-text">Recruiter Productivity spans multiple sub-metrics: hires per recruiter, time spent per hire stage, and the ratio of strategic to administrative work. Research consistently shows recruiters spend 30–60% of their time on administrative tasks that can be automated — scheduling, status emails, posting management, and reporting. Measuring this creates the business case for technology investment.</p>
+          <p class="definition-text">Recruiter Productivity spans multiple sub-metrics: hires per recruiter, time spent per hire stage, and the ratio of strategic to administrative work. Research consistently shows recruiters spend 30–60% of their time on administrative tasks that can be automated: scheduling, status emails, posting management, and reporting. Measuring this creates the business case for technology investment.</p>
           <div class="measurement-block">
             <p class="meas-label">How organizations measure it</p>
             <div class="meas-variant">
@@ -1099,7 +747,7 @@
       <div class="card-title-group">
         <div class="metric-category">Productivity</div>
         <div class="metric-title">Source of Hire Effectiveness</div>
-        <div class="metric-tagline">Which channels deliver the best candidates — and at what cost</div>
+        <div class="metric-tagline">Which channels deliver the best candidates, and at what cost</div>
       </div>
       <div class="card-toggle">+</div>
     </div>
@@ -1107,7 +755,7 @@
       <div class="card-body-inner">
         <div class="col-definition">
           <h3>Definition &amp; Context</h3>
-          <p class="definition-text">Source of Hire tracks the origin channel of every hire — organic career site, job boards, referrals, CRM pipelines, agencies, social, and more. Most organizations know their source of application, but the high-value insight is source of <em>hire</em>: which channels produce candidates who actually get offers and start. This drives sourcing strategy and budget allocation decisions.</p>
+          <p class="definition-text">Source of Hire tracks the origin channel of every hire: organic career site, job boards, referrals, CRM pipelines, agencies, social, and more. Most organizations know their source of application, but the high-value insight is source of <em>hire</em>: which channels produce candidates who actually get offers and start. This drives sourcing strategy and budget allocation decisions.</p>
           <div class="measurement-block">
             <p class="meas-label">How organizations measure it</p>
             <div class="meas-variant">
@@ -1185,7 +833,7 @@
       <div class="card-body-inner">
         <div class="col-definition">
           <h3>Definition &amp; Context</h3>
-          <p class="definition-text">Quality of Hire is the most strategically important TA metric — and the hardest to measure. It connects talent acquisition decisions to downstream business outcomes. A strong QoH framework creates a feedback loop between TA and hiring managers, turning anecdotal performance judgments into structured data that improves future hiring decisions.</p>
+          <p class="definition-text">Quality of Hire is the most strategically important TA metric, and the hardest to measure. It connects talent acquisition decisions to downstream business outcomes. A strong QoH framework creates a feedback loop between TA and hiring managers, turning anecdotal performance judgments into structured data that improves future hiring decisions.</p>
           <div class="measurement-block">
             <p class="meas-label">How organizations measure it</p>
             <div class="meas-variant">
@@ -1263,7 +911,7 @@
       <div class="card-body-inner">
         <div class="col-definition">
           <h3>Definition &amp; Context</h3>
-          <p class="definition-text">First-year turnover is a critical TA accountability metric because it reveals whether hiring decisions and onboarding experiences are setting employees up for long-term success. High first-year turnover is expensive — replacement costs typically run 50–200% of annual salary when you factor in recruiting, training, and lost productivity. It often signals misalignment in role expectations set during the hiring process.</p>
+          <p class="definition-text">First-year turnover is a critical TA accountability metric because it reveals whether hiring decisions and onboarding experiences are setting employees up for long-term success. High first-year turnover is expensive: replacement costs typically run 50–200% of annual salary when you factor in recruiting, training, and lost productivity. It often signals misalignment in role expectations set during the hiring process.</p>
           <div class="measurement-block">
             <p class="meas-label">How organizations measure it</p>
             <div class="meas-variant">
@@ -1341,14 +989,14 @@
       <div class="card-body-inner">
         <div class="col-definition">
           <h3>Definition &amp; Context</h3>
-          <p class="definition-text">Candidate Experience Score is both a quality metric and a brand metric. Candidates who have poor experiences — even if not hired — share those experiences publicly on Glassdoor, LinkedIn, and with their networks. Measuring CX creates accountability for the experience you're delivering at every touchpoint and provides the diagnostic data to fix specific failure points.</p>
+          <p class="definition-text">Candidate Experience Score is both a quality metric and a brand metric. Candidates who have poor experiences, even if not hired, share those experiences publicly on Glassdoor, LinkedIn, and with their networks. Measuring CX creates accountability for the experience you're delivering at every touchpoint and provides the diagnostic data to fix specific failure points.</p>
           <div class="measurement-block">
             <p class="meas-label">How organizations measure it</p>
             <div class="meas-variant">
               <div class="meas-dot"></div>
               <div class="meas-variant-text">
                 <strong>Post-Process NPS or CSAT Survey</strong>
-                Sent to all candidates — hired and not hired. Measures likelihood to recommend or reapply.
+                Sent to all candidates, hired and not hired. Measures likelihood to recommend or reapply.
               </div>
             </div>
             <div class="meas-variant">
@@ -1384,7 +1032,7 @@
               <div class="strategy-link-info">
                 <div class="strategy-link-cat">Candidate Experience</div>
                 <div class="strategy-link-title">Rejection Architecture</div>
-                <div class="strategy-link-impact">How you decline candidates matters as much as how you engage them — ghosting destroys NPS scores</div>
+                <div class="strategy-link-impact">How you decline candidates matters as much as how you engage them: ghosting destroys NPS scores</div>
               </div>
               <div class="strategy-link-arrow">→</div>
             </a>
@@ -1419,7 +1067,7 @@
       <div class="card-body-inner">
         <div class="col-definition">
           <h3>Definition &amp; Context</h3>
-          <p class="definition-text">Compliance in TA spans OFCCP/EEO documentation, disposition tracking, adverse impact analysis, and data retention. Most organizations only discover compliance gaps during an audit — by which point remediation is expensive and reputational risk is real. Proactively measuring compliance posture turns it from a reactive fire drill into a managed, auditable process.</p>
+          <p class="definition-text">Compliance in TA spans OFCCP/EEO documentation, disposition tracking, adverse impact analysis, and data retention. Most organizations only discover compliance gaps during an audit; by which point remediation is expensive and reputational risk is real. Proactively measuring compliance posture turns it from a reactive fire drill into a managed, auditable process.</p>
           <div class="measurement-block">
             <p class="meas-label">How organizations measure it</p>
             <div class="meas-variant">
@@ -1483,23 +1131,20 @@
   </article>
 
 </main>
+</div>
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-inner">
-    <div class="footer-logo"><span class="hash">#</span><span class="wordmark">TASSP</span></div>
-    <ul class="footer-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="library.html">Strategy Library</a></li>
-      <li><a href="metrics.html">TA Metrics</a></li>
-      <li><a href="onboarding.html">Admin Onboarding</a></li>
-      <li><a href="process-mapper.html">Process Mapper</a></li>
-      <li><a href="index.html#signup">Get Updates</a></li>
-    </ul>
-    <div class="footer-copy">
-      <div class="footer-domain">tassp.pro</div>
-    </div>
-  </div>
+  <div class="footer-brand"><span style="color:var(--gold);">#</span>TASSP</div>
+  <nav class="footer-nav">
+    <a href="index.html">Home</a>
+    <a href="library.html">Strategy Library</a>
+    <a href="metrics.html">TA Metrics</a>
+    <a href="onboarding.html">Admin Onboarding</a>
+    <a href="process-mapper.html">Process Mapper</a>
+    <a href="index.html#signup">Get Updates</a>
+    <a href="https://tassp.pro" style="color:var(--gold);">tassp.pro</a>
+  </nav>
 </footer>
 
 <script>
@@ -1527,6 +1172,23 @@
       document.getElementById('shown-count').textContent = shown;
     });
   });
+</script>
+
+<script>
+  const hamburger = document.getElementById('nav-hamburger');
+  const mobileMenu = document.getElementById('nav-mobile-menu');
+  if(hamburger && mobileMenu){
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('open');
+      mobileMenu.classList.toggle('open');
+    });
+    mobileMenu.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        hamburger.classList.remove('open');
+        mobileMenu.classList.remove('open');
+      });
+    });
+  }
 </script>
 </body>
 </html>
