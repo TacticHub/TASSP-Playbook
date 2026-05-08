@@ -6,7 +6,7 @@
 <title>TA Metrics &amp; Outcomes | TASSP</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink:#0F2440; --ink2:#0a1a2e; --ink3:#142338;
@@ -22,7 +22,7 @@
   body { background:var(--ink); color:var(--paper); font-family:'Space Grotesk',sans-serif; font-weight:300; line-height:1.65; overflow-x:hidden; }
   a { color:inherit; text-decoration:none; }
 
-  /* ── NAV ── */
+  /* NAV */
   nav { position:sticky; top:1rem; z-index:300; display:flex; align-items:center; justify-content:space-between; width:min(1240px, calc(100% - 3rem)); margin:1.5rem auto 0; padding:0.65rem 2rem; min-height:64px; background:rgba(15,36,64,0.98); backdrop-filter:blur(16px); border:1px solid var(--border); border-radius:10px; }
   .nav-brand { display:flex; align-items:center; gap:0.75rem; text-decoration:none; }
   .nav-brand-text { font-family:'Space Grotesk',sans-serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.02em; color:var(--paper); line-height:1; }
@@ -41,14 +41,14 @@
   .nav-hamburger.open span:nth-child(2) { opacity:0; }
   .nav-hamburger.open span:nth-child(3) { transform:translateY(-6.5px) rotate(-45deg); }
 
-  /* ── MOBILE MENU ── */
+  /* MOBILE MENU */
   .nav-mobile-menu { display:none; flex-direction:column; position:fixed; top:0; left:0; right:0; bottom:0; z-index:200; background:var(--ink2); padding:6rem 2.5rem 3rem; gap:0; }
   .nav-mobile-menu.open { display:flex; }
   .nav-mobile-menu a { font-size:1.1rem; font-weight:500; letter-spacing:0.05em; color:var(--fog); text-decoration:none; padding:1rem 0; border-bottom:1px solid var(--border); transition:color 0.2s; }
   .nav-mobile-menu a:hover { color:var(--white); }
   .nav-mobile-menu .nav-cta-mobile { margin-top:1.25rem; display:inline-block; padding:0.75rem 1.5rem; background:var(--gold); color:var(--white); font-size:0.78rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; text-decoration:none; border-radius:3px; border-bottom:none; }
 
-  /* ── PAGE HEADER ── */
+  /* PAGE HEADER */
   .page-header { padding:9rem 5rem 3rem; background:var(--ink2); border-bottom:1px solid var(--border); position:relative; overflow:hidden; }
   .page-header::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 80% at 80% 50%, rgba(74,143,168,0.06) 0%, transparent 70%); }
   .hero-bg-grid { position:absolute; inset:0; background-image: linear-gradient(rgba(74,143,168,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(74,143,168,0.05) 1px, transparent 1px); background-size:60px 60px; pointer-events:none; }
@@ -56,7 +56,7 @@
   .page-header h1 { font-family:'Space Grotesk',sans-serif; font-size:clamp(2.2rem,5vw,3.8rem); font-weight:700; line-height:1.05; letter-spacing:-0.02em; position:relative; z-index:1; }
   .page-header p { margin-top:1rem; font-size:1rem; color:var(--muted); max-width:560px; line-height:1.75; position:relative; z-index:1; }
 
-  /* ── FILTER / COUNT BAR ── */
+  /* FILTER BAR */
   .filter-section { background:var(--ink2); padding:1.5rem 5rem 0; border-bottom:1px solid var(--border); position:sticky; top:64px; z-index:100; }
   .filter-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding-bottom:1.25rem; }
   .filter-label { font-family:'Space Mono',monospace; font-size:0.68rem; letter-spacing:0.12em; color:var(--muted); text-transform:uppercase; margin-right:4px; }
@@ -64,19 +64,18 @@
   .filter-btn:hover { color:var(--paper); border-color:var(--gold); }
   .filter-btn.active { color:var(--ink); background:var(--gold); border-color:var(--gold); font-weight:600; }
 
-  /* ── MAIN ── */
+  /* MAIN */
   .metrics-main { padding:3rem 5rem 5rem; background:var(--ink2); min-height:60vh; }
   .metrics-count { font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.08em; color:var(--muted); margin-bottom:2rem; }
   .metrics-count span { color:var(--gold); font-weight:700; }
 
-  /* ── METRICS GRID ── */
+  /* METRICS GRID */
   .metrics-grid { display:flex; flex-direction:column; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:4px; overflow:hidden; }
 
-  /* ── METRIC CARD ── */
+  /* METRIC CARD */
   .metric-card { background:var(--ink2); transition:background 0.2s; }
   .metric-card:hover { background:var(--ink3); }
   .metric-card.hidden { display:none; }
-
   .card-header { display:flex; align-items:flex-start; gap:1.5rem; padding:1.75rem 2rem; cursor:pointer; }
   .metric-icon { width:40px; height:40px; border-radius:8px; background:rgba(74,143,168,0.1); border:1px solid rgba(74,143,168,0.2); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; margin-top:2px; }
   .card-title-group { flex:1; }
@@ -86,12 +85,12 @@
   .card-toggle { width:26px; height:26px; border-radius:4px; background:rgba(74,143,168,0.08); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:4px; color:var(--gold); font-size:1rem; transition:transform 0.3s, background 0.2s; }
   .metric-card.open .card-toggle { transform:rotate(45deg); background:rgba(74,143,168,0.18); }
 
-  /* ── CARD BODY ── */
+  /* CARD BODY */
   .card-body { max-height:0; overflow:hidden; transition:max-height 0.45s ease; }
   .metric-card.open .card-body { max-height:1200px; }
-  .card-body-inner { padding:0 2rem 2rem; display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; border-top:1px solid var(--border); padding-top:1.75rem; margin:0 2rem; }
+  .card-body-inner { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; border-top:1px solid var(--border); padding:1.75rem 2rem 2rem; }
 
-  /* ── DEFINITION COLUMN ── */
+  /* DEFINITION COL */
   .col-definition h3, .col-strategies h3 { font-family:'Space Mono',monospace; font-size:0.62rem; letter-spacing:0.2em; color:var(--gold); text-transform:uppercase; margin-bottom:1rem; }
   .definition-text { font-size:0.9rem; color:var(--muted); line-height:1.75; margin-bottom:1.5rem; font-weight:300; }
   .measurement-block { background:var(--ink); border:1px solid var(--border); border-radius:4px; padding:1.25rem 1.5rem; }
@@ -102,7 +101,7 @@
   .meas-variant-text { font-size:0.82rem; color:var(--muted); line-height:1.55; font-weight:300; }
   .meas-variant-text strong { color:var(--paper); font-weight:600; display:block; margin-bottom:1px; }
 
-  /* ── STRATEGIES COLUMN ── */
+  /* STRATEGIES COL */
   .strategy-links { display:flex; flex-direction:column; gap:0.6rem; }
   .strategy-link { display:flex; align-items:center; gap:0.85rem; background:var(--ink); border:1px solid var(--border); border-radius:4px; padding:0.9rem 1rem; transition:border-color 0.2s, background 0.2s; color:inherit; }
   .strategy-link:hover { border-color:var(--gold); background:var(--ink3); }
@@ -112,20 +111,20 @@
   .strategy-link-title { font-size:0.82rem; font-weight:600; color:var(--paper); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .strategy-link-impact { font-size:0.75rem; color:var(--muted); line-height:1.4; margin-top:2px; font-weight:300; }
   .strategy-link-arrow { color:var(--gold); font-size:0.8rem; flex-shrink:0; opacity:0.7; }
-  .view-all-link { display:inline-flex; align-items:center; gap:6px; margin-top:1rem; font-family:'Space Mono',monospace; font-size:0.62rem; letter-spacing:0.12em; color:var(--gold); text-transform:uppercase; text-decoration:none; transition:gap 0.2s; }
+  .view-all-link { display:inline-flex; align-items:center; gap:6px; margin-top:1rem; font-family:'Space Mono',monospace; font-size:0.62rem; letter-spacing:0.12em; color:var(--gold); text-transform:uppercase; transition:gap 0.2s; }
   .view-all-link:hover { gap:9px; }
 
-  /* ── FOOTER ── */
+  /* FOOTER */
   footer { padding:2rem 5rem; background:var(--ink); border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
   .footer-brand { font-family:'Space Grotesk',sans-serif; font-size:0.9rem; font-weight:700; letter-spacing:0.06em; color:var(--steel); }
   .footer-nav { display:flex; gap:2rem; }
   .footer-nav a { font-family:'Space Mono',monospace; font-size:0.62rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--steel); text-decoration:none; transition:color 0.2s; }
   .footer-nav a:hover { color:var(--gold); }
 
-  /* ── RESPONSIVE ── */
+  /* RESPONSIVE */
   @media(max-width:900px){
     .page-header,.filter-section,.metrics-main{padding-left:1.5rem;padding-right:1.5rem}
-    .card-body-inner{grid-template-columns:1fr;padding-left:0;padding-right:0;margin:0}
+    .card-body-inner{grid-template-columns:1fr}
     .card-header{padding:1.25rem 1.25rem}
   }
   @media(max-width:600px){
