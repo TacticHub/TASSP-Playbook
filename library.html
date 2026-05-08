@@ -211,6 +211,7 @@
   <div class="nav-center">
     <a href="index.html">Home</a>
     <a href="library.html" class="active">Strategy Library</a>
+    <a href="metrics.html">TA Metrics</a>
     <a href="onboarding.html">Admin Onboarding</a>
     <a href="process-mapper.html">Process Mapper <span style="font-size:0.65em;letter-spacing:0.1em;opacity:0.7">(BETA)</span></a>
   </div>
@@ -226,7 +227,8 @@
 <div class="nav-mobile-menu" id="nav-mobile-menu">
   <a href="index.html">Home</a>
   <a href="library.html" class="active">Strategy Library</a>
-  <a href="onboarding.html">Admin Onboarding</a>
+  <a href="metrics.html">TA Metrics</a>
+    <a href="onboarding.html">Admin Onboarding</a>
   <a href="process-mapper.html">Process Mapper</a>
   <a href="index.html#signup" class="nav-cta-mobile">Get Updates</a>
 </div>
@@ -378,6 +380,7 @@
   <nav class="footer-nav">
     <a href="index.html">Home</a>
     <a href="library.html">Strategy Library</a>
+    <a href="metrics.html">TA Metrics</a>
     <a href="onboarding.html">Admin Onboarding</a>
     <a href="process-mapper.html">Process Mapper</a>
     <a href="index.html#signup">Get Updates</a>
@@ -679,9 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Deep-link: open a specific strategy modal via ?strategy=liXX
   const strategyParam = urlParams.get('strategy');
   if(strategyParam && strategies[strategyParam]) {
-    // Render library first, then open modal
     setTimeout(() => {
-      // Scroll to top so modal is centered in viewport
       window.scrollTo(0, 0);
       openStrategy(strategyParam);
     }, 100);
