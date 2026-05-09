@@ -171,7 +171,7 @@
 </div>
 
 <div class="metrics-main">
-  <div class="metrics-count"><span id="shown-count">14</span> metrics</div>
+  <div class="metrics-count"><span id="shown-count">16</span> metrics</div>
   <main class="metrics-grid" id="metrics-grid">
   <article class="metric-card" data-category="velocity" onclick="toggleCard(this)">
     <div class="card-header">
@@ -179,7 +179,7 @@
       <div class="card-title-group">
         <div class="metric-category">Hiring Velocity</div>
         <div class="metric-title">Time to Fill</div>
-        <div class="metric-tagline">Requisition-level metric: approved or opened requisition to accepted offer</div>
+        <div class="metric-tagline">Business perspective: how long does the organization wait to fill a vacant role?</div>
       </div>
       <div class="card-toggle">+</div>
     </div>
@@ -187,7 +187,7 @@
       <div class="card-body-inner">
         <div class="col-definition">
           <h3>Definition &amp; Context</h3>
-          <p class="definition-text">Time to Fill is a requisition lifecycle metric. It measures elapsed calendar days from the moment a role is formally approved or opened to the moment a candidate accepts an offer. TTF reflects the efficiency of your entire TA operation at the requisition level, including sourcing ramp time, pipeline build time, and process throughput. It should never be confused with Time to Hire, which is candidate-centric.</p>
+          <p class="definition-text">Time to Fill answers the business question: "How long does the organization wait to fill a vacant role?" It is a vacancy duration metric measured from the business and workforce planning perspective. TTF captures the full elapsed time from the moment a role is approved or opened to the moment an offer is accepted. It reflects sourcing ramp time, pipeline build time, and end-to-end process throughput. TTF is the metric hiring managers and business leaders care about most because it maps directly to vacancy cost and operational impact.</p>
           <div class="measurement-block">
             <p class="meas-label">How organizations measure it</p>
             <div class="meas-variant">
@@ -255,7 +255,7 @@
       <div class="card-title-group">
         <div class="metric-category">Hiring Velocity</div>
         <div class="metric-title">Time to Hire</div>
-        <div class="metric-tagline">Candidate-level metric: candidate entry into process to accepted offer</div>
+        <div class="metric-tagline">Candidate and recruiting perspective: how quickly do candidates move once engaged?</div>
       </div>
       <div class="card-toggle">+</div>
     </div>
@@ -263,7 +263,7 @@
       <div class="card-body-inner">
         <div class="col-definition">
           <h3>Definition &amp; Context</h3>
-          <p class="definition-text">Time to Hire is a candidate lifecycle metric. It measures elapsed days from the moment a specific candidate enters your process to the moment they accept an offer. Unlike TTF, which is requisition-scoped, TTH is person-scoped. It is the metric most directly impacted by recruiter responsiveness, scheduling efficiency, interview structure, and offer speed. TTH diagnoses the candidate experience of your process speed.</p>
+          <p class="definition-text">Time to Hire answers the recruiting question: "How quickly do candidates move once they are engaged?" It is a candidate process speed metric measured from the recruiting and candidate experience perspective. TTH captures the elapsed time from the moment a specific candidate enters your process to offer acceptance. Where TTF tells you how long the business waited, TTH tells you how efficiently your recruiting engine moved that candidate through. TTH is most directly impacted by recruiter responsiveness, scheduling speed, interview structure, and offer turnaround time.</p>
           <div class="measurement-block">
             <p class="meas-label">How organizations measure it</p>
             <div class="meas-variant">
@@ -325,6 +325,175 @@
       </div>
     </div>
   </article>
+
+  <article class="metric-card" data-category="velocity" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">&#x1F680;</div>
+      <div class="card-title-group">
+        <div class="metric-category">Hiring Velocity</div>
+        <div class="metric-title">Time to Start</div>
+        <div class="metric-tagline">HR operations perspective: how long does post-offer activation take before a new hire walks in the door?</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">Time to Start answers the HR operations question: "How long does it take to get from accepted offer to first day?" It is a post-offer activation metric capturing elapsed time between offer acceptance and the new hire's start date. While TA owns the process up to offer, HR operations, credentialing, IT provisioning, background check completion, and onboarding readiness all influence this window. In high-volume, regulated, or credentialed industries like healthcare, logistics, and financial services, Time to Start can be as strategically important as Time to Fill.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Offer Accepted Date to First Day of Employment</strong>
+                Standard formula. Captures the full post-offer activation window regardless of what drives the delay.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Time to Start by Delay Driver</strong>
+                Diagnostic view. Segments delays by BGC completion, credentialing, IT provisioning, or new hire scheduling to identify the bottleneck owner.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Time to Start by Role Type or Business Unit</strong>
+                Segmented view. Regulated roles, shift-based positions, and credentialed roles often have structurally longer activation windows requiring separate benchmarks.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Pre-Start Completion Rate</strong>
+                Readiness metric. Tracks whether new hires have completed required pre-boarding steps before their first day, reducing Day 1 friction.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html?strategy=li37" target="_blank">
+              <div class="strategy-link-icon">&#x2705;</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Post-Offer</div>
+                <div class="strategy-link-title">Post-Offer Compliance Workflow: Reduce Time from Offer to Background Check Completion</div>
+                <div class="strategy-link-impact">BGC completion is the most common post-offer bottleneck; automating the workflow directly compresses Time to Start</div>
+              </div>
+              <div class="strategy-link-arrow">&#x2192;</div>
+            </a>
+            <a class="strategy-link" href="library.html?strategy=li32" target="_blank">
+              <div class="strategy-link-icon">&#x1F512;</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Post-Offer</div>
+                <div class="strategy-link-title">Background Check Integration: Automate Status Tracking to Prevent Drop-Off</div>
+                <div class="strategy-link-impact">Integrated BGC status tracking eliminates manual follow-up delays and keeps the activation timeline on track</div>
+              </div>
+              <div class="strategy-link-arrow">&#x2192;</div>
+            </a>
+            <a class="strategy-link" href="library.html?strategy=li29" target="_blank">
+              <div class="strategy-link-icon">&#x1F4CB;</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Post-Offer</div>
+                <div class="strategy-link-title">Post-Offer Pre-Boarding Touchpoints: Launch Immediately After Offer Acceptance</div>
+                <div class="strategy-link-impact">Launching pre-boarding immediately after acceptance accelerates paperwork completion and reduces start date delays caused by new hire inaction</div>
+              </div>
+              <div class="strategy-link-arrow">&#x2192;</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies &#x2192;</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="metric-card" data-category="quality" onclick="toggleCard(this)">
+    <div class="card-header">
+      <div class="metric-icon">&#x1F4C8;</div>
+      <div class="card-title-group">
+        <div class="metric-category">Quality &amp; Retention</div>
+        <div class="metric-title">Time to Productivity</div>
+        <div class="metric-tagline">Business outcome perspective: how long before a new hire delivers full independent contribution?</div>
+      </div>
+      <div class="card-toggle">+</div>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="col-definition">
+          <h3>Definition &amp; Context</h3>
+          <p class="definition-text">Time to Productivity answers the business question: "How long before this hire is fully contributing?" It is a ramp effectiveness metric that connects TA and onboarding decisions to downstream business outcomes. Where Quality of Hire measures how well someone performs, Time to Productivity measures how quickly they get there. This metric is particularly significant in technical, revenue-generating, clinical, or operationally complex roles where ramp delays have direct cost or coverage implications. It is one of the most compelling metrics for establishing TA's strategic business impact.</p>
+          <div class="measurement-block">
+            <p class="meas-label">How organizations measure it</p>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Days from Start Date to Full Independent Performance</strong>
+                Primary measure. Requires a defined productivity threshold, often set by the hiring manager or role standard, to be meaningful.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Hiring Manager Ramp Assessment at 30, 60, and 90 Days</strong>
+                Milestone view. Structured check-ins capture whether the new hire is on track, behind, or exceeding ramp expectations at key intervals.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Time to Productivity by Source Channel</strong>
+                Strategic view. Reveals which sourcing channels produce hires who ramp fastest, informing sourcing investment decisions beyond fill rate alone.
+              </div>
+            </div>
+            <div class="meas-variant">
+              <div class="meas-dot"></div>
+              <div class="meas-variant-text">
+                <strong>Time to Productivity by Role Family or Tenure Band</strong>
+                Segmented view. Internal promotions, experienced external hires, and entry-level hires have structurally different ramp curves requiring separate benchmarks.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-strategies">
+          <h3>Top Strategies to Improve This Metric</h3>
+          <div class="strategy-links">
+            <a class="strategy-link" href="library.html?strategy=li28" target="_blank">
+              <div class="strategy-link-icon">&#x1F4CB;</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Onboarding</div>
+                <div class="strategy-link-title">Pre-Boarding Plan: Automate Welcome Communications Before Day One</div>
+                <div class="strategy-link-impact">Structured pre-boarding reduces Week 1 administrative burden and accelerates the new hire's ability to focus on role contribution</div>
+              </div>
+              <div class="strategy-link-arrow">&#x2192;</div>
+            </a>
+            <a class="strategy-link" href="library.html?strategy=li43" target="_blank">
+              <div class="strategy-link-icon">&#x1F4CA;</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Onboarding</div>
+                <div class="strategy-link-title">Pre-Boarding KPI Baseline: Measure Before You Build</div>
+                <div class="strategy-link-impact">Establishing a ramp baseline before optimizing onboarding ensures productivity improvements are measurable and attributable</div>
+              </div>
+              <div class="strategy-link-arrow">&#x2192;</div>
+            </a>
+            <a class="strategy-link" href="library.html?strategy=li19" target="_blank">
+              <div class="strategy-link-icon">&#x1F3AF;</div>
+              <div class="strategy-link-info">
+                <div class="strategy-link-cat">Interview</div>
+                <div class="strategy-link-title">Hiring Manager Decision Matrix: Map Skills and Behaviors to Final Selection</div>
+                <div class="strategy-link-impact">Selection decisions aligned to role performance criteria produce hires who ramp faster because expectations are calibrated correctly from the start</div>
+              </div>
+              <div class="strategy-link-arrow">&#x2192;</div>
+            </a>
+          </div>
+          <a class="view-all-link" href="library.html">Browse all strategies &#x2192;</a>
+        </div>
+      </div>
+    </div>
+  </article>
+
   <article class="metric-card" data-category="velocity" onclick="toggleCard(this)">
     <div class="card-header">
       <div class="metric-icon">📝</div>
